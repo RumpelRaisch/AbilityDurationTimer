@@ -16,7 +16,7 @@ local UI       = {};
 local RUMPEL   = {};
 local SETTINGS = {};
 
-UI.FRAME         = Component.GetFrame("sat_frame");
+UI.FRAME         = Component.GetFrame("adt_frame");
 UI.GRP           = {};
 UI.GRP.MAIN      = UI.FRAME:GetChild("timer");
 UI.GRP.LABEL     = UI.GRP.MAIN:GetChild("label");
@@ -343,10 +343,13 @@ end
 -- ===============================
 
 function RUMPEL.DEV.CreateIcon(FRAME)
-    local GRP = Component.CreateWidget('<Group name="timer" dimensions="height:64; width:64; center-y:50%; center-x:50%" />', FRAME);
+    -- local GRP = Component.CreateWidget('<Group name="timer" dimensions="height:64; width:64; center-y:50%; center-x:50%" />', FRAME);
 
-    Component.CreateWidget('<Icon name="icon" dimensions="left:0; center-y:50%; width:64; height:64;" />', GRP);
-    Component.CreateWidget('<TextTimer name="texttimer" dimensions="left:0; center-y:50%; width:64; height:64;" style="font:Demi_20; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; alpha:0; text-color:#FF8800; format:%.1s" />', GRP);
+    -- Component.CreateWidget('<Icon name="icon" dimensions="left:0; center-y:50%; width:64; height:64;" />', GRP);
+    -- Component.CreateWidget('<TextTimer name="texttimer" dimensions="left:0; center-y:50%; width:64; height:64;" style="font:Demi_20; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; alpha:0; text-color:#FF8800; format:%.1s" />', GRP);
+
+    -- widget from blueprint in xml
+    local GRP = Component.CreateWidget("BP_IconTimer", FRAME);
 
     RUMPEL.DEV.UI_TIMERS[RUMPEL.DEV.ui_timers_count] = GRP;
 
