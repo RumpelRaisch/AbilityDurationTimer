@@ -12,15 +12,17 @@ require "lib/lib_InterfaceOptions"
 --  Variables
 -- ===============================
 
-local UI       = {};
-local RUMPEL   = {};
-local SETTINGS = {};
+local DEV_MODE      = false;
+local UI            = {};
+local RUMPEL        = {};
+local SETTINGS      = {};
+local ABILITY_INFOS = {};
 
 UI.FRAME         = Component.GetFrame("adt_frame");
-UI.GRP           = {};
-UI.GRP.MAIN      = UI.FRAME:GetChild("timer");
-UI.GRP.LABEL     = UI.GRP.MAIN:GetChild("label");
-UI.GRP.TEXTTIMER = UI.GRP.MAIN:GetChild("texttimer");
+-- UI.GRP           = {};
+-- UI.GRP.MAIN      = UI.FRAME:GetChild("timer");
+-- UI.GRP.LABEL     = UI.GRP.MAIN:GetChild("label");
+-- UI.GRP.TEXTTIMER = UI.GRP.MAIN:GetChild("texttimer");
 
 RUMPEL.DEV = {
     ui_timers_count = 1,
@@ -28,12 +30,13 @@ RUMPEL.DEV = {
 };
 
 SETTINGS.DEFAULTS = {
-    debug          = false,
-    system_message = true,
+    debug                     = false,
+    system_message            = true,
+    show_icon_instead_of_text = true,
     -- objects
     FONT = {
         name = "Demi",
-        size = 20,
+        size = 18,
         -- objects
         COLOR = {
             label     = "FFFFFF",
@@ -78,12 +81,13 @@ SETTINGS.DEFAULTS = {
     }
 };
 SETTINGS.USER = {
-    debug          = false,
-    system_message = true,
+    debug                     = false,
+    system_message            = true,
+    show_icon_instead_of_text = true,
     -- objects
     FONT = {
         name  = "Demi",
-        size  = 20,
+        size  = 18,
         -- objects
         COLOR = {
             label     = "FFFFFF",
@@ -128,6 +132,12 @@ SETTINGS.USER = {
     }
 };
 
+ABILITY_INFOS[3782]  = {icon_id = 202130}; -- Heavy Armor
+ABILITY_INFOS[1726]  = {icon_id = 222527}; -- Thunderdome
+ABILITY_INFOS[15206] = {icon_id = 492574}; -- Adrenaline Rush
+ABILITY_INFOS[12305] = {icon_id = 202115}; -- Teleport Beacon
+ABILITY_INFOS[3639]  = {icon_id = 222507}; -- Overcharge
+
 -- ===============================
 --  Options
 -- ===============================
@@ -138,47 +148,48 @@ function BuildOptions()
     InterfaceOptions.StartGroup({label="Ability Duration Timer: Main Settings"});
         InterfaceOptions.AddCheckBox({id="DEBUG_ENABLED", label="Debug", default=SETTINGS.DEFAULTS.debug});
         InterfaceOptions.AddCheckBox({id="SYSMSG_ENABLED", label="Chat output (Starting duration timer ...)", default=SETTINGS.DEFAULTS.system_message});
+        -- InterfaceOptions.AddCheckBox({id="SHOW_ICON_ENEBLED", label="Show icon instead of ability name", default=SETTINGS.DEFAULTS.show_icon_instead_of_text});
         InterfaceOptions.AddChoiceMenu({id="FONT", label="Font", default=SETTINGS.DEFAULTS.FONT.name});
         InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Demi", label="Eurostile Medium"});
         InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Bold", label="Eurostile Bold"});
         InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuMedium", label="Ubuntu Medium"});
         InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuBold", label="Ubuntu Bold"});
         InterfaceOptions.AddSlider({id="FONTSIZE", label="Fontsize", min=8, max=20, inc=1, suffix="px", default=SETTINGS.DEFAULTS.FONT.size});
-        InterfaceOptions.AddColorPicker({id="TEXTCOLOR", label="Ability name color", default={tint=SETTINGS.DEFAULTS.FONT.COLOR.label}});
+        -- InterfaceOptions.AddColorPicker({id="TEXTCOLOR", label="Ability name color", default={tint=SETTINGS.DEFAULTS.FONT.COLOR.label}});
         InterfaceOptions.AddColorPicker({id="TIMERCOLOR", label="Ability duration color", default={tint=SETTINGS.DEFAULTS.FONT.COLOR.texttimer}});
     InterfaceOptions.StopGroup();
 
-    -- Dreadnaught
-    InterfaceOptions.StartGroup({label="Dreadnaught"});
-        InterfaceOptions.AddCheckBox({id="HEAVY_ARMOR_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.HEAVY_ARMOR.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.HEAVY_ARMOR.enabled});
-        InterfaceOptions.AddTextInput({id="HEAVY_ARMOR_TEXT", label=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.HEAVY_ARMOR.name.." text", default=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.HEAVY_ARMOR.name, maxlen=100});
-        InterfaceOptions.AddCheckBox({id="THUNDERDOME_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.THUNDERDOME.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.THUNDERDOME.enabled});
-        InterfaceOptions.AddTextInput({id="THUNDERDOME_TEXT", label=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.THUNDERDOME.name.." text", default=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.THUNDERDOME.name, maxlen=100});
-    InterfaceOptions.StopGroup();
-
-    -- Biotech
-    InterfaceOptions.StartGroup({label="Biotech"});
-        InterfaceOptions.AddCheckBox({id="ADRENALINE_RUSH_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.MEDIC.ADRENALINE_RUSH.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.MEDIC.ADRENALINE_RUSH.enabled});
-        InterfaceOptions.AddTextInput({id="ADRENALINE_RUSH_TEXT", label=SETTINGS.DEFAULTS.TIMERS.MEDIC.ADRENALINE_RUSH.name.." text", default=SETTINGS.DEFAULTS.TIMERS.MEDIC.ADRENALINE_RUSH.name, maxlen=100});
-    InterfaceOptions.StopGroup();
-
-    -- Recon
-    InterfaceOptions.StartGroup({label="Recon"});
-        InterfaceOptions.AddCheckBox({id="TELEPORT_BEACON_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.RECON.TELEPORT_BEACON.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.RECON.TELEPORT_BEACON.enabled});
-        InterfaceOptions.AddTextInput({id="TELEPORT_BEACON_TEXT", label=SETTINGS.DEFAULTS.TIMERS.RECON.TELEPORT_BEACON.name.." text", default=SETTINGS.DEFAULTS.TIMERS.RECON.TELEPORT_BEACON.name, maxlen=100});
-    InterfaceOptions.StopGroup();
-
-    -- Assault
-    InterfaceOptions.StartGroup({label="Assault"});
-        InterfaceOptions.AddCheckBox({id="OVERCHARGE_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.BERZERKER.OVERCHARGE.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.BERZERKER.OVERCHARGE.enabled});
-        InterfaceOptions.AddTextInput({id="OVERCHARGE_TEXT", label=SETTINGS.DEFAULTS.TIMERS.BERZERKER.OVERCHARGE.name.." text", default=SETTINGS.DEFAULTS.TIMERS.BERZERKER.OVERCHARGE.name, maxlen=100});
-    InterfaceOptions.StopGroup();
-
-    -- Engineer
-    -- InterfaceOptions.StartGroup({label="Engineer"});
-    --     InterfaceOptions.AddCheckBox({id="_ENABLED", label="", default=SETTINGS.DEFAULTS.TIMERS});
-    --     InterfaceOptions.AddTextInput({id="_TEXT", label="", default=SETTINGS.DEFAULTS.TIMERS, maxlen=100});
+    -- -- Dreadnaught
+    -- InterfaceOptions.StartGroup({label="Dreadnaught"});
+    --     InterfaceOptions.AddCheckBox({id="HEAVY_ARMOR_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.HEAVY_ARMOR.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.HEAVY_ARMOR.enabled});
+    --     InterfaceOptions.AddTextInput({id="HEAVY_ARMOR_TEXT", label=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.HEAVY_ARMOR.name.." text", default=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.HEAVY_ARMOR.name, maxlen=100});
+    --     InterfaceOptions.AddCheckBox({id="THUNDERDOME_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.THUNDERDOME.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.THUNDERDOME.enabled});
+    --     InterfaceOptions.AddTextInput({id="THUNDERDOME_TEXT", label=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.THUNDERDOME.name.." text", default=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.THUNDERDOME.name, maxlen=100});
     -- InterfaceOptions.StopGroup();
+
+    -- -- Biotech
+    -- InterfaceOptions.StartGroup({label="Biotech"});
+    --     InterfaceOptions.AddCheckBox({id="ADRENALINE_RUSH_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.MEDIC.ADRENALINE_RUSH.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.MEDIC.ADRENALINE_RUSH.enabled});
+    --     InterfaceOptions.AddTextInput({id="ADRENALINE_RUSH_TEXT", label=SETTINGS.DEFAULTS.TIMERS.MEDIC.ADRENALINE_RUSH.name.." text", default=SETTINGS.DEFAULTS.TIMERS.MEDIC.ADRENALINE_RUSH.name, maxlen=100});
+    -- InterfaceOptions.StopGroup();
+
+    -- -- Recon
+    -- InterfaceOptions.StartGroup({label="Recon"});
+    --     InterfaceOptions.AddCheckBox({id="TELEPORT_BEACON_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.RECON.TELEPORT_BEACON.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.RECON.TELEPORT_BEACON.enabled});
+    --     InterfaceOptions.AddTextInput({id="TELEPORT_BEACON_TEXT", label=SETTINGS.DEFAULTS.TIMERS.RECON.TELEPORT_BEACON.name.." text", default=SETTINGS.DEFAULTS.TIMERS.RECON.TELEPORT_BEACON.name, maxlen=100});
+    -- InterfaceOptions.StopGroup();
+
+    -- -- Assault
+    -- InterfaceOptions.StartGroup({label="Assault"});
+    --     InterfaceOptions.AddCheckBox({id="OVERCHARGE_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.BERZERKER.OVERCHARGE.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.BERZERKER.OVERCHARGE.enabled});
+    --     InterfaceOptions.AddTextInput({id="OVERCHARGE_TEXT", label=SETTINGS.DEFAULTS.TIMERS.BERZERKER.OVERCHARGE.name.." text", default=SETTINGS.DEFAULTS.TIMERS.BERZERKER.OVERCHARGE.name, maxlen=100});
+    -- InterfaceOptions.StopGroup();
+
+    -- -- Engineer
+    -- -- InterfaceOptions.StartGroup({label="Engineer"});
+    -- --     InterfaceOptions.AddCheckBox({id="_ENABLED", label="", default=SETTINGS.DEFAULTS.TIMERS});
+    -- --     InterfaceOptions.AddTextInput({id="_TEXT", label="", default=SETTINGS.DEFAULTS.TIMERS, maxlen=100});
+    -- -- InterfaceOptions.StopGroup();
 end
 
 -- ===============================
@@ -197,7 +208,9 @@ function OnOptionChanged(id, value)
     if "DEBUG_ENABLED" == id then
         SETTINGS.USER.debug = value;
     elseif "SYSMSG_ENABLED" == id then
-        SETTINGS.DEFAULTS.system_message = value;
+        SETTINGS.USER.system_message = value;
+    elseif "SHOW_ICON_ENEBLED" == id then
+        SETTINGS.USER.show_icon_instead_of_text = value;
     elseif "FONT" == id then
         SETTINGS.USER.FONT.name = value;
     elseif "FONTSIZE" == id then
@@ -260,11 +273,15 @@ function OnAbilityUsed(args)
 
     if -1 ~= args.index then
         local ability_id    = args.id;
-        local ability_state = Player.GetAbilityState(ability_id);
+        -- local ability_state = Player.GetAbilityState(ability_id);
         local ability_info  = Player.GetAbilityInfo(ability_id);
 
-        RUMPEL.ConsoleLog(ability_state);
+        -- RUMPEL.ConsoleLog(ability_state);
         RUMPEL.ConsoleLog(ability_info);
+
+        if true == DEV_MODE then
+            RUMPEL.DEV.CreateIcon(ability_info.iconId, 20);
+        end
     end
 end
 
@@ -325,15 +342,22 @@ function OnAbilityState(args)
             end
         end
 
-        -- local ability_id    = args.id;
-        -- local ability_state = Player.GetAbilityState(ability_id);
-        -- local ability_info  = Player.GetAbilityInfo(ability_id);
-
-        -- RUMPEL.ConsoleLog(ability_state);
-        -- RUMPEL.ConsoleLog(ability_info);
-
         if true == fill_ui then
-            RUMPEL.FillUiFrame(ability_name, args.state_dur_total);
+            if true == SETTINGS.USER.show_icon_instead_of_text then
+                local ability_id    = args.id;
+                -- local ability_state = Player.GetAbilityState(ability_id);
+                -- local ability_info  = Player.GetAbilityInfo(ability_id);
+
+                RUMPEL.ConsoleLog("Ability ID: "..tostring(ability_id));
+                -- RUMPEL.ConsoleLog("Player.GetAbilityState()");
+                -- RUMPEL.ConsoleLog(ability_state);
+                -- RUMPEL.ConsoleLog("Player.GetAbilityInfo()");
+                -- RUMPEL.ConsoleLog(ability_info);
+
+                RUMPEL.DEV.CreateIcon(ABILITY_INFOS[tonumber(ability_id)].icon_id, args.state_dur_total, ability_name);
+            else
+                RUMPEL.FillUiFrame(ability_name, args.state_dur_total);
+            end
         end
     end
 end
@@ -342,30 +366,52 @@ end
 --  Functions
 -- ===============================
 
-function RUMPEL.DEV.CreateIcon(FRAME)
-    -- local GRP = Component.CreateWidget('<Group name="timer" dimensions="height:64; width:64; center-y:50%; center-x:50%" />', FRAME);
+function RUMPEL.DEV.CreateIcon(icon_id, duration, ability_name)
+    -- widgets from blueprint in xml
+    local GRP     = Component.CreateWidget("BP_IconTimer", UI.FRAME);
+    local CONTENT = Component.CreateWidget("BP_IconTimer_Content", GRP);
 
-    -- Component.CreateWidget('<Icon name="icon" dimensions="left:0; center-y:50%; width:64; height:64;" />', GRP);
-    -- Component.CreateWidget('<TextTimer name="texttimer" dimensions="left:0; center-y:50%; width:64; height:64;" style="font:Demi_20; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; alpha:0; text-color:#FF8800; format:%.1s" />', GRP);
+    RUMPEL.DEV.UI_TIMERS[RUMPEL.DEV.ui_timers_count] = {
+        GRP     = GRP,
+        CONTENT = CONTENT
+    };
 
-    -- widget from blueprint in xml
-    local GRP = Component.CreateWidget("BP_IconTimer", FRAME);
+    RUMPEL.DurTimerMsg(ability_name);
+    RUMPEL.DEV.SetTimer(RUMPEL.DEV.ui_timers_count, icon_id, duration);
 
-    RUMPEL.DEV.UI_TIMERS[RUMPEL.DEV.ui_timers_count] = GRP;
+    if 100 <= RUMPEL.DEV.ui_timers_count then
+        RUMPEL.DEV.ui_timers_count = 1;
+    else
+        RUMPEL.DEV.ui_timers_count = RUMPEL.DEV.ui_timers_count + 1;
+    end
+end
 
-    -- [17:27] <Rumpel> do you have a good source where i can take a look and see how i can manipule the groups/icons?
-    -- [17:27] <Rumpel> like dimensions and position
-    -- [17:35] <Arkii> gui/skins has an xml that defines the schema
-    -- [17:35] <Arkii> but its a bit of a pain to read
+function RUMPEL.DEV.SetTimer(timer_id, icon_id, duration)
+    local UI_TIMER = RUMPEL.DEV.UI_TIMERS[timer_id];
+    local TIMER    = UI_TIMER.CONTENT:GetChild("texttimer");
+    local ICON     = UI_TIMER.CONTENT:GetChild("icon");
+    local font     = SETTINGS.USER.FONT.name.."_"..tostring(SETTINGS.USER.FONT.size);
 
-    -- ICON = RUMPEL.DEV.UI_TIMERS[RUMPEL.DEV.ui_timers_count]:GetChild("icon");
-    -- TIMER = RUMPEL.DEV.UI_TIMERS[RUMPEL.DEV.ui_timers_count]:GetChild("texttimer");
+    -- Font
+    TIMER:SetFont(font);
 
-    -- ICON:SetIcon(icon_id);
+    -- Font color
+    TIMER:SetTextColor("#"..SETTINGS.USER.FONT.COLOR.texttimer);
 
-    -- Component.RemoveWidget(RUMPEL.DEV.UI_TIMERS[RUMPEL.DEV.ui_timers_count]);
+    ICON:SetIcon(icon_id);
 
-    RUMPEL.DEV.ui_timers_count = RUMPEL.DEV.ui_timers_count + 1;
+    TIMER:StartTimer(duration, true);
+    TIMER:ParamTo("alpha", 1, 0.1);
+
+    local UPDATE_TIMER = Callback2.Create();
+
+    UPDATE_TIMER:Bind(
+        function()
+            TIMER:ParamTo("alpha", 0, 0.1);
+            Component.RemoveWidget(UI_TIMER.GRP);
+        end
+    );
+    UPDATE_TIMER:Schedule(tonumber(duration));
 end
 
 function RUMPEL.UpdateText()
@@ -419,9 +465,7 @@ function RUMPEL.SystemMsg(message)
 end
 
 function RUMPEL.DurTimerMsg(ability_name)
-    if true == SETTINGS.DEFAULTS.system_message then
+    if true == SETTINGS.USER.system_message then
         RUMPEL.SystemMsg("Starting duration timer for '"..ability_name.."'.");
     end
 end
-
--- foo

@@ -12,6 +12,10 @@
         url=""
         uiVersion="1000"
     />
+
+    <Textures>
+        <Texture name="barslot_backplate_custom" src=".\res\background.png" premultiplied="false" />
+    </Textures>
     
     <Events>    
         <Event name="ON_COMPONENT_LOAD"    bind="OnComponentLoad" />
@@ -21,30 +25,29 @@
     </Events>
     
     <BluePrints>
-        <Blueprint name="BP_LabeledTimer">
-            <!-- <StillArt dimensions="dock:fill" style="texture:colors; region:black; alpha:0.4"/> -->
-
+        <!-- <Blueprint name="BP_LabeledTimer">
             <Text name="label" dimensions="left:0; center-y:50%; width:426; height:64;" style="font:Demi_20; valign:middle; halign:right; clip:false; wrap:false; padding:0; visible:true; alpha:0; text-color:#FFFFFF;" />
             <TextTimer name="texttimer" dimensions="left:430; center-y:50%; width:70; height:64;" style="font:Demi_20; valign:middle; halign:left; clip:false; wrap:false; padding:0; visible:true; alpha:0; text-color:#FF8800; format:%.1s" />
-        </Blueprint>
+        </Blueprint> -->
 
         <BluePrint name="BP_IconTimer" instantiable="true">
-            <Group name="timer_grp" dimensions="height:64; width:64; center-y:50%; center-x:50%">
-                <Icon name="icon" dimensions="left:0; top:0; width:64; height:64;" />
-                <TextTimer name="texttimer" dimensions="left:0; top:0; width:64; height:64;" style="font:Demi_20; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; alpha:0; text-color:#FF8800; format:%.1s" />
-            </Group>
+            <StillArt name="circle" dimensions="left:0; top:0; height:64; width:64;" style="texture:barslot_backplate_custom; alpha:1;" />
+            <Group name="timer_grp" dimensions="left:0; top:0; height:64; width:64;" />
+        </BluePrint>
+
+        <BluePrint name="BP_IconTimer_Content" instantiable="true">
+            <Icon name="icon" dimensions="left:0; top:0; width:64; height:64;" />
+            <TextTimer name="texttimer" dimensions="left:0; top:64; width:64; height:22;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; alpha:0; text-color:#FF8800; format:%.1s" />
         </BluePrint>
     </BluePrints>
     
     <Frames>
-        <HUDFrame name="adt_frame" dimensions="center-x:50%; center-y:50%; height:64; width:500" style="halign:center; valign:center" visible="true">
+        <HUDFrame name="adt_frame" dimensions="center-x:50%; center-y:50%; height:86; width:64" style="halign:center; valign:center" visible="true" />
+        <!-- <HUDFrame name="adt_frame" dimensions="center-x:50%; center-y:50%; height:86; width:64" style="halign:center; valign:center" visible="true">
             <Children>
-                <!-- <StillArt dimensions="dock:fill" style="texture:colors; region:black; alpha:0.4"/> -->
                 <Group name="timer" dimensions="height:100%; width:100%; center-y:50%; center-x:50%" blueprint="BP_LabeledTimer" />
             </Children>
-        </HUDFrame>
+        </HUDFrame> -->
     </Frames>
 
 </Component>
-
-<!-- foo -->
