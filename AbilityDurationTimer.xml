@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Component
+    xmlns="http://www.red5studios.com/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.red5studios.com/ ../../../../schemas/component.xsd"
+>
+
+    <Info
+        title="Ability Duration Timer"
+        author="Rumpel, Vollmond"
+        description=""
+        url=""
+        uiVersion="1000"
+    />
+    
+    <Events>    
+        <Event name="ON_COMPONENT_LOAD"    bind="OnComponentLoad" />
+        <Event name="ON_ABILITY_STATE"     bind="OnAbilityState" />
+        <Event name="ON_ABILITY_USED"      bind="OnAbilityUsed" />
+        <Event name="ON_ABILITY_IN_EFFECT" bind="OnAbilityInEffect" />
+    </Events>
+    
+    <BluePrints>
+        <Blueprint name="rumpel">
+            <!-- <StillArt dimensions="dock:fill" style="texture:colors; region:black; alpha:0.4"/> -->
+
+            <Text name="label" dimensions="left:0; center-y:50%; width:426; height:64;" style="font:Demi_20; valign:middle; halign:right; clip:false; wrap:false; padding:0; visible:true; alpha:0; text-color:#FFFFFF;" />
+            <TextTimer name="texttimer" dimensions="left:430; center-y:50%; width:70; height:64;" style="font:Demi_20; valign:middle; halign:left; clip:false; wrap:false; padding:0; visible:true; alpha:0; text-color:#FF8800; format:%.1s" />
+        </Blueprint>
+    </BluePrints>
+    
+    <Frames>
+        <HUDFrame name="sat_frame" dimensions="center-x:50%; center-y:50%; height:64; width:500" style="halign:center; valign:center" visible="true">
+            <Children>
+                <!-- <StillArt dimensions="dock:fill" style="texture:colors; region:black; alpha:0.4"/> -->
+                <Group name="timer" dimensions="height:100%; width:100%; center-y:50%; center-x:50%" blueprint="rumpel" />
+            </Children>
+        </HUDFrame>
+    </Frames>
+
+</Component>
