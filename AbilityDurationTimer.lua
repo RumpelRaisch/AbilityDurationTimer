@@ -353,6 +353,11 @@ function RUMPEL.DEV.CreateIcon(FRAME)
 
     RUMPEL.DEV.UI_TIMERS[RUMPEL.DEV.ui_timers_count] = GRP;
 
+    -- [17:27] <Rumpel> do you have a good source where i can take a look and see how i can manipule the groups/icons?
+    -- [17:27] <Rumpel> like dimensions and position
+    -- [17:35] <Arkii> gui/skins has an xml that defines the schema
+    -- [17:35] <Arkii> but its a bit of a pain to read
+
     -- ICON = RUMPEL.DEV.UI_TIMERS[RUMPEL.DEV.ui_timers_count]:GetChild("icon");
     -- TIMER = RUMPEL.DEV.UI_TIMERS[RUMPEL.DEV.ui_timers_count]:GetChild("texttimer");
 
