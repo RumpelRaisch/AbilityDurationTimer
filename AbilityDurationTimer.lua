@@ -12,8 +12,8 @@ require "lib/lib_InterfaceOptions"
 --  Variables
 -- ===============================
 
-local RUMPEL   = {};
 local UI       = {};
+local RUMPEL   = {};
 local SETTINGS = {};
 
 UI.FRAME         = Component.GetFrame("sat_frame");
@@ -21,6 +21,11 @@ UI.GRP           = {};
 UI.GRP.MAIN      = UI.FRAME:GetChild("timer");
 UI.GRP.LABEL     = UI.GRP.MAIN:GetChild("label");
 UI.GRP.TEXTTIMER = UI.GRP.MAIN:GetChild("texttimer");
+
+RUMPEL.DEV = {
+    ui_timers_count = 1,
+    UI_TIMERS = {}
+};
 
 SETTINGS.DEFAULTS = {
     debug          = false,
@@ -336,6 +341,24 @@ end
 -- ===============================
 --  Functions
 -- ===============================
+
+function RUMPEL.DEV.CreateIcon(FRAME)
+    local GRP = Component.CreateWidget('<Group name="timer" dimensions="height:64; width:64; center-y:50%; center-x:50%" />', FRAME);
+
+    Component.CreateWidget('<Icon name="icon" dimensions="left:0; center-y:50%; width:64; height:64;" />', GRP);
+    Component.CreateWidget('<TextTimer name="texttimer" dimensions="left:0; center-y:50%; width:64; height:64;" style="font:Demi_20; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; alpha:0; text-color:#FF8800; format:%.1s" />', GRP);
+
+    RUMPEL.DEV.UI_TIMERS[RUMPEL.DEV.ui_timers_count] = GRP;
+
+    -- ICON = RUMPEL.DEV.UI_TIMERS[RUMPEL.DEV.ui_timers_count]:GetChild("icon");
+    -- TIMER = RUMPEL.DEV.UI_TIMERS[RUMPEL.DEV.ui_timers_count]:GetChild("texttimer");
+
+    -- ICON:SetIcon(icon_id);
+
+    -- Component.RemoveWidget(RUMPEL.DEV.UI_TIMERS[RUMPEL.DEV.ui_timers_count]);
+
+    RUMPEL.DEV.ui_timers_count = RUMPEL.DEV.ui_timers_count + 1;
+end
 
 function RUMPEL.UpdateText()
     local font = SETTINGS.USER.FONT.name.."_"..tostring(SETTINGS.USER.FONT.size);
