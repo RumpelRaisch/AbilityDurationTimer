@@ -392,3 +392,5 @@ function RUMPEL.DurTimerMsg(ability_name)
         RUMPEL.SystemMsg("Starting duration timer for '"..ability_name.."'.");
     end
 end
+
+-- foo
