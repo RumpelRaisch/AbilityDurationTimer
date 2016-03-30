@@ -159,37 +159,37 @@ function BuildOptions()
         InterfaceOptions.AddColorPicker({id="TIMERCOLOR", label="Ability duration color", default={tint=SETTINGS.DEFAULTS.FONT.COLOR.texttimer}});
     InterfaceOptions.StopGroup();
 
-    -- -- Dreadnaught
-    -- InterfaceOptions.StartGroup({label="Dreadnaught"});
-    --     InterfaceOptions.AddCheckBox({id="HEAVY_ARMOR_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.HEAVY_ARMOR.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.HEAVY_ARMOR.enabled});
+    -- Dreadnaught
+    InterfaceOptions.StartGroup({label="Dreadnaught"});
+        InterfaceOptions.AddCheckBox({id="HEAVY_ARMOR_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.HEAVY_ARMOR.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.HEAVY_ARMOR.enabled});
     --     InterfaceOptions.AddTextInput({id="HEAVY_ARMOR_TEXT", label=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.HEAVY_ARMOR.name.." text", default=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.HEAVY_ARMOR.name, maxlen=100});
-    --     InterfaceOptions.AddCheckBox({id="THUNDERDOME_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.THUNDERDOME.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.THUNDERDOME.enabled});
+        InterfaceOptions.AddCheckBox({id="THUNDERDOME_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.THUNDERDOME.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.THUNDERDOME.enabled});
     --     InterfaceOptions.AddTextInput({id="THUNDERDOME_TEXT", label=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.THUNDERDOME.name.." text", default=SETTINGS.DEFAULTS.TIMERS.GUARDIAN.THUNDERDOME.name, maxlen=100});
-    -- InterfaceOptions.StopGroup();
+    InterfaceOptions.StopGroup();
 
-    -- -- Biotech
-    -- InterfaceOptions.StartGroup({label="Biotech"});
-    --     InterfaceOptions.AddCheckBox({id="ADRENALINE_RUSH_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.MEDIC.ADRENALINE_RUSH.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.MEDIC.ADRENALINE_RUSH.enabled});
+    -- Biotech
+    InterfaceOptions.StartGroup({label="Biotech"});
+        InterfaceOptions.AddCheckBox({id="ADRENALINE_RUSH_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.MEDIC.ADRENALINE_RUSH.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.MEDIC.ADRENALINE_RUSH.enabled});
     --     InterfaceOptions.AddTextInput({id="ADRENALINE_RUSH_TEXT", label=SETTINGS.DEFAULTS.TIMERS.MEDIC.ADRENALINE_RUSH.name.." text", default=SETTINGS.DEFAULTS.TIMERS.MEDIC.ADRENALINE_RUSH.name, maxlen=100});
-    -- InterfaceOptions.StopGroup();
+    InterfaceOptions.StopGroup();
 
-    -- -- Recon
-    -- InterfaceOptions.StartGroup({label="Recon"});
-    --     InterfaceOptions.AddCheckBox({id="TELEPORT_BEACON_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.RECON.TELEPORT_BEACON.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.RECON.TELEPORT_BEACON.enabled});
+    -- Recon
+    InterfaceOptions.StartGroup({label="Recon"});
+        InterfaceOptions.AddCheckBox({id="TELEPORT_BEACON_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.RECON.TELEPORT_BEACON.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.RECON.TELEPORT_BEACON.enabled});
     --     InterfaceOptions.AddTextInput({id="TELEPORT_BEACON_TEXT", label=SETTINGS.DEFAULTS.TIMERS.RECON.TELEPORT_BEACON.name.." text", default=SETTINGS.DEFAULTS.TIMERS.RECON.TELEPORT_BEACON.name, maxlen=100});
-    -- InterfaceOptions.StopGroup();
+    InterfaceOptions.StopGroup();
 
-    -- -- Assault
-    -- InterfaceOptions.StartGroup({label="Assault"});
-    --     InterfaceOptions.AddCheckBox({id="OVERCHARGE_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.BERZERKER.OVERCHARGE.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.BERZERKER.OVERCHARGE.enabled});
+    -- Assault
+    InterfaceOptions.StartGroup({label="Assault"});
+        InterfaceOptions.AddCheckBox({id="OVERCHARGE_ENABLED", label=SETTINGS.DEFAULTS.TIMERS.BERZERKER.OVERCHARGE.name.." enabled", default=SETTINGS.DEFAULTS.TIMERS.BERZERKER.OVERCHARGE.enabled});
     --     InterfaceOptions.AddTextInput({id="OVERCHARGE_TEXT", label=SETTINGS.DEFAULTS.TIMERS.BERZERKER.OVERCHARGE.name.." text", default=SETTINGS.DEFAULTS.TIMERS.BERZERKER.OVERCHARGE.name, maxlen=100});
-    -- InterfaceOptions.StopGroup();
+    InterfaceOptions.StopGroup();
 
-    -- -- Engineer
-    -- -- InterfaceOptions.StartGroup({label="Engineer"});
-    -- --     InterfaceOptions.AddCheckBox({id="_ENABLED", label="", default=SETTINGS.DEFAULTS.TIMERS});
-    -- --     InterfaceOptions.AddTextInput({id="_TEXT", label="", default=SETTINGS.DEFAULTS.TIMERS, maxlen=100});
-    -- -- InterfaceOptions.StopGroup();
+    -- Engineer
+    -- InterfaceOptions.StartGroup({label="Engineer"});
+    --     InterfaceOptions.AddCheckBox({id="_ENABLED", label="", default=SETTINGS.DEFAULTS.TIMERS});
+    --     InterfaceOptions.AddTextInput({id="_TEXT", label="", default=SETTINGS.DEFAULTS.TIMERS, maxlen=100});
+    -- InterfaceOptions.StopGroup();
 end
 
 -- ===============================
