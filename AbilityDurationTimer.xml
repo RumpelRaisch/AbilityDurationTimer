@@ -14,7 +14,7 @@
     />
 
     <Textures>
-        <Texture name="barslot_backplate_custom" src=".\res\background.png" premultiplied="false" />
+        <Texture name="icon_bg" src=".\res\background.png" premultiplied="false" />
     </Textures>
     
     <Events>    
@@ -26,18 +26,24 @@
     
     <BluePrints>
         <BluePrint name="BP_IconTimer" instantiable="true">
-            <StillArt name="circle" dimensions="left:0; top:0; height:64; width:64;" style="texture:barslot_backplate_custom; alpha:1;" />
+            <StillArt name="circle" dimensions="left:0; top:0; height:64; width:64;" style="texture:icon_bg; alpha:1;" />
             <Group name="timer_grp" dimensions="left:0; top:0; height:64; width:64;" />
         </BluePrint>
 
         <BluePrint name="BP_IconTimer_Content" instantiable="true">
             <Icon name="icon" dimensions="left:0; top:0; width:64; height:64;" />
-            <TextTimer name="texttimer" dimensions="left:0; top:64; width:64; height:22;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; alpha:0; text-color:#FF8800; format:%.1s" />
+            <TextTimer name="text_timer_outline_1" dimensions="left:1; top:0; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
+            <TextTimer name="text_timer_outline_2" dimensions="left:0; top:1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
+            <TextTimer name="text_timer_outline_3" dimensions="left:-1; top:0; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
+            <TextTimer name="text_timer_outline_4" dimensions="left:0; top:-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
+            <TextTimer name="text_timer" dimensions="left:0; top:0; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#FF8800; format:%.1s" />
         </BluePrint>
     </BluePrints>
     
     <Frames>
-        <HUDFrame name="adt_frame" dimensions="center-x:50%; center-y:50%; height:86; width:64" style="halign:center; valign:center" visible="true" />
+        <HUDFrame name="adt_frame" dimensions="center-x:50%; center-y:50%; height:64; width:64" style="halign:center; valign:center" visible="true" />
     </Frames>
 
 </Component>
+
+<!-- http://web.archive.org/web/20150612062204/http://a.pomf.se/ksgbzp.json -->

@@ -18,14 +18,11 @@ local RUMPEL        = {};
 local SETTINGS      = {};
 local ABILITY_INFOS = {};
 
-UI.FRAME         = Component.GetFrame("adt_frame");
--- UI.GRP           = {};
--- UI.GRP.MAIN      = UI.FRAME:GetChild("timer");
--- UI.GRP.LABEL     = UI.GRP.MAIN:GetChild("label");
--- UI.GRP.TEXTTIMER = UI.GRP.MAIN:GetChild("texttimer");
-
-RUMPEL.ui_timers_count = 1;
-RUMPEL.UI_TIMERS       = {};
+UI.ui_timers_count = 1;
+UI.UI_TIMERS       = {};
+UI.POSITIONS       = {};
+UI.FONTS_BOLD      = {};
+UI.FRAME           = Component.GetFrame("adt_frame");
 
 SETTINGS.DEFAULT = {
     debug          = false,
@@ -36,8 +33,8 @@ SETTINGS.DEFAULT = {
         size = 18,
         -- objects
         COLOR = {
-            label     = "FFFFFF",
-            texttimer = "FF8800"
+            text_timer         = "FF8800",
+            text_timer_outline = "000000"
         }
     },
     TIMERS = {
@@ -86,8 +83,8 @@ SETTINGS.USER = {
         size  = 18,
         -- objects
         COLOR = {
-            label     = "FFFFFF",
-            texttimer = "FF8800"
+            text_timer         = "FF8800",
+            text_timer_outline = "000000"
         }
     },
     TIMERS = {
@@ -129,6 +126,11 @@ ABILITY_INFOS[15206] = {icon_id = 492574}; -- Adrenaline Rush
 ABILITY_INFOS[12305] = {icon_id = 202115}; -- Teleport Beacon
 ABILITY_INFOS[3639]  = {icon_id = 222507}; -- Overcharge
 
+UI.POSITIONS[1] = false;
+UI.POSITIONS[2] = false;
+UI.POSITIONS[3] = false;
+UI.POSITIONS[4] = false;
+
 -- ===============================
 --  Options
 -- ===============================
@@ -145,7 +147,8 @@ function BuildOptions()
         InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuMedium", label="Ubuntu Medium"});
         InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuBold", label="Ubuntu Bold"});
         InterfaceOptions.AddSlider({id="FONTSIZE", label="Fontsize", min=8, max=20, inc=1, suffix="px", default=SETTINGS.DEFAULT.FONT.size});
-        InterfaceOptions.AddColorPicker({id="TIMERCOLOR", label="Ability duration color", default={tint=SETTINGS.DEFAULT.FONT.COLOR.texttimer}});
+        InterfaceOptions.AddColorPicker({id="TIMERCOLOR", label="Ability duration color", default={tint=SETTINGS.DEFAULT.FONT.COLOR.text_timer}});
+        InterfaceOptions.AddColorPicker({id="TIMERCOLOR_OUTLINE", label="Ability duration outline color", default={tint=SETTINGS.DEFAULT.FONT.COLOR.text_timer_outline}});
     InterfaceOptions.StopGroup();
 
     -- Dreadnaught
@@ -196,10 +199,10 @@ function OnOptionChanged(id, value)
         SETTINGS.USER.FONT.name = value;
     elseif "FONTSIZE" == id then
         SETTINGS.USER.FONT.size = value;
-    elseif "TEXTCOLOR" == id then
-        SETTINGS.USER.FONT.COLOR.label = value.tint;
     elseif "TIMERCOLOR" == id then
-        SETTINGS.USER.FONT.COLOR.texttimer = value.tint;
+        SETTINGS.USER.FONT.COLOR.text_timer = value.tint;
+    elseif "TIMERCOLOR_OUTLINE" == id then
+        SETTINGS.USER.FONT.COLOR.text_timer_outline = value.tint;
     elseif "HEAVY_ARMOR_ENABLED" == id then
         SETTINGS.USER.TIMERS.GUARDIAN.HEAVY_ARMOR.enabled = value;
     elseif "THUNDERDOME_ENABLED" == id then
@@ -338,46 +341,71 @@ function RUMPEL.CreateIcon(icon_id, duration, ability_name)
     local GRP     = Component.CreateWidget("BP_IconTimer", UI.FRAME);
     local CONTENT = Component.CreateWidget("BP_IconTimer_Content", GRP);
 
-    RUMPEL.UI_TIMERS[RUMPEL.ui_timers_count] = {
-        id      = RUMPEL.ui_timers_count,
+    UI.UI_TIMERS[UI.ui_timers_count] = {
+        id      = UI.ui_timers_count,
         GRP     = GRP,
         CONTENT = CONTENT
     };
 
     RUMPEL.DurTimerMsg(ability_name);
-    RUMPEL.SetTimer(RUMPEL.ui_timers_count, icon_id, duration);
+    RUMPEL.SetTimer(UI.ui_timers_count, icon_id, duration);
 
-    if 100 <= RUMPEL.ui_timers_count then
-        RUMPEL.ui_timers_count = 1;
+    if 100 <= UI.ui_timers_count then
+        UI.ui_timers_count = 1;
     else
-        RUMPEL.ui_timers_count = RUMPEL.ui_timers_count + 1;
+        UI.ui_timers_count = UI.ui_timers_count + 1;
     end
 end
 
 function RUMPEL.SetTimer(timer_id, icon_id, duration)
-    local UI_TIMER = RUMPEL.UI_TIMERS[timer_id];
-    local TIMER    = UI_TIMER.CONTENT:GetChild("texttimer");
-    local ICON     = UI_TIMER.CONTENT:GetChild("icon");
-    local font     = SETTINGS.USER.FONT.name.."_"..tostring(SETTINGS.USER.FONT.size);
+    local UPDATE_TIMER    = Callback2.Create();
+    local UI_TIMER        = UI.UI_TIMERS[timer_id];
+    local TIMER           = UI_TIMER.CONTENT:GetChild("text_timer");
+    local TIMER_OUTLINE_1 = UI_TIMER.CONTENT:GetChild("text_timer_outline_1");
+    local TIMER_OUTLINE_2 = UI_TIMER.CONTENT:GetChild("text_timer_outline_2");
+    local TIMER_OUTLINE_3 = UI_TIMER.CONTENT:GetChild("text_timer_outline_3");
+    local TIMER_OUTLINE_4 = UI_TIMER.CONTENT:GetChild("text_timer_outline_4");
+    local ICON            = UI_TIMER.CONTENT:GetChild("icon");
+    local font            = SETTINGS.USER.FONT.name.."_"..tostring(SETTINGS.USER.FONT.size);
+
+    RUMPEL.ConsoleLog(font_outline);
 
     -- Font
     TIMER:SetFont(font);
+    TIMER_OUTLINE_1:SetFont(font);
+    TIMER_OUTLINE_2:SetFont(font);
+    TIMER_OUTLINE_3:SetFont(font);
+    TIMER_OUTLINE_4:SetFont(font);
 
     -- Font color
-    TIMER:SetTextColor("#"..SETTINGS.USER.FONT.COLOR.texttimer);
+    TIMER:SetTextColor("#"..SETTINGS.USER.FONT.COLOR.text_timer);
+    TIMER_OUTLINE_1:SetTextColor("#"..SETTINGS.USER.FONT.COLOR.text_timer_outline);
+    TIMER_OUTLINE_2:SetTextColor("#"..SETTINGS.USER.FONT.COLOR.text_timer_outline);
+    TIMER_OUTLINE_3:SetTextColor("#"..SETTINGS.USER.FONT.COLOR.text_timer_outline);
+    TIMER_OUTLINE_4:SetTextColor("#"..SETTINGS.USER.FONT.COLOR.text_timer_outline);
 
     ICON:SetIcon(icon_id);
 
     TIMER:StartTimer(duration, true);
+    TIMER_OUTLINE_1:StartTimer(duration, true);
+    TIMER_OUTLINE_2:StartTimer(duration, true);
+    TIMER_OUTLINE_3:StartTimer(duration, true);
+    TIMER_OUTLINE_4:StartTimer(duration, true);
     TIMER:ParamTo("alpha", 1, 0.1);
-
-    local UPDATE_TIMER = Callback2.Create();
+    TIMER_OUTLINE_1:ParamTo("alpha", 1, 0.1);
+    TIMER_OUTLINE_2:ParamTo("alpha", 1, 0.1);
+    TIMER_OUTLINE_3:ParamTo("alpha", 1, 0.1);
+    TIMER_OUTLINE_4:ParamTo("alpha", 1, 0.1);
 
     UPDATE_TIMER:Bind(
         function()
             TIMER:ParamTo("alpha", 0, 0.1);
+            TIMER_OUTLINE_1:ParamTo("alpha", 0, 0.1);
+            TIMER_OUTLINE_2:ParamTo("alpha", 0, 0.1);
+            TIMER_OUTLINE_3:ParamTo("alpha", 0, 0.1);
+            TIMER_OUTLINE_4:ParamTo("alpha", 0, 0.1);
             Component.RemoveWidget(UI_TIMER.GRP);
-            RUMPEL.UI_TIMERS[timer_id] = nil;
+            UI.UI_TIMERS[timer_id] = nil;
         end
     );
     UPDATE_TIMER:Schedule(tonumber(duration));
