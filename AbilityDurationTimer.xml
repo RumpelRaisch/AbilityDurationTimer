@@ -25,11 +25,6 @@
     </Events>
     
     <BluePrints>
-        <!-- <Blueprint name="BP_LabeledTimer">
-            <Text name="label" dimensions="left:0; center-y:50%; width:426; height:64;" style="font:Demi_20; valign:middle; halign:right; clip:false; wrap:false; padding:0; visible:true; alpha:0; text-color:#FFFFFF;" />
-            <TextTimer name="texttimer" dimensions="left:430; center-y:50%; width:70; height:64;" style="font:Demi_20; valign:middle; halign:left; clip:false; wrap:false; padding:0; visible:true; alpha:0; text-color:#FF8800; format:%.1s" />
-        </Blueprint> -->
-
         <BluePrint name="BP_IconTimer" instantiable="true">
             <StillArt name="circle" dimensions="left:0; top:0; height:64; width:64;" style="texture:barslot_backplate_custom; alpha:1;" />
             <Group name="timer_grp" dimensions="left:0; top:0; height:64; width:64;" />
@@ -43,11 +38,6 @@
     
     <Frames>
         <HUDFrame name="adt_frame" dimensions="center-x:50%; center-y:50%; height:86; width:64" style="halign:center; valign:center" visible="true" />
-        <!-- <HUDFrame name="adt_frame" dimensions="center-x:50%; center-y:50%; height:86; width:64" style="halign:center; valign:center" visible="true">
-            <Children>
-                <Group name="timer" dimensions="height:100%; width:100%; center-y:50%; center-x:50%" blueprint="BP_LabeledTimer" />
-            </Children>
-        </HUDFrame> -->
     </Frames>
 
 </Component>
