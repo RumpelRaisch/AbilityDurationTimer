@@ -32,10 +32,10 @@
 
         <BluePrint name="BP_IconTimer_Content" instantiable="true">
             <Icon name="icon" dimensions="left:0; top:0; width:64; height:64;" />
-            <TextTimer name="text_timer_outline_1" dimensions="left:1; top:0; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer_outline_2" dimensions="left:0; top:1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer_outline_3" dimensions="left:-1; top:0; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer_outline_4" dimensions="left:0; top:-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
+            <TextTimer name="text_timer_outline_1" dimensions="left:1; top:1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
+            <TextTimer name="text_timer_outline_2" dimensions="left:-1; top:1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
+            <TextTimer name="text_timer_outline_3" dimensions="left:-1; top:-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
+            <TextTimer name="text_timer_outline_4" dimensions="left:1; top:-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
             <TextTimer name="text_timer" dimensions="left:0; top:0; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#FF8800; format:%.1s" />
         </BluePrint>
     </BluePrints>
