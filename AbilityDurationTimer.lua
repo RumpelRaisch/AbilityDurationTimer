@@ -30,7 +30,7 @@ SETTINGS.DEFAULT = {
     -- objects
     FONT = {
         name = "Demi",
-        size = 18,
+        size = 16,
         -- objects
         COLOR = {
             text_timer         = "FF8800",
@@ -80,7 +80,7 @@ SETTINGS.USER = {
     -- objects
     FONT = {
         name  = "Demi",
-        size  = 18,
+        size  = 16,
         -- objects
         COLOR = {
             text_timer         = "FF8800",
@@ -146,7 +146,7 @@ function BuildOptions()
         InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Bold", label="Eurostile Bold"});
         InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuMedium", label="Ubuntu Medium"});
         InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuBold", label="Ubuntu Bold"});
-        InterfaceOptions.AddSlider({id="FONTSIZE", label="Fontsize", min=8, max=20, inc=1, suffix="px", default=SETTINGS.DEFAULT.FONT.size});
+        InterfaceOptions.AddSlider({id="FONTSIZE", label="Fontsize", min=8, max=20, inc=2, suffix="px", default=SETTINGS.DEFAULT.FONT.size});
         InterfaceOptions.AddColorPicker({id="TIMERCOLOR", label="Ability duration color", default={tint=SETTINGS.DEFAULT.FONT.COLOR.text_timer}});
         InterfaceOptions.AddColorPicker({id="TIMERCOLOR_OUTLINE", label="Ability duration outline color", default={tint=SETTINGS.DEFAULT.FONT.COLOR.text_timer_outline}});
     InterfaceOptions.StopGroup();
@@ -221,17 +221,17 @@ end
 function OnAbilityInEffect(args)
     local archetype = Player.GetCurrentArchtype();
 
-    RUMPEL.ConsoleLog("==[ADT.RUMPEL.ConsoleLog(OnAbilityInEffect)]===============");
-    RUMPEL.ConsoleLog(archetype);
-    RUMPEL.ConsoleLog(args);
+    -- RUMPEL.ConsoleLog("==[ADT.RUMPEL.ConsoleLog(OnAbilityInEffect)]===============");
+    -- RUMPEL.ConsoleLog(archetype);
+    -- RUMPEL.ConsoleLog(args);
 end
 
 function OnAbilityUsed(args)
     local archetype = Player.GetCurrentArchtype();
 
-    RUMPEL.ConsoleLog("==[ADT.RUMPEL.ConsoleLog(OnAbilityUsed)]===================");
-    RUMPEL.ConsoleLog(archetype);
-    RUMPEL.ConsoleLog(args);
+    -- RUMPEL.ConsoleLog("==[ADT.RUMPEL.ConsoleLog(OnAbilityUsed)]===================");
+    -- RUMPEL.ConsoleLog(archetype);
+    -- RUMPEL.ConsoleLog(args);
 
     -- local player_all_stats = Player.GetAllStats();
 
@@ -251,7 +251,7 @@ function OnAbilityUsed(args)
         local ability_info  = Player.GetAbilityInfo(ability_id);
 
         -- RUMPEL.ConsoleLog(ability_state);
-        RUMPEL.ConsoleLog(ability_info);
+        -- RUMPEL.ConsoleLog(ability_info);
 
         if true == DEV_MODE then
             RUMPEL.CreateIcon(ability_info.iconId, 20);
@@ -263,9 +263,9 @@ function OnAbilityState(args)
     local archetype = Player.GetCurrentArchtype();
     local fill_ui   = false;
 
-    RUMPEL.ConsoleLog("==[ADT.RUMPEL.ConsoleLog(OnAbilityState)]==================");
-    RUMPEL.ConsoleLog(archetype);
-    RUMPEL.ConsoleLog(args);
+    -- RUMPEL.ConsoleLog("==[ADT.RUMPEL.ConsoleLog(OnAbilityState)]==================");
+    -- RUMPEL.ConsoleLog(archetype);
+    -- RUMPEL.ConsoleLog(args);
 
     if -1 ~= args.index then
         local ability_name = args.state;
@@ -274,7 +274,7 @@ function OnAbilityState(args)
             ability_name = SETTINGS.DEFAULT.TIMERS.MEDIC.ADRENALINE_RUSH.name;
         end
 
-        RUMPEL.ConsoleLog("Ability '"..ability_name.."' fired Event 'ON_ABILITY_STATE'!");
+        -- RUMPEL.ConsoleLog("Ability '"..ability_name.."' fired Event 'ON_ABILITY_STATE'!");
 
         if "guardian" == archetype then
             if
@@ -321,7 +321,7 @@ function OnAbilityState(args)
             -- local ability_state = Player.GetAbilityState(ability_id);
             -- local ability_info  = Player.GetAbilityInfo(ability_id);
 
-            RUMPEL.ConsoleLog("Ability ID: "..tostring(ability_id));
+            -- RUMPEL.ConsoleLog("Ability ID: "..tostring(ability_id));
             -- RUMPEL.ConsoleLog("Player.GetAbilityState()");
             -- RUMPEL.ConsoleLog(ability_state);
             -- RUMPEL.ConsoleLog("Player.GetAbilityInfo()");
@@ -337,18 +337,35 @@ end
 -- ===============================
 
 function RUMPEL.CreateIcon(icon_id, duration, ability_name)
+    local position = nil;
+
+    if false == UI.POSITIONS[1] then
+        UI.POSITIONS[1] = true;
+        position = 1;
+    elseif false == UI.POSITIONS[2] then
+        UI.POSITIONS[2] = true;
+        position = 2;
+    elseif false == UI.POSITIONS[3] then
+        UI.POSITIONS[3] = true;
+        position = 3;
+    elseif false == UI.POSITIONS[4] then
+        UI.POSITIONS[4] = true;
+        position = 4;
+    end
+
     -- widgets from blueprint in xml
-    local GRP     = Component.CreateWidget("BP_IconTimer", UI.FRAME);
-    local CONTENT = Component.CreateWidget("BP_IconTimer_Content", GRP);
+    local GRP     = Component.CreateWidget("BP_IconTimer_"..position, UI.FRAME);
+    local CONTENT = Component.CreateWidget("BP_IconTimer_Content_"..position, GRP);
 
     UI.UI_TIMERS[UI.ui_timers_count] = {
-        id      = UI.ui_timers_count,
-        GRP     = GRP,
-        CONTENT = CONTENT
+        id       = UI.ui_timers_count,
+        position = position,
+        GRP      = GRP,
+        CONTENT  = CONTENT
     };
 
     RUMPEL.DurTimerMsg(ability_name);
-    RUMPEL.SetTimer(UI.ui_timers_count, icon_id, duration);
+    RUMPEL.SetTimer(UI.ui_timers_count, icon_id, duration, position);
 
     if 100 <= UI.ui_timers_count then
         UI.ui_timers_count = 1;
@@ -357,7 +374,7 @@ function RUMPEL.CreateIcon(icon_id, duration, ability_name)
     end
 end
 
-function RUMPEL.SetTimer(timer_id, icon_id, duration)
+function RUMPEL.SetTimer(timer_id, icon_id, duration, position)
     local UPDATE_TIMER    = Callback2.Create();
     local UI_TIMER        = UI.UI_TIMERS[timer_id];
     local TIMER           = UI_TIMER.CONTENT:GetChild("text_timer");
@@ -367,8 +384,6 @@ function RUMPEL.SetTimer(timer_id, icon_id, duration)
     local TIMER_OUTLINE_4 = UI_TIMER.CONTENT:GetChild("text_timer_outline_4");
     local ICON            = UI_TIMER.CONTENT:GetChild("icon");
     local font            = SETTINGS.USER.FONT.name.."_"..tostring(SETTINGS.USER.FONT.size);
-
-    RUMPEL.ConsoleLog(font_outline);
 
     -- Font
     TIMER:SetFont(font);
@@ -397,6 +412,8 @@ function RUMPEL.SetTimer(timer_id, icon_id, duration)
     TIMER_OUTLINE_3:ParamTo("alpha", 1, 0.1);
     TIMER_OUTLINE_4:ParamTo("alpha", 1, 0.1);
 
+    RUMPEL.ConsoleLog(UI_TIMER.GRP:GetBounds());
+
     UPDATE_TIMER:Bind(
         function()
             TIMER:ParamTo("alpha", 0, 0.1);
@@ -406,6 +423,7 @@ function RUMPEL.SetTimer(timer_id, icon_id, duration)
             TIMER_OUTLINE_4:ParamTo("alpha", 0, 0.1);
             Component.RemoveWidget(UI_TIMER.GRP);
             UI.UI_TIMERS[timer_id] = nil;
+            UI.POSITIONS[position] = false;
         end
     );
     UPDATE_TIMER:Schedule(tonumber(duration));
