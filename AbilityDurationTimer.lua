@@ -25,8 +25,9 @@ UI.FONTS_BOLD      = {};
 UI.FRAME           = Component.GetFrame("adt_frame");
 
 SETTINGS.DEFAULT = {
-    debug          = false,
-    system_message = true,
+    debug            = false,
+    system_message   = true,
+    timers_alignment = "ltr",
     -- objects
     FONT = {
         name = "Demi",
@@ -75,8 +76,9 @@ SETTINGS.DEFAULT = {
     }
 };
 SETTINGS.USER = {
-    debug          = false,
-    system_message = true,
+    debug            = false,
+    system_message   = true,
+    timers_alignment = "ltr",
     -- objects
     FONT = {
         name  = "Demi",
@@ -141,6 +143,9 @@ function BuildOptions()
     InterfaceOptions.StartGroup({label="Ability Duration Timer: Main Settings"});
         InterfaceOptions.AddCheckBox({id="DEBUG_ENABLED", label="Debug", default=SETTINGS.DEFAULT.debug});
         InterfaceOptions.AddCheckBox({id="SYSMSG_ENABLED", label="Chat output (Starting duration timer ...)", default=SETTINGS.DEFAULT.system_message});
+        InterfaceOptions.AddChoiceMenu({id="TIMERS_ALIGNMENT", label="Timer alignment", default=SETTINGS.DEFAULT.timers_alignment});
+        InterfaceOptions.AddChoiceEntry({menuId="TIMERS_ALIGNMENT", val="ltr", label="left to right"});
+        InterfaceOptions.AddChoiceEntry({menuId="TIMERS_ALIGNMENT", val="rtl", label="right to left"});
         InterfaceOptions.AddChoiceMenu({id="FONT", label="Font", default=SETTINGS.DEFAULT.FONT.name});
         InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Demi", label="Eurostile Medium"});
         InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Bold", label="Eurostile Bold"});
@@ -195,6 +200,8 @@ function OnOptionChanged(id, value)
         SETTINGS.USER.debug = value;
     elseif "SYSMSG_ENABLED" == id then
         SETTINGS.USER.system_message = value;
+    elseif "TIMERS_ALIGNMENT" == id then
+        SETTINGS.USER.timers_alignment = value;
     elseif "FONT" == id then
         SETTINGS.USER.FONT.name = value;
     elseif "FONTSIZE" == id then
@@ -337,20 +344,33 @@ end
 -- ===============================
 
 function RUMPEL.CreateIcon(icon_id, duration, ability_name)
-    local position = nil;
+    local ALIGNMENT = {};
+    local position  = nil;
 
-    if false == UI.POSITIONS[1] then
-        UI.POSITIONS[1] = true;
-        position = 1;
-    elseif false == UI.POSITIONS[2] then
-        UI.POSITIONS[2] = true;
-        position = 2;
-    elseif false == UI.POSITIONS[3] then
-        UI.POSITIONS[3] = true;
-        position = 3;
-    elseif false == UI.POSITIONS[4] then
-        UI.POSITIONS[4] = true;
-        position = 4;
+    if "ltr" == SETTINGS.USER.timers_alignment then
+        ALIGNMENT[1] = 1;
+        ALIGNMENT[2] = 2;
+        ALIGNMENT[3] = 3;
+        ALIGNMENT[4] = 4;
+    else
+        ALIGNMENT[1] = 4;
+        ALIGNMENT[2] = 3;
+        ALIGNMENT[3] = 2;
+        ALIGNMENT[4] = 1;
+    end
+
+    if false == UI.POSITIONS[ALIGNMENT[1]] then
+        UI.POSITIONS[ALIGNMENT[1]] = true;
+        position                   = ALIGNMENT[1];
+    elseif false == UI.POSITIONS[ALIGNMENT[2]] then
+        UI.POSITIONS[ALIGNMENT[2]] = true;
+        position                   = ALIGNMENT[2];
+    elseif false == UI.POSITIONS[ALIGNMENT[3]] then
+        UI.POSITIONS[ALIGNMENT[3]] = true;
+        position                   = ALIGNMENT[3];
+    elseif false == UI.POSITIONS[ALIGNMENT[4]] then
+        UI.POSITIONS[ALIGNMENT[4]] = true;
+        position                   = ALIGNMENT[4];
     end
 
     -- widgets from blueprint in xml
