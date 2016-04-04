@@ -8,8 +8,8 @@
     <Info
         title="Ability Duration Timer"
         author="Rumpel, Vollmond"
-        description=""
-        url=""
+        description="Shows duration timer for abilities."
+        url="http://forums.firefall.com/community/threads/8254722/"
         uiVersion="1000"
     />
 
@@ -19,9 +19,9 @@
     
     <Events>    
         <Event name="ON_COMPONENT_LOAD"    bind="OnComponentLoad" />
-        <Event name="ON_ABILITY_STATE"     bind="OnAbilityState" />
-        <Event name="ON_ABILITY_USED"      bind="OnAbilityUsed" />
-        <Event name="ON_ABILITY_IN_EFFECT" bind="OnAbilityInEffect" />
+        <Event name="ON_PLAYER_READY"      bind="OnPlayerReady"   />
+        <Event name="ON_ABILITY_STATE"     bind="OnAbilityState"  />
+        <Event name="ON_ABILITY_USED"      bind="OnAbilityUsed"   />
     </Events>
     
     <BluePrints>
@@ -83,7 +83,7 @@
     </BluePrints>
     
     <Frames>
-        <HUDFrame name="adt_frame" dimensions="center-x:50%; center-y:50%; height:64; width:278" style="halign:center; valign:center" visible="true" />
+        <HUDFrame name="adt_frame" dimensions="center-x:50%-300; center-y:50%; height:64; width:278" style="halign:center; valign:center" visible="true" />
     </Frames>
 
 </Component>
