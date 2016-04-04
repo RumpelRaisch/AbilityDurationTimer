@@ -8,22 +8,26 @@
 require "string";
 require "lib/lib_Callback2";
 require "lib/lib_InterfaceOptions";
+require "lib/lib_Slash";
 
 -- ===============================
 --  Variables
 -- ===============================
 
-local DEV_MODE         = false;
-local UI               = {};
-local RUMPEL           = {};
-local SETTINGS         = {};
-local ABILITY_INFOS    = {};
-local SHOW_TIMERS      = {};
-local ON_ABILITY_STATE = {};
+local DEV_MODE          = true;
+local UI                = {};
+local RUMPEL            = {};
+local SETTINGS          = {};
+local ABILITY_INFOS     = {};
+local ABILITY_ALIAS     = {};
+local ABILITY_DURATIONS = {};
+local SHOW_TIMERS       = {};
+local ON_ABILITY_STATE  = {};
+local slash_list        = "adt";
 
-UI.ui_timers_count = 1;
 UI.UI_TIMERS       = {};
 UI.POSITIONS       = {};
+UI.GRP_POSITIONS   = {};
 UI.FRAME           = Component.GetFrame("adt_frame");
 
 SETTINGS = {
@@ -55,11 +59,21 @@ ABILITY_INFOS[41880] = {icon_id = 222507}; -- Overclock [ON_ABILITY_USED]
 ABILITY_INFOS[15229] = {icon_id = 222507}; -- Overclock [ON_ABILITY_STATE] (named Overcharge ...)
 ABILITY_INFOS[35455] = {icon_id = 222475}; -- Bulwark
 ABILITY_INFOS[41886] = {icon_id = 222491}; -- Fortify
+-- ABILITY_INFOS[38620] = {icon_id = 392110}; -- Rocketeer's Wings
+
+-- ABILITY_ALIAS["Activate: Rocket Wings"] = "Rocketeer's Wings";
+
+-- ABILITY_DURATIONS["Activate: Rocket Wings"] = 16;
 
 UI.POSITIONS[1] = false;
 UI.POSITIONS[2] = false;
 UI.POSITIONS[3] = false;
 UI.POSITIONS[4] = false;
+
+UI.GRP_POSITIONS[1] = "left:0; top:0; height:64; width:64;";
+UI.GRP_POSITIONS[2] = "left:68; top:0; height:64; width:64;";
+UI.GRP_POSITIONS[3] = "left:136; top:0; height:64; width:64;";
+UI.GRP_POSITIONS[4] = "left:204; top:0; height:64; width:64;";
 
 ON_ABILITY_STATE["Heavy Armor"]     = true;
 ON_ABILITY_STATE["Thunderdome"]     = true;
@@ -89,6 +103,9 @@ SETTINGS.TIMERS["Overcharge"] = true;
 SETTINGS.TIMERS["Overclock"] = true;
 SETTINGS.TIMERS["Bulwark"]   = true;
 SETTINGS.TIMERS["Fortify"]   = true;
+
+-- Miscellaneous
+-- SETTINGS.TIMERS["Activate: Rocket Wings"] = true;
 
 -- ===============================
 --  Options
@@ -144,6 +161,11 @@ function BuildOptions()
         InterfaceOptions.AddCheckBox({id="OVERCLOCK_ENABLED", label="Overclock enabled", default=(Component.GetSetting("OVERCLOCK_ENABLED") or SETTINGS.TIMERS["Overclock"])});
         InterfaceOptions.AddCheckBox({id="FORTIFY_ENABLED", label="Fortify enabled", default=(Component.GetSetting("FORTIFY_ENABLED") or SETTINGS.TIMERS["Fortify"])});
     InterfaceOptions.StopGroup();
+
+    -- Miscellaneous
+    -- InterfaceOptions.StartGroup({label="Miscellaneous"});
+    --     InterfaceOptions.AddCheckBox({id="ROCKETEERS_WINGS_ENABLED", label="Rocketeer's Wings enabled", default=(Component.GetSetting("ROCKETEERS_WINGS_ENABLED") or SETTINGS.TIMERS["Activate: Rocket Wings"])});
+    -- InterfaceOptions.StopGroup();
 end
 
 -- ===============================
@@ -154,6 +176,23 @@ function OnComponentLoad()
     BuildOptions();
 
     InterfaceOptions.SetCallbackFunc(OnOptionChanged, "Ability Duration Timer");
+
+    LIB_SLASH.BindCallback({slash_list=slash_list, func=OnSlash});
+end
+
+function OnComponentUnload()
+    LIB_SLASH.UnbindCallback(slash_list);
+end
+
+function OnSlash(ARGS)
+    RUMPEL.ConsoleLog("OnSlash with args: "..tostring(ARGS));
+
+    if 42 == tonumber(ARGS[1]) then
+        RUMPEL.CreateIcon(202130, 25, "Heavy Armor", 3782);
+        RUMPEL.CreateIcon(222527, 15, "Thunderdome", 1726);
+        RUMPEL.CreateIcon(492574, 20, "Adrenaline Rush", 15206);
+        RUMPEL.CreateIcon(202115, 30, "Teleport Beacon", 12305);
+    end
 end
 
 function OnPlayerReady()
@@ -182,10 +221,10 @@ function OnOptionChanged(id, value)
         Component.SaveSetting("FONT_SIZE", value);
     elseif "TIMER_COLOR" == id then
         SETTINGS.FONT.COLOR.text_timer = value.tint;
-        Component.SaveSetting("TIMER_COLOR", value);
+        Component.SaveSetting("TIMER_COLOR", value.tint);
     elseif "TIMER_COLOR_OUTLINE" == id then
         SETTINGS.FONT.COLOR.text_timer_outline = value.tint;
-        Component.SaveSetting("TIMER_COLOR_OUTLINE", value);
+        Component.SaveSetting("TIMER_COLOR_OUTLINE", value.tint);
     elseif "HEAVY_ARMOR_ENABLED" == id then
         SETTINGS.TIMERS["Heavy Armor"] = value;
         Component.SaveSetting("HEAVY_ARMOR_ENABLED", value);
@@ -222,32 +261,35 @@ function OnOptionChanged(id, value)
     elseif "FORTIFY_ENABLED" == id then
         SETTINGS.TIMERS["Fortify"] = value;
         Component.SaveSetting("FORTIFY_ENABLED", value);
+    elseif "ROCKETEERS_WINGS_ENABLED" == id then
+        SETTINGS.TIMERS["Activate: Rocket Wings"] = value;
+        Component.SaveSetting("ROCKETEERS_WINGS_ENABLED", value);
     end
 end
 
-function OnAbilityUsed(args)
-    if -1 ~= args.index then
-        local ABILITY_INFO = Player.GetAbilityInfo(args.id);
+function OnAbilityUsed(ARGS)
+    if -1 ~= ARGS.index then
+        local ABILITY_INFO = Player.GetAbilityInfo(ARGS.id);
 
         RUMPEL.ConsoleLog("Ability '"..ABILITY_INFO.name.."' fired Event 'ON_ABILITY_USED'!");
-        RUMPEL.ConsoleLog("ID: "..tostring(args.id));
+        RUMPEL.ConsoleLog("ID: "..tostring(ARGS.id));
         RUMPEL.ConsoleLog("NAME: "..ABILITY_INFO.name);
         RUMPEL.ConsoleLog("ICON ID: "..tostring(ABILITY_INFO.iconId));
 
-        local ability_duration = RUMPEL.GetAbilityDuration(ABILITY_INFO.name);
+        local ability_duration = ABILITY_DURATIONS[ABILITY_INFO.name] or RUMPEL.GetAbilityDuration(ABILITY_INFO.name);
 
         RUMPEL.ConsoleLog("DURATION: "..tostring(ability_duration));
 
         if nil ~= ability_duration and true ~= ON_ABILITY_STATE[ABILITY_INFO.name] and true == SETTINGS.TIMERS[ABILITY_INFO.name] then
             RUMPEL.ConsoleLog("OnAbilityUsed:CreateIcon");
-            RUMPEL.CreateIcon(ABILITY_INFO.iconId, ability_duration, ABILITY_INFO.name);
+            RUMPEL.CreateIcon(ABILITY_INFO.iconId, ability_duration, ABILITY_INFO.name, ARGS.id);
         end
     end
 end
 
-function OnAbilityState(args)
-    if -1 ~= args.index then
-        -- local ability_id    = tonumber(args.id);
+function OnAbilityState(ARGS)
+    if -1 ~= ARGS.index then
+        -- local ability_id    = tonumber(ARGS.id);
         -- local ability_state = Player.GetAbilityState(ability_id);
         -- local ability_info  = Player.GetAbilityInfo(ability_id);
 
@@ -257,19 +299,19 @@ function OnAbilityState(args)
         -- RUMPEL.ConsoleLog("Player.GetAbilityInfo()");
         -- RUMPEL.ConsoleLog(ability_info);
 
-        local ability_name = args.state;
-        local ability_id   = tonumber(args.id);
+        local ability_name = ARGS.state;
+        local ability_id   = tonumber(ARGS.id);
 
         RUMPEL.ConsoleLog("Ability '"..ability_name.."' fired Event 'ON_ABILITY_STATE'!");
         RUMPEL.ConsoleLog("ID: "..tostring(ability_id));
         RUMPEL.ConsoleLog("NAME: "..ability_name);
         RUMPEL.ConsoleLog("ICON ID: "..tostring(ABILITY_INFOS[tonumber(ability_id)].icon_id));
-        RUMPEL.ConsoleLog("DURATION: "..tostring(args.state_dur_total));
+        RUMPEL.ConsoleLog("DURATION: "..tostring(ARGS.state_dur_total));
         RUMPEL.ConsoleLog("ON_ABILITY_STATE[ability_id]: "..tostring(ON_ABILITY_STATE[ability_id]));
 
         if true == SETTINGS.TIMERS[ability_name] and false ~= ON_ABILITY_STATE[ability_name] and false ~= ON_ABILITY_STATE[ability_id] then
             RUMPEL.ConsoleLog("OnAbilityState:CreateIcon");
-            RUMPEL.CreateIcon(ABILITY_INFOS[ability_id].icon_id, args.state_dur_total, ability_name);
+            RUMPEL.CreateIcon(ABILITY_INFOS[ability_id].icon_id, ARGS.state_dur_total, ability_name, ability_id);
         end
     end
 end
@@ -278,7 +320,7 @@ end
 --  Functions
 -- ===============================
 
-function RUMPEL.CreateIcon(icon_id, duration, ability_name)
+function RUMPEL.CreateIcon(icon_id, duration, ability_name, ability_id)
     local ALIGNMENT = {};
     local position  = nil;
 
@@ -308,36 +350,36 @@ function RUMPEL.CreateIcon(icon_id, duration, ability_name)
         position                   = ALIGNMENT[4];
     end
 
-    -- widgets from blueprint in xml
-    local GRP     = Component.CreateWidget("BP_IconTimer_"..position, UI.FRAME);
-    local CONTENT = Component.CreateWidget("BP_IconTimer_Content_"..position, GRP);
+    if nil ~= position then
+        UI.UI_TIMERS[position] = {
+            ability_id   = ability_id,
+            icon_id      = icon_id,
+            duration     = duration,
+            position     = position,
+            ability_name = ability_name,
+            BP           = Component.CreateWidget("BP_IconTimer", UI.FRAME) -- from blueprint in xml
+        };
 
-    UI.UI_TIMERS[UI.ui_timers_count] = {
-        id       = UI.ui_timers_count,
-        position = position,
-        GRP      = GRP,
-        CONTENT  = CONTENT
-    };
+        UI.UI_TIMERS[position].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[4]], 0);
 
-    RUMPEL.DurTimerMsg(ability_name);
-    RUMPEL.SetTimer(UI.UI_TIMERS[UI.ui_timers_count], icon_id, duration, position);
-
-    if 100 <= UI.ui_timers_count then
-        UI.ui_timers_count = 1;
-    else
-        UI.ui_timers_count = UI.ui_timers_count + 1;
+        RUMPEL.DurTimerMsg(ability_name);
+        RUMPEL.SetTimer(UI.UI_TIMERS[position]);
     end
 end
 
-function RUMPEL.SetTimer(UI_TIMER, icon_id, duration, position)
+function RUMPEL.SetTimer(UI_TIMER)
     local UPDATE_TIMER    = Callback2.Create();
-    local TIMER           = UI_TIMER.CONTENT:GetChild("text_timer");
-    local TIMER_OUTLINE_1 = UI_TIMER.CONTENT:GetChild("text_timer_outline_1");
-    local TIMER_OUTLINE_2 = UI_TIMER.CONTENT:GetChild("text_timer_outline_2");
-    local TIMER_OUTLINE_3 = UI_TIMER.CONTENT:GetChild("text_timer_outline_3");
-    local TIMER_OUTLINE_4 = UI_TIMER.CONTENT:GetChild("text_timer_outline_4");
-    local ICON            = UI_TIMER.CONTENT:GetChild("icon");
+    local GRP             = UI_TIMER.BP:GetChild("timer_grp");
+    local TIMER_OUTLINE_1 = GRP:GetChild("text_timer_outline_1");
+    local TIMER_OUTLINE_2 = GRP:GetChild("text_timer_outline_2");
+    local TIMER_OUTLINE_3 = GRP:GetChild("text_timer_outline_3");
+    local TIMER_OUTLINE_4 = GRP:GetChild("text_timer_outline_4");
+    local TIMER           = GRP:GetChild("text_timer");
+    -- local ICON_BG         = GRP:GetChild("icon_bg");
+    local ICON            = GRP:GetChild("icon");
     local font            = SETTINGS.FONT.name.."_"..tostring(SETTINGS.FONT.size);
+
+    GRP:MoveTo(UI.GRP_POSITIONS[UI_TIMER.position], 0.1);
 
     -- Font
     TIMER:SetFont(font);
@@ -347,40 +389,116 @@ function RUMPEL.SetTimer(UI_TIMER, icon_id, duration, position)
     TIMER_OUTLINE_4:SetFont(font);
 
     -- Font color
-    TIMER:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer);
     TIMER_OUTLINE_1:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer_outline);
     TIMER_OUTLINE_2:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer_outline);
     TIMER_OUTLINE_3:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer_outline);
     TIMER_OUTLINE_4:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer_outline);
+    TIMER:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer);
 
-    ICON:SetIcon(icon_id);
+    -- ICON_BG:SetIcon(165652);
+    -- ICON:SetIcon((ABILITY_INFOS[UI_TIMER.ability_id] or UI_TIMER.icon_id));
+    ICON:SetIcon(UI_TIMER.icon_id);
 
-    TIMER:StartTimer(duration, true);
-    TIMER_OUTLINE_1:StartTimer(duration, true);
-    TIMER_OUTLINE_2:StartTimer(duration, true);
-    TIMER_OUTLINE_3:StartTimer(duration, true);
-    TIMER_OUTLINE_4:StartTimer(duration, true);
+    TIMER:StartTimer(UI_TIMER.duration, true);
+    TIMER_OUTLINE_1:StartTimer(UI_TIMER.duration, true);
+    TIMER_OUTLINE_2:StartTimer(UI_TIMER.duration, true);
+    TIMER_OUTLINE_3:StartTimer(UI_TIMER.duration, true);
+    TIMER_OUTLINE_4:StartTimer(UI_TIMER.duration, true);
+
     TIMER:ParamTo("alpha", 1, 0.1);
     TIMER_OUTLINE_1:ParamTo("alpha", 1, 0.1);
     TIMER_OUTLINE_2:ParamTo("alpha", 1, 0.1);
     TIMER_OUTLINE_3:ParamTo("alpha", 1, 0.1);
     TIMER_OUTLINE_4:ParamTo("alpha", 1, 0.1);
 
-    -- RUMPEL.ConsoleLog(UI_TIMER.GRP:GetBounds());
-
     UPDATE_TIMER:Bind(
         function()
-            TIMER:ParamTo("alpha", 0, 0.1);
-            TIMER_OUTLINE_1:ParamTo("alpha", 0, 0.1);
-            TIMER_OUTLINE_2:ParamTo("alpha", 0, 0.1);
-            TIMER_OUTLINE_3:ParamTo("alpha", 0, 0.1);
-            TIMER_OUTLINE_4:ParamTo("alpha", 0, 0.1);
-            Component.RemoveWidget(UI_TIMER.GRP);
-            UI_TIMER = nil;
-            UI.POSITIONS[position] = false;
+            RUMPEL.UpdateTimerBind(UI_TIMER);
         end
     );
-    UPDATE_TIMER:Schedule(tonumber(duration));
+    UPDATE_TIMER:Schedule(tonumber(UI_TIMER.duration));
+end
+
+function RUMPEL.UpdateTimerBind(UI_TIMER)
+    Component.RemoveWidget(UI_TIMER.BP);
+
+    local ALIGNMENT = {};
+
+    if "ltr" == SETTINGS.timers_alignment then
+        ALIGNMENT[1] = {1};
+        ALIGNMENT[2] = {2,1};
+        ALIGNMENT[3] = {3,2};
+        ALIGNMENT[4] = {4,3};
+    else
+        ALIGNMENT[1] = {4};
+        ALIGNMENT[2] = {3,4};
+        ALIGNMENT[3] = {2,3};
+        ALIGNMENT[4] = {1,2};
+    end
+
+    if ALIGNMENT[4][1] == UI_TIMER.position then
+        UI.POSITIONS[ALIGNMENT[4][1]] = false;
+    elseif ALIGNMENT[3][1] == UI_TIMER.position then
+        UI.POSITIONS[ALIGNMENT[3][1]] = false;
+
+        if false ~= UI.POSITIONS[ALIGNMENT[4][1]] then
+            UI.UI_TIMERS[ALIGNMENT[4][1]].position = ALIGNMENT[4][2];
+            UI.UI_TIMERS[ALIGNMENT[4][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[4][2]], 0.1);
+
+            UI.POSITIONS[ALIGNMENT[4][1]] = false;
+            UI.POSITIONS[ALIGNMENT[4][2]] = true;
+            UI.UI_TIMERS[ALIGNMENT[4][2]] = UI.UI_TIMERS[ALIGNMENT[4][1]];
+        end
+    elseif ALIGNMENT[2][1] == UI_TIMER.position then
+        UI.POSITIONS[ALIGNMENT[2][1]] = false;
+
+        if false ~= UI.POSITIONS[ALIGNMENT[3][1]] then
+            UI.UI_TIMERS[ALIGNMENT[3][1]].position = ALIGNMENT[3][2];
+            UI.UI_TIMERS[ALIGNMENT[3][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[3][2]], 0.1);
+
+            UI.POSITIONS[ALIGNMENT[3][1]] = false;
+            UI.POSITIONS[ALIGNMENT[3][2]] = true;
+            UI.UI_TIMERS[ALIGNMENT[3][2]] = UI.UI_TIMERS[ALIGNMENT[3][1]];
+        end
+
+        if false ~= UI.POSITIONS[ALIGNMENT[4][1]] then
+            UI.UI_TIMERS[ALIGNMENT[4][1]].position = ALIGNMENT[4][2];
+            UI.UI_TIMERS[ALIGNMENT[4][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[4][2]], 0.1);
+
+            UI.POSITIONS[ALIGNMENT[4][1]] = false;
+            UI.POSITIONS[ALIGNMENT[4][2]] = true;
+            UI.UI_TIMERS[ALIGNMENT[4][2]] = UI.UI_TIMERS[ALIGNMENT[4][1]];
+        end
+    elseif ALIGNMENT[1][1] == UI_TIMER.position then
+        UI.POSITIONS[ALIGNMENT[1][1]] = false;
+
+        if false ~= UI.POSITIONS[ALIGNMENT[2][1]] then
+            UI.UI_TIMERS[ALIGNMENT[2][1]].position = ALIGNMENT[2][2];
+            UI.UI_TIMERS[ALIGNMENT[2][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[2][2]], 0.1);
+
+            UI.POSITIONS[ALIGNMENT[2][1]] = false;
+            UI.POSITIONS[ALIGNMENT[2][2]] = true;
+            UI.UI_TIMERS[ALIGNMENT[2][2]] = UI.UI_TIMERS[ALIGNMENT[2][1]];
+        end
+
+        if false ~= UI.POSITIONS[ALIGNMENT[3][1]] then
+            UI.UI_TIMERS[ALIGNMENT[3][1]].position = ALIGNMENT[3][2];
+            UI.UI_TIMERS[ALIGNMENT[3][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[3][2]], 0.1);
+
+            UI.POSITIONS[ALIGNMENT[3][1]] = false;
+            UI.POSITIONS[ALIGNMENT[3][2]] = true;
+            UI.UI_TIMERS[ALIGNMENT[3][2]] = UI.UI_TIMERS[ALIGNMENT[3][1]];
+        end
+
+        if false ~= UI.POSITIONS[ALIGNMENT[4][1]] then
+            UI.UI_TIMERS[ALIGNMENT[4][1]].position = ALIGNMENT[4][2];
+            UI.UI_TIMERS[ALIGNMENT[4][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[4][2]], 0.1);
+
+            UI.POSITIONS[ALIGNMENT[4][1]] = false;
+            UI.POSITIONS[ALIGNMENT[4][2]] = true;
+            UI.UI_TIMERS[ALIGNMENT[4][2]] = UI.UI_TIMERS[ALIGNMENT[4][1]];
+        end
+    end
 end
 
 function RUMPEL.GetAbilityDuration(ability_name)
@@ -415,6 +533,6 @@ end
 
 function RUMPEL.DurTimerMsg(ability_name)
     if true == SETTINGS.system_message then
-        RUMPEL.SystemMsg("Starting duration timer for '"..ability_name.."'.");
+        RUMPEL.SystemMsg("Starting duration timer for '"..(ABILITY_ALIAS[ability_name] or ability_name).."'.");
     end
 end
