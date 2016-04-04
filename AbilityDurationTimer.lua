@@ -195,6 +195,10 @@ function OnSlash(ARGS)
     end
 end
 
+function OnShow(ARGS)
+    UI.FRAME:Show(ARGS.show);
+end
+
 function OnPlayerReady()
     if true == DEV_MODE then
         local PLAYER_ALL_STATS = Player.GetAllStats();

@@ -23,6 +23,8 @@
         <Event name="ON_PLAYER_READY"     bind="OnPlayerReady"     />
         <Event name="ON_ABILITY_STATE"    bind="OnAbilityState"    />
         <Event name="ON_ABILITY_USED"     bind="OnAbilityUsed"     />
+
+        <Event name="MY_HUD_SHOW"         bind="OnShow"            />
     </Events>
     
     <BluePrints>
