@@ -19,8 +19,9 @@
     
     <Events>    
         <Event name="ON_COMPONENT_LOAD"    bind="OnComponentLoad" />
-        <Event name="ON_ABILITY_STATE"     bind="OnAbilityState" />
-        <Event name="ON_ABILITY_USED"      bind="OnAbilityUsed" />
+        <Event name="ON_PLAYER_READY"      bind="OnPlayerReady"   />
+        <Event name="ON_ABILITY_STATE"     bind="OnAbilityState"  />
+        <Event name="ON_ABILITY_USED"      bind="OnAbilityUsed"   />
     </Events>
     
     <BluePrints>

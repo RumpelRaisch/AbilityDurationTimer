@@ -13,6 +13,7 @@ require "lib/lib_InterfaceOptions";
 --  Variables
 -- ===============================
 
+local DEV_MODE         = false;
 local UI               = {};
 local RUMPEL           = {};
 local SETTINGS         = {};
@@ -45,11 +46,15 @@ SETTINGS = {
 -- no ability infos on event 'ON_ABILITY_STATE'
 ABILITY_INFOS[3782]  = {icon_id = 202130}; -- Heavy Armor
 ABILITY_INFOS[1726]  = {icon_id = 222527}; -- Thunderdome
+ABILITY_INFOS[34066] = {icon_id = 202138}; -- Dreadfield
+ABILITY_INFOS[41881] = {icon_id = 212177}; -- Absorption Bomb
 ABILITY_INFOS[15206] = {icon_id = 492574}; -- Adrenaline Rush
 ABILITY_INFOS[12305] = {icon_id = 202115}; -- Teleport Beacon
 ABILITY_INFOS[3639]  = {icon_id = 222507}; -- Overcharge
 ABILITY_INFOS[41880] = {icon_id = 222507}; -- Overclock [ON_ABILITY_USED]
 ABILITY_INFOS[15229] = {icon_id = 222507}; -- Overclock [ON_ABILITY_STATE] (named Overcharge ...)
+ABILITY_INFOS[35455] = {icon_id = 222475}; -- Bulwark
+ABILITY_INFOS[41886] = {icon_id = 222491}; -- Fortify
 
 UI.POSITIONS[1] = false;
 UI.POSITIONS[2] = false;
@@ -64,9 +69,10 @@ ON_ABILITY_STATE["Overcharge"]      = true;
 ON_ABILITY_STATE[15229]             = false; -- Overclock [ON_ABILITY_STATE] (named Overcharge ...)
 
 -- Dreadnaught
-SETTINGS.TIMERS["Heavy Armor"] = true;
-SETTINGS.TIMERS["Thunderdome"] = true;
-SETTINGS.TIMERS["Dreadfield"]  = true;
+SETTINGS.TIMERS["Heavy Armor"]     = true;
+SETTINGS.TIMERS["Thunderdome"]     = true;
+SETTINGS.TIMERS["Dreadfield"]      = true;
+SETTINGS.TIMERS["Absorption Bomb"] = true;
 
 -- Biotech
 SETTINGS.TIMERS["Adrenaline"] = true;
@@ -82,6 +88,7 @@ SETTINGS.TIMERS["Overcharge"] = true;
 -- Engineer
 SETTINGS.TIMERS["Overclock"] = true;
 SETTINGS.TIMERS["Bulwark"]   = true;
+SETTINGS.TIMERS["Fortify"]   = true;
 
 -- ===============================
 --  Options
@@ -110,6 +117,8 @@ function BuildOptions()
     InterfaceOptions.StartGroup({label="Dreadnaught"});
         InterfaceOptions.AddCheckBox({id="HEAVY_ARMOR_ENABLED", label="Heavy Armor enabled", default=(Component.GetSetting("HEAVY_ARMOR_ENABLED") or SETTINGS.TIMERS["Heavy Armor"])});
         InterfaceOptions.AddCheckBox({id="THUNDERDOME_ENABLED", label="Thunderdome enabled", default=(Component.GetSetting("THUNDERDOME_ENABLED") or SETTINGS.TIMERS["Thunderdome"])});
+        InterfaceOptions.AddCheckBox({id="DREADFIELD_ENABLED", label="Dreadfield enabled", default=(Component.GetSetting("DREADFIELD_ENABLED") or SETTINGS.TIMERS["Dreadfield"])});
+        InterfaceOptions.AddCheckBox({id="ABSORPTION_BOMB_ENABLED", label="Absorption Bomb enabled", default=(Component.GetSetting("ABSORPTION_BOMB_ENABLED") or SETTINGS.TIMERS["Absorption Bomb"])});
     InterfaceOptions.StopGroup();
 
     -- Biotech
@@ -133,6 +142,7 @@ function BuildOptions()
     InterfaceOptions.StartGroup({label="Engineer"});
         InterfaceOptions.AddCheckBox({id="BULWARK_ENABLED", label="Bulwark enabled", default=(Component.GetSetting("BULWARK_ENABLED") or SETTINGS.TIMERS["Bulwark"])});
         InterfaceOptions.AddCheckBox({id="OVERCLOCK_ENABLED", label="Overclock enabled", default=(Component.GetSetting("OVERCLOCK_ENABLED") or SETTINGS.TIMERS["Overclock"])});
+        InterfaceOptions.AddCheckBox({id="FORTIFY_ENABLED", label="Fortify enabled", default=(Component.GetSetting("FORTIFY_ENABLED") or SETTINGS.TIMERS["Fortify"])});
     InterfaceOptions.StopGroup();
 end
 
@@ -144,6 +154,14 @@ function OnComponentLoad()
     BuildOptions();
 
     InterfaceOptions.SetCallbackFunc(OnOptionChanged, "Ability Duration Timer");
+end
+
+function OnPlayerReady()
+    if true == DEV_MODE then
+        local PLAYER_ALL_STATS = Player.GetAllStats();
+
+        log(tostring(PLAYER_ALL_STATS));
+    end
 end
 
 function OnOptionChanged(id, value)
@@ -174,6 +192,12 @@ function OnOptionChanged(id, value)
     elseif "THUNDERDOME_ENABLED" == id then
         SETTINGS.TIMERS["Thunderdome"] = value;
         Component.SaveSetting("THUNDERDOME_ENABLED", value);
+    elseif "DREADFIELD_ENABLED" == id then
+        SETTINGS.TIMERS["Dreadfield"] = value;
+        Component.SaveSetting("DREADFIELD_ENABLED", value);
+    elseif "ABSORPTION_BOMB_ENABLED" == id then
+        SETTINGS.TIMERS["Absorption Bomb"] = value;
+        Component.SaveSetting("ABSORPTION_BOMB_ENABLED", value);
     elseif "ADRENALINE_RUSH_ENABLED" == id then
         SETTINGS.TIMERS["Adrenaline"] = value;
         Component.SaveSetting("ADRENALINE_RUSH_ENABLED", value);
@@ -195,6 +219,9 @@ function OnOptionChanged(id, value)
     elseif "OVERCLOCK_ENABLED" == id then
         SETTINGS.TIMERS["Overclock"] = value;
         Component.SaveSetting("OVERCLOCK_ENABLED", value);
+    elseif "FORTIFY_ENABLED" == id then
+        SETTINGS.TIMERS["Fortify"] = value;
+        Component.SaveSetting("FORTIFY_ENABLED", value);
     end
 end
 
@@ -362,10 +389,11 @@ function RUMPEL.GetAbilityDuration(ability_name)
     for i,_ in pairs(PLAYER_ALL_STATS.item_attributes) do
         local MATCH = {
             {string.find(PLAYER_ALL_STATS.item_attributes[i].designer_name, "^(.*) Ability Duration")},
+            {string.find(PLAYER_ALL_STATS.item_attributes[i].designer_name, "^(.*) Buff Duration")},
             {string.find(PLAYER_ALL_STATS.item_attributes[i].designer_name, "^(.*) Duration")}
         };
 
-        if ability_name == MATCH[1][3] or ability_name == MATCH[2][3] then
+        if ability_name == MATCH[1][3] or ability_name == MATCH[2][3] or ability_name == MATCH[3][3] then
             return tonumber(PLAYER_ALL_STATS.item_attributes[i].current_value);
         end
     end
