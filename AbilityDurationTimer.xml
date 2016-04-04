@@ -18,72 +18,30 @@
     </Textures>
     
     <Events>    
-        <Event name="ON_COMPONENT_LOAD"    bind="OnComponentLoad" />
-        <Event name="ON_PLAYER_READY"      bind="OnPlayerReady"   />
-        <Event name="ON_ABILITY_STATE"     bind="OnAbilityState"  />
-        <Event name="ON_ABILITY_USED"      bind="OnAbilityUsed"   />
+        <Event name="ON_COMPONENT_LOAD"   bind="OnComponentLoad"   />
+        <Event name="ON_COMPONENT_UNLOAD" bind="OnComponentUnload" />
+        <Event name="ON_PLAYER_READY"     bind="OnPlayerReady"     />
+        <Event name="ON_ABILITY_STATE"    bind="OnAbilityState"    />
+        <Event name="ON_ABILITY_USED"     bind="OnAbilityUsed"     />
     </Events>
     
     <BluePrints>
-        <BluePrint name="BP_IconTimer_1" instantiable="true">
-            <StillArt name="circle" dimensions="center-x:100%-234; center-y:50%; height:64; width:64;" style="texture:icon_bg; alpha:1;" />
-            <Group name="timer_grp" dimensions="center-x:100%-234; center-y:50%; height:64; width:64;" />
-        </BluePrint>
-
-        <BluePrint name="BP_IconTimer_2" instantiable="true">
-            <StillArt name="circle" dimensions="center-x:100%-168; center-y:50%; height:64; width:64;" style="texture:icon_bg; alpha:1;" />
-            <Group name="timer_grp" dimensions="center-x:100%-168; center-y:50%; height:64; width:64;" />
-        </BluePrint>
-
-        <BluePrint name="BP_IconTimer_3" instantiable="true">
-            <StillArt name="circle" dimensions="center-x:100%-100; center-y:50%; height:64; width:64;" style="texture:icon_bg; alpha:1;" />
-            <Group name="timer_grp" dimensions="center-x:100%-100; center-y:50%; height:64; width:64;" />
-        </BluePrint>
-
-        <BluePrint name="BP_IconTimer_4" instantiable="true">
-            <StillArt name="circle" dimensions="center-x:100%-32; center-y:50%; height:64; width:64;" style="texture:icon_bg; alpha:1;" />
-            <Group name="timer_grp" dimensions="center-x:100%-32; center-y:50%; height:64; width:64;" />
-        </BluePrint>
-
-        <BluePrint name="BP_IconTimer_Content_1" instantiable="true">
-            <Icon name="icon" dimensions="center-x:100%-234; center-y:50%; width:64; height:64;" />
-            <TextTimer name="text_timer_outline_1" dimensions="center-x:100%-235; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer_outline_2" dimensions="center-x:100%-235; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer_outline_3" dimensions="center-x:100%-233; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer_outline_4" dimensions="center-x:100%-233; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer" dimensions="center-x:100%-234; center-y:50%; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#FF8800; format:%.1s" />
-        </BluePrint>
-
-        <BluePrint name="BP_IconTimer_Content_2" instantiable="true">
-            <Icon name="icon" dimensions="center-x:100%-168; center-y:50%; width:64; height:64;" />
-            <TextTimer name="text_timer_outline_1" dimensions="center-x:100%-169; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer_outline_2" dimensions="center-x:100%-169; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer_outline_3" dimensions="center-x:100%-167; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer_outline_4" dimensions="center-x:100%-167; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer" dimensions="center-x:100%-168; center-y:50%; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#FF8800; format:%.1s" />
-        </BluePrint>
-
-        <BluePrint name="BP_IconTimer_Content_3" instantiable="true">
-            <Icon name="icon" dimensions="center-x:100%-100; center-y:50%; width:64; height:64;" />
-            <TextTimer name="text_timer_outline_1" dimensions="center-x:100%-101; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer_outline_2" dimensions="center-x:100%-101; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer_outline_3" dimensions="center-x:100%-99; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer_outline_4" dimensions="center-x:100%-99; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer" dimensions="center-x:100%-100; center-y:50%; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#FF8800; format:%.1s" />
-        </BluePrint>
-
-        <BluePrint name="BP_IconTimer_Content_4" instantiable="true">
-            <Icon name="icon" dimensions="center-x:100%-32; center-y:50%; width:64; height:64;" />
-            <TextTimer name="text_timer_outline_1" dimensions="center-x:100%-33; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer_outline_2" dimensions="center-x:100%-33; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer_outline_3" dimensions="center-x:100%-31; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer_outline_4" dimensions="center-x:100%-31; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-            <TextTimer name="text_timer" dimensions="center-x:100%-32; center-y:50%; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#FF8800; format:%.1s" />
+        <BluePrint name="BP_IconTimer" instantiable="true">
+            <Group name="timer_grp" dimensions="left:0; top:0; height:64; width:64;" style="clip:false;">
+                <StillArt name="circle" dimensions="height:64; width:64;" style="texture:icon_bg; alpha:1;" />
+                <!-- <Icon name="icon_bg" dimensions="width:64; height:64;" /> -->
+                <Icon name="icon" dimensions="width:64; height:64;" />
+                <TextTimer name="text_timer_outline_1" dimensions="center-x:50%+1; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
+                <TextTimer name="text_timer_outline_2" dimensions="center-x:50%+1; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
+                <TextTimer name="text_timer_outline_3" dimensions="center-x:50%-1; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
+                <TextTimer name="text_timer_outline_4" dimensions="center-x:50%-1; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
+                <TextTimer name="text_timer" dimensions="center-x:50%; center-y:50%; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#FF8800; format:%.1s" />
+            </Group>
         </BluePrint>
     </BluePrints>
     
     <Frames>
-        <HUDFrame name="adt_frame" dimensions="center-x:50%-300; center-y:50%; height:64; width:278" style="halign:center; valign:center" visible="true" />
+        <HUDFrame name="adt_frame" dimensions="center-x:50%-300; center-y:50%; height:64; width:268" style="halign:center; valign:center" visible="true" />
     </Frames>
 
 </Component>
