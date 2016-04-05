@@ -14,21 +14,24 @@ require "lib/lib_Slash";
 --  Variables
 -- ===============================
 
-local DEV_MODE          = true;
-local UI                = {};
-local RUMPEL            = {};
-local SETTINGS          = {};
-local ABILITY_INFOS     = {};
-local ABILITY_ALIAS     = {};
-local ABILITY_DURATIONS = {};
-local SHOW_TIMERS       = {};
-local ON_ABILITY_STATE  = {};
-local slash_list        = "adt";
+local UI                         = {};
+local RUMPEL                     = {};
+local SETTINGS                   = {};
+local ABILITY_INFOS              = {};
+local ABILITY_ALIAS              = {};
+local ABILITY_ALIAS_PLAYER_STATS = {};
+local ABILITY_DURATIONS          = {};
+local SHOW_TIMERS                = {};
+local ON_ABILITY_STATE           = {};
+local slash_list                 = "adt";
 
-UI.UI_TIMERS       = {};
-UI.POSITIONS       = {};
-UI.GRP_POSITIONS   = {};
-UI.FRAME           = Component.GetFrame("adt_frame");
+UI.max_timers        = 6;
+UI.active_timers     = 0;
+UI.UI_TIMERS         = {};
+UI.GRP_POSITIONS     = {};
+UI.GRP_POSITIONS.LTR = {};
+UI.GRP_POSITIONS.RTL = {};
+UI.FRAME             = Component.GetFrame("adt_frame");
 
 SETTINGS = {
     debug            = false,
@@ -61,19 +64,26 @@ ABILITY_INFOS[35455] = {icon_id = 222475}; -- Bulwark
 ABILITY_INFOS[41886] = {icon_id = 222491}; -- Fortify
 -- ABILITY_INFOS[38620] = {icon_id = 392110}; -- Rocketeer's Wings
 
--- ABILITY_ALIAS["Activate: Rocket Wings"] = "Rocketeer's Wings";
+ABILITY_ALIAS["Adrenaline"]             = "Adrenaline Rush";
+ABILITY_ALIAS["Activate: Rocket Wings"] = "Rocketeer's Wings";
 
--- ABILITY_DURATIONS["Activate: Rocket Wings"] = 16;
+ABILITY_ALIAS_PLAYER_STATS["Hellfire"] = "Missile Barrage";
 
-UI.POSITIONS[1] = false;
-UI.POSITIONS[2] = false;
-UI.POSITIONS[3] = false;
-UI.POSITIONS[4] = false;
+ABILITY_DURATIONS["Activate: Rocket Wings"] = 16;
 
-UI.GRP_POSITIONS[1] = "left:0; top:0; height:64; width:64;";
-UI.GRP_POSITIONS[2] = "left:68; top:0; height:64; width:64;";
-UI.GRP_POSITIONS[3] = "left:136; top:0; height:64; width:64;";
-UI.GRP_POSITIONS[4] = "left:204; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.LTR[1] = "left:0; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.LTR[2] = "left:68; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.LTR[3] = "left:136; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.LTR[4] = "left:204; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.LTR[5] = "left:272; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.LTR[6] = "left:340; top:0; height:64; width:64;";
+
+UI.GRP_POSITIONS.RTL[1] = "left:340; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.RTL[2] = "left:272; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.RTL[3] = "left:204; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.RTL[4] = "left:136; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.RTL[5] = "left:68; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.RTL[6] = "left:0; top:0; height:64; width:64;";
 
 ON_ABILITY_STATE["Heavy Armor"]     = true;
 ON_ABILITY_STATE["Thunderdome"]     = true;
@@ -97,7 +107,9 @@ SETTINGS.TIMERS["Heroism"]    = true;
 SETTINGS.TIMERS["Teleport Beacon"] = true;
 
 -- Assault
-SETTINGS.TIMERS["Overcharge"] = true;
+SETTINGS.TIMERS["Overcharge"]   = true;
+SETTINGS.TIMERS["Thermal Wave"] = true;
+SETTINGS.TIMERS["Hellfire"]     = true;
 
 -- Engineer
 SETTINGS.TIMERS["Overclock"] = true;
@@ -105,7 +117,7 @@ SETTINGS.TIMERS["Bulwark"]   = true;
 SETTINGS.TIMERS["Fortify"]   = true;
 
 -- Miscellaneous
--- SETTINGS.TIMERS["Activate: Rocket Wings"] = true;
+SETTINGS.TIMERS["Activate: Rocket Wings"] = true;
 
 -- ===============================
 --  Options
@@ -153,6 +165,8 @@ function BuildOptions()
     -- Assault
     InterfaceOptions.StartGroup({label="Assault"});
         InterfaceOptions.AddCheckBox({id="OVERCHARGE_ENABLED", label="Overcharge enabled", default=(Component.GetSetting("OVERCHARGE_ENABLED") or SETTINGS.TIMERS["Overcharge"])});
+        InterfaceOptions.AddCheckBox({id="THERMAL_WAVE_ENABLED", label="Thermal Wave enabled", default=(Component.GetSetting("THERMAL_WAVE_ENABLED") or SETTINGS.TIMERS["Thermal Wave"])});
+        InterfaceOptions.AddCheckBox({id="HELLFIRE_ENABLED", label="Hellfire enabled", default=(Component.GetSetting("HELLFIRE_ENABLED") or SETTINGS.TIMERS["Hellfire"])});
     InterfaceOptions.StopGroup();
 
     -- Engineer
@@ -163,9 +177,9 @@ function BuildOptions()
     InterfaceOptions.StopGroup();
 
     -- Miscellaneous
-    -- InterfaceOptions.StartGroup({label="Miscellaneous"});
-    --     InterfaceOptions.AddCheckBox({id="ROCKETEERS_WINGS_ENABLED", label="Rocketeer's Wings enabled", default=(Component.GetSetting("ROCKETEERS_WINGS_ENABLED") or SETTINGS.TIMERS["Activate: Rocket Wings"])});
-    -- InterfaceOptions.StopGroup();
+    InterfaceOptions.StartGroup({label="Miscellaneous"});
+        InterfaceOptions.AddCheckBox({id="ROCKETEERS_WINGS_ENABLED", label="Rocketeer's Wings enabled", default=(Component.GetSetting("ROCKETEERS_WINGS_ENABLED") or SETTINGS.TIMERS["Activate: Rocket Wings"])});
+    InterfaceOptions.StopGroup();
 end
 
 -- ===============================
@@ -185,22 +199,29 @@ function OnComponentUnload()
 end
 
 function OnSlash(ARGS)
-    RUMPEL.ConsoleLog("OnSlash with args: "..tostring(ARGS));
+    -- RUMPEL.ConsoleLog("OnSlash with args: "..tostring(ARGS));
 
     if 42 == tonumber(ARGS[1]) then
-        RUMPEL.CreateIcon(202130, 25, "Heavy Armor", 3782);
-        RUMPEL.CreateIcon(222527, 15, "Thunderdome", 1726);
-        RUMPEL.CreateIcon(492574, 20, "Adrenaline Rush", 15206);
-        RUMPEL.CreateIcon(202115, 30, "Teleport Beacon", 12305);
+        RUMPEL.TestTimers();
+    elseif "rm" == ARGS[1] then
+        RUMPEL.RemoveTimers();
+    elseif "pstats" == ARGS[1] then
+        log(tostring(Player.GetAllStats()));
+    elseif "timers" == ARGS[1] then
+        RUMPEL.SystemMsg("UI.active_timers: "..tostring(UI.active_timers));
     end
 end
 
-function OnPlayerReady()
-    if true == DEV_MODE then
-        local PLAYER_ALL_STATS = Player.GetAllStats();
+function OnShow(ARGS)
+    UI.FRAME:Show(ARGS.show);
+end
 
-        log(tostring(PLAYER_ALL_STATS));
-    end
+function OnBattleframeChanged()
+    RUMPEL.RemoveTimers();
+end
+
+function OnDeath()
+    RUMPEL.RemoveTimers();
 end
 
 function OnOptionChanged(id, value)
@@ -252,6 +273,12 @@ function OnOptionChanged(id, value)
     elseif "OVERCHARGE_ENABLED" == id then
         SETTINGS.TIMERS["Overcharge"] = value;
         Component.SaveSetting("OVERCHARGE_ENABLED", value);
+    elseif "THERMAL_WAVE_ENABLED" == id then
+        SETTINGS.TIMERS["Thermal Wave"] = value;
+        Component.SaveSetting("THERMAL_WAVE_ENABLED", value);
+    elseif "HELLFIRE_ENABLED" == id then
+        SETTINGS.TIMERS["Hellfire"] = value;
+        Component.SaveSetting("HELLFIRE_ENABLED", value);
     elseif "BULWARK_ENABLED" == id then
         SETTINGS.TIMERS["Bulwark"] = value;
         Component.SaveSetting("BULWARK_ENABLED", value);
@@ -276,7 +303,7 @@ function OnAbilityUsed(ARGS)
         RUMPEL.ConsoleLog("NAME: "..ABILITY_INFO.name);
         RUMPEL.ConsoleLog("ICON ID: "..tostring(ABILITY_INFO.iconId));
 
-        local ability_duration = ABILITY_DURATIONS[ABILITY_INFO.name] or RUMPEL.GetAbilityDuration(ABILITY_INFO.name);
+        local ability_duration = ABILITY_DURATIONS[ABILITY_INFO.name] or RUMPEL.GetAbilityDuration((ABILITY_ALIAS_PLAYER_STATS[ABILITY_INFO.name] or ABILITY_INFO.name));
 
         RUMPEL.ConsoleLog("DURATION: "..tostring(ability_duration));
 
@@ -321,65 +348,83 @@ end
 -- ===============================
 
 function RUMPEL.CreateIcon(icon_id, duration, ability_name, ability_id)
-    local ALIGNMENT = {};
-    local position  = nil;
+    local GRP_POSITIONS = nil;
+
+    -- RUMPEL.ConsoleLog("SETTINGS.timers_alignment: "..SETTINGS.timers_alignment);
 
     if "ltr" == SETTINGS.timers_alignment then
-        ALIGNMENT[1] = 1;
-        ALIGNMENT[2] = 2;
-        ALIGNMENT[3] = 3;
-        ALIGNMENT[4] = 4;
+        GRP_POSITIONS = UI.GRP_POSITIONS.LTR;
     else
-        ALIGNMENT[1] = 4;
-        ALIGNMENT[2] = 3;
-        ALIGNMENT[3] = 2;
-        ALIGNMENT[4] = 1;
+        GRP_POSITIONS = UI.GRP_POSITIONS.RTL;
     end
 
-    if false == UI.POSITIONS[ALIGNMENT[1]] then
-        UI.POSITIONS[ALIGNMENT[1]] = true;
-        position                   = ALIGNMENT[1];
-    elseif false == UI.POSITIONS[ALIGNMENT[2]] then
-        UI.POSITIONS[ALIGNMENT[2]] = true;
-        position                   = ALIGNMENT[2];
-    elseif false == UI.POSITIONS[ALIGNMENT[3]] then
-        UI.POSITIONS[ALIGNMENT[3]] = true;
-        position                   = ALIGNMENT[3];
-    elseif false == UI.POSITIONS[ALIGNMENT[4]] then
-        UI.POSITIONS[ALIGNMENT[4]] = true;
-        position                   = ALIGNMENT[4];
+    UI.active_timers = UI.active_timers + 1;
+
+    if UI.max_timers < UI.active_timers then
+        UI.active_timers = UI.max_timers;
+
+        do return end
     end
 
-    if nil ~= position then
-        UI.UI_TIMERS[position] = {
-            ability_id   = ability_id,
-            icon_id      = icon_id,
-            duration     = duration,
-            position     = position,
-            ability_name = ability_name,
-            BP           = Component.CreateWidget("BP_IconTimer", UI.FRAME) -- from blueprint in xml
-        };
+    UI.UI_TIMERS[UI.active_timers] = {
+        id           = UI.active_timers,
+        ability_id   = ability_id,
+        icon_id      = icon_id,
+        duration     = duration,
+        ability_name = ability_name,
+        BP           = Component.CreateWidget("BP_IconTimer", UI.FRAME) -- from blueprint in xml
+    };
 
-        UI.UI_TIMERS[position].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[4]], 0);
+    RUMPEL.ConsoleLog("RUMPEL.CreateIcon()::UI.active_timers: "..tostring(UI.active_timers));
 
-        RUMPEL.DurTimerMsg(ability_name);
-        RUMPEL.SetTimer(UI.UI_TIMERS[position]);
+    -- RUMPEL.ConsoleLog("GRP_POSITIONS[UI.active_timers]: "..GRP_POSITIONS[UI.active_timers]);
+
+    UI.UI_TIMERS[UI.active_timers].BP:GetChild("timer_grp"):MoveTo(GRP_POSITIONS[UI.active_timers], 0);
+
+    RUMPEL.DurTimerMsg(ability_name);
+    RUMPEL.SetTimer(UI.UI_TIMERS[UI.active_timers]);
+end
+
+function RUMPEL.RemoveTimers()
+    local id            = 1;
+    local active_timers = UI.active_timers;
+
+    while id <= active_timers do
+        Component.RemoveWidget(UI.UI_TIMERS[id].BP);
+
+        UI.UI_TIMERS[id].UPDATE_TIMER:Release();
+
+        UI.active_timers = UI.active_timers - 1;
+        id               = id + 1;
     end
+
+    if 0 > UI.active_timers then
+        UI.active_timers = 0;
+    end
+
+    RUMPEL.ConsoleLog("RUMPEL.RemoveTimers()::UI.active_timers: "..tostring(UI.active_timers));
 end
 
 function RUMPEL.SetTimer(UI_TIMER)
-    local UPDATE_TIMER    = Callback2.Create();
     local GRP             = UI_TIMER.BP:GetChild("timer_grp");
     local TIMER_OUTLINE_1 = GRP:GetChild("text_timer_outline_1");
     local TIMER_OUTLINE_2 = GRP:GetChild("text_timer_outline_2");
     local TIMER_OUTLINE_3 = GRP:GetChild("text_timer_outline_3");
     local TIMER_OUTLINE_4 = GRP:GetChild("text_timer_outline_4");
     local TIMER           = GRP:GetChild("text_timer");
-    -- local ICON_BG         = GRP:GetChild("icon_bg");
     local ICON            = GRP:GetChild("icon");
+    local GRP_POSITIONS   = nil;
     local font            = SETTINGS.FONT.name.."_"..tostring(SETTINGS.FONT.size);
 
-    GRP:MoveTo(UI.GRP_POSITIONS[UI_TIMER.position], 0.1);
+    UI_TIMER.UPDATE_TIMER = Callback2.Create();
+
+    if "ltr" == SETTINGS.timers_alignment then
+        GRP_POSITIONS = UI.GRP_POSITIONS.LTR;
+    else
+        GRP_POSITIONS = UI.GRP_POSITIONS.RTL;
+    end
+
+    GRP:MoveTo(GRP_POSITIONS[UI_TIMER.id], 0.1);
 
     -- Font
     TIMER:SetFont(font);
@@ -395,9 +440,13 @@ function RUMPEL.SetTimer(UI_TIMER)
     TIMER_OUTLINE_4:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer_outline);
     TIMER:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer);
 
-    -- ICON_BG:SetIcon(165652);
-    -- ICON:SetIcon((ABILITY_INFOS[UI_TIMER.ability_id] or UI_TIMER.icon_id));
-    ICON:SetIcon(UI_TIMER.icon_id);
+    if "Activate: Rocket Wings" == UI_TIMER.ability_name then
+        local ROCKETEERS_WINGS = GRP:GetChild("rocketeers_wings");
+
+        ROCKETEERS_WINGS:ParamTo("alpha", 1, 0);
+    else
+        ICON:SetIcon(UI_TIMER.icon_id);
+    end
 
     TIMER:StartTimer(UI_TIMER.duration, true);
     TIMER_OUTLINE_1:StartTimer(UI_TIMER.duration, true);
@@ -411,94 +460,50 @@ function RUMPEL.SetTimer(UI_TIMER)
     TIMER_OUTLINE_3:ParamTo("alpha", 1, 0.1);
     TIMER_OUTLINE_4:ParamTo("alpha", 1, 0.1);
 
-    UPDATE_TIMER:Bind(
+    UI_TIMER.UPDATE_TIMER:Bind(
         function()
             RUMPEL.UpdateTimerBind(UI_TIMER);
         end
     );
-    UPDATE_TIMER:Schedule(tonumber(UI_TIMER.duration));
+    UI_TIMER.UPDATE_TIMER:Schedule(tonumber(UI_TIMER.duration));
 end
 
 function RUMPEL.UpdateTimerBind(UI_TIMER)
     Component.RemoveWidget(UI_TIMER.BP);
 
-    local ALIGNMENT = {};
+    local GRP_POSITIONS = nil;
+    local active_timers = UI.active_timers;
+    local id            = UI_TIMER.id + 1;
+
+    UI.UI_TIMERS[UI_TIMER.id] = nil;
+    UI.active_timers          = UI.active_timers - 1;
 
     if "ltr" == SETTINGS.timers_alignment then
-        ALIGNMENT[1] = {1};
-        ALIGNMENT[2] = {2,1};
-        ALIGNMENT[3] = {3,2};
-        ALIGNMENT[4] = {4,3};
+        GRP_POSITIONS = UI.GRP_POSITIONS.LTR;
     else
-        ALIGNMENT[1] = {4};
-        ALIGNMENT[2] = {3,4};
-        ALIGNMENT[3] = {2,3};
-        ALIGNMENT[4] = {1,2};
+        GRP_POSITIONS = UI.GRP_POSITIONS.RTL;
     end
 
-    if ALIGNMENT[4][1] == UI_TIMER.position then
-        UI.POSITIONS[ALIGNMENT[4][1]] = false;
-    elseif ALIGNMENT[3][1] == UI_TIMER.position then
-        UI.POSITIONS[ALIGNMENT[3][1]] = false;
+    while id <= active_timers do
+        local new_id = id - 1;
 
-        if false ~= UI.POSITIONS[ALIGNMENT[4][1]] then
-            UI.UI_TIMERS[ALIGNMENT[4][1]].position = ALIGNMENT[4][2];
-            UI.UI_TIMERS[ALIGNMENT[4][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[4][2]], 0.1);
+        UI.UI_TIMERS[id].id = new_id;
+        UI.UI_TIMERS[id].BP:GetChild("timer_grp"):MoveTo(GRP_POSITIONS[new_id], 0.1);
 
-            UI.POSITIONS[ALIGNMENT[4][1]] = false;
-            UI.POSITIONS[ALIGNMENT[4][2]] = true;
-            UI.UI_TIMERS[ALIGNMENT[4][2]] = UI.UI_TIMERS[ALIGNMENT[4][1]];
-        end
-    elseif ALIGNMENT[2][1] == UI_TIMER.position then
-        UI.POSITIONS[ALIGNMENT[2][1]] = false;
+        UI.UI_TIMERS[new_id] = UI.UI_TIMERS[id];
+        UI.UI_TIMERS[id]     = nil;
 
-        if false ~= UI.POSITIONS[ALIGNMENT[3][1]] then
-            UI.UI_TIMERS[ALIGNMENT[3][1]].position = ALIGNMENT[3][2];
-            UI.UI_TIMERS[ALIGNMENT[3][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[3][2]], 0.1);
+        -- RUMPEL.ConsoleLog(UI.UI_TIMERS[new_id]);
+        -- RUMPEL.ConsoleLog(UI.UI_TIMERS[id]);
 
-            UI.POSITIONS[ALIGNMENT[3][1]] = false;
-            UI.POSITIONS[ALIGNMENT[3][2]] = true;
-            UI.UI_TIMERS[ALIGNMENT[3][2]] = UI.UI_TIMERS[ALIGNMENT[3][1]];
-        end
-
-        if false ~= UI.POSITIONS[ALIGNMENT[4][1]] then
-            UI.UI_TIMERS[ALIGNMENT[4][1]].position = ALIGNMENT[4][2];
-            UI.UI_TIMERS[ALIGNMENT[4][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[4][2]], 0.1);
-
-            UI.POSITIONS[ALIGNMENT[4][1]] = false;
-            UI.POSITIONS[ALIGNMENT[4][2]] = true;
-            UI.UI_TIMERS[ALIGNMENT[4][2]] = UI.UI_TIMERS[ALIGNMENT[4][1]];
-        end
-    elseif ALIGNMENT[1][1] == UI_TIMER.position then
-        UI.POSITIONS[ALIGNMENT[1][1]] = false;
-
-        if false ~= UI.POSITIONS[ALIGNMENT[2][1]] then
-            UI.UI_TIMERS[ALIGNMENT[2][1]].position = ALIGNMENT[2][2];
-            UI.UI_TIMERS[ALIGNMENT[2][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[2][2]], 0.1);
-
-            UI.POSITIONS[ALIGNMENT[2][1]] = false;
-            UI.POSITIONS[ALIGNMENT[2][2]] = true;
-            UI.UI_TIMERS[ALIGNMENT[2][2]] = UI.UI_TIMERS[ALIGNMENT[2][1]];
-        end
-
-        if false ~= UI.POSITIONS[ALIGNMENT[3][1]] then
-            UI.UI_TIMERS[ALIGNMENT[3][1]].position = ALIGNMENT[3][2];
-            UI.UI_TIMERS[ALIGNMENT[3][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[3][2]], 0.1);
-
-            UI.POSITIONS[ALIGNMENT[3][1]] = false;
-            UI.POSITIONS[ALIGNMENT[3][2]] = true;
-            UI.UI_TIMERS[ALIGNMENT[3][2]] = UI.UI_TIMERS[ALIGNMENT[3][1]];
-        end
-
-        if false ~= UI.POSITIONS[ALIGNMENT[4][1]] then
-            UI.UI_TIMERS[ALIGNMENT[4][1]].position = ALIGNMENT[4][2];
-            UI.UI_TIMERS[ALIGNMENT[4][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[4][2]], 0.1);
-
-            UI.POSITIONS[ALIGNMENT[4][1]] = false;
-            UI.POSITIONS[ALIGNMENT[4][2]] = true;
-            UI.UI_TIMERS[ALIGNMENT[4][2]] = UI.UI_TIMERS[ALIGNMENT[4][1]];
-        end
+        id = id + 1;
     end
+
+    if 0 > UI.active_timers then
+        UI.active_timers = 0;
+    end
+
+    RUMPEL.ConsoleLog("RUMPEL.UpdateTimerBind()::UI.active_timers: "..tostring(UI.active_timers));
 end
 
 function RUMPEL.GetAbilityDuration(ability_name)
@@ -515,6 +520,13 @@ function RUMPEL.GetAbilityDuration(ability_name)
             return tonumber(PLAYER_ALL_STATS.item_attributes[i].current_value);
         end
     end
+end
+
+function RUMPEL.TestTimers()
+    RUMPEL.CreateIcon(202130, 25, "Heavy Armor", 3782);
+    RUMPEL.CreateIcon(222527, 15, "Thunderdome", 1726);
+    RUMPEL.CreateIcon(492574, 20, "Adrenaline Rush", 15206);
+    RUMPEL.CreateIcon(202115, 30, "Teleport Beacon", 12305);
 end
 
 function RUMPEL.ConsoleLog(message)
