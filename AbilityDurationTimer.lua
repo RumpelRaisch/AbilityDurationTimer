@@ -106,7 +106,7 @@ SETTINGS.TIMERS["Bulwark"]   = true;
 SETTINGS.TIMERS["Fortify"]   = true;
 
 -- Miscellaneous
--- SETTINGS.TIMERS["Activate: Rocket Wings"] = true;
+SETTINGS.TIMERS["Activate: Rocket Wings"] = true;
 
 -- ===============================
 --  Options
