@@ -61,9 +61,10 @@ ABILITY_INFOS[35455] = {icon_id = 222475}; -- Bulwark
 ABILITY_INFOS[41886] = {icon_id = 222491}; -- Fortify
 -- ABILITY_INFOS[38620] = {icon_id = 392110}; -- Rocketeer's Wings
 
--- ABILITY_ALIAS["Activate: Rocket Wings"] = "Rocketeer's Wings";
+ABILITY_ALIAS["Adrenaline"]             = "Adrenaline Rush";
+ABILITY_ALIAS["Activate: Rocket Wings"] = "Rocketeer's Wings";
 
--- ABILITY_DURATIONS["Activate: Rocket Wings"] = 16;
+ABILITY_DURATIONS["Activate: Rocket Wings"] = 16;
 
 UI.POSITIONS[1] = false;
 UI.POSITIONS[2] = false;
@@ -163,9 +164,9 @@ function BuildOptions()
     InterfaceOptions.StopGroup();
 
     -- Miscellaneous
-    -- InterfaceOptions.StartGroup({label="Miscellaneous"});
-    --     InterfaceOptions.AddCheckBox({id="ROCKETEERS_WINGS_ENABLED", label="Rocketeer's Wings enabled", default=(Component.GetSetting("ROCKETEERS_WINGS_ENABLED") or SETTINGS.TIMERS["Activate: Rocket Wings"])});
-    -- InterfaceOptions.StopGroup();
+    InterfaceOptions.StartGroup({label="Miscellaneous"});
+        InterfaceOptions.AddCheckBox({id="ROCKETEERS_WINGS_ENABLED", label="Rocketeer's Wings enabled", default=(Component.GetSetting("ROCKETEERS_WINGS_ENABLED") or SETTINGS.TIMERS["Activate: Rocket Wings"])});
+    InterfaceOptions.StopGroup();
 end
 
 -- ===============================
@@ -399,9 +400,14 @@ function RUMPEL.SetTimer(UI_TIMER)
     TIMER_OUTLINE_4:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer_outline);
     TIMER:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer);
 
-    -- ICON_BG:SetIcon(165652);
-    -- ICON:SetIcon((ABILITY_INFOS[UI_TIMER.ability_id] or UI_TIMER.icon_id));
-    ICON:SetIcon(UI_TIMER.icon_id);
+    if "Activate: Rocket Wings" == UI_TIMER.ability_name then
+        local ROCKETEERS_WINGS = GRP:GetChild("rocketeers_wings");
+
+        ROCKETEERS_WINGS:ParamTo("texture", "rocketeers_wings", 0);
+        ROCKETEERS_WINGS:ParamTo("alpha", 1, 0);
+    else
+        ICON:SetIcon(UI_TIMER.icon_id);
+    end
 
     TIMER:StartTimer(UI_TIMER.duration, true);
     TIMER_OUTLINE_1:StartTimer(UI_TIMER.duration, true);

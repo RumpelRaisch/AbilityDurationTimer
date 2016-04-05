@@ -15,6 +15,7 @@
 
     <Textures>
         <Texture name="icon_bg" src=".\res\background.png" premultiplied="false" />
+        <Texture name="rocketeers_wings" src=".\res\rocketeers_wings.png" premultiplied="false" />
     </Textures>
     
     <Events>    
@@ -31,6 +32,7 @@
         <BluePrint name="BP_IconTimer" instantiable="true">
             <Group name="timer_grp" dimensions="left:0; top:0; height:64; width:64;" style="clip:false;">
                 <StillArt name="circle" dimensions="height:64; width:64;" style="texture:icon_bg; alpha:1;" />
+                <StillArt name="rocketeers_wings" dimensions="height:64; width:64;" style="texture:rocketeers_wings; alpha:0;" />
                 <!-- <Icon name="icon_bg" dimensions="width:64; height:64;" /> -->
                 <Icon name="icon" dimensions="width:64; height:64;" />
                 <TextTimer name="text_timer_outline_1" dimensions="center-x:50%+1; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
