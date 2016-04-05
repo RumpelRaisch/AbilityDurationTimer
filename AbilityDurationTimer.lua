@@ -2,7 +2,7 @@
 -- Ability Duration Timer
 -- by: Rumpel, Vollmond
 -- ===============================
--- 
+--
 -- ===============================
 
 require "string";
