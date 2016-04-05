@@ -19,13 +19,15 @@
     </Textures>
     
     <Events>    
-        <Event name="ON_COMPONENT_LOAD"   bind="OnComponentLoad"   />
-        <Event name="ON_COMPONENT_UNLOAD" bind="OnComponentUnload" />
-        <Event name="ON_PLAYER_READY"     bind="OnPlayerReady"     />
-        <Event name="ON_ABILITY_STATE"    bind="OnAbilityState"    />
-        <Event name="ON_ABILITY_USED"     bind="OnAbilityUsed"     />
+        <Event name="ON_COMPONENT_LOAD"      bind="OnComponentLoad"      />
+        <Event name="ON_COMPONENT_UNLOAD"    bind="OnComponentUnload"    />
+        <Event name="ON_PLAYER_READY"        bind="OnPlayerReady"        />
+        <Event name="ON_BATTLEFRAME_CHANGED" bind="OnBattleframeChanged" />
+        <Event name="ON_DEATH"               bind="OnDeath"              />
+        <Event name="ON_ABILITY_STATE"       bind="OnAbilityState"       />
+        <Event name="ON_ABILITY_USED"        bind="OnAbilityUsed"        />
 
-        <Event name="MY_HUD_SHOW"         bind="OnShow"            />
+        <Event name="MY_HUD_SHOW"            bind="OnShow"               />
     </Events>
     
     <BluePrints>
@@ -33,7 +35,6 @@
             <Group name="timer_grp" dimensions="left:0; top:0; height:64; width:64;" style="clip:false;">
                 <StillArt name="circle" dimensions="height:64; width:64;" style="texture:icon_bg; alpha:1;" />
                 <StillArt name="rocketeers_wings" dimensions="height:64; width:64;" style="texture:rocketeers_wings; alpha:0;" />
-                <!-- <Icon name="icon_bg" dimensions="width:64; height:64;" /> -->
                 <Icon name="icon" dimensions="width:64; height:64;" />
                 <TextTimer name="text_timer_outline_1" dimensions="center-x:50%+1; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
                 <TextTimer name="text_timer_outline_2" dimensions="center-x:50%+1; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />

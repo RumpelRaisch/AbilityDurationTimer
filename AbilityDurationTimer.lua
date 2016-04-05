@@ -25,10 +25,12 @@ local SHOW_TIMERS       = {};
 local ON_ABILITY_STATE  = {};
 local slash_list        = "adt";
 
-UI.UI_TIMERS       = {};
-UI.POSITIONS       = {};
-UI.GRP_POSITIONS   = {};
-UI.FRAME           = Component.GetFrame("adt_frame");
+UI.active_timers     = 0;
+UI.UI_TIMERS         = {};
+UI.GRP_POSITIONS     = {};
+UI.GRP_POSITIONS.LTR = {};
+UI.GRP_POSITIONS.RTL = {};
+UI.FRAME             = Component.GetFrame("adt_frame");
 
 SETTINGS = {
     debug            = false,
@@ -66,15 +68,15 @@ ABILITY_ALIAS["Activate: Rocket Wings"] = "Rocketeer's Wings";
 
 ABILITY_DURATIONS["Activate: Rocket Wings"] = 16;
 
-UI.POSITIONS[1] = false;
-UI.POSITIONS[2] = false;
-UI.POSITIONS[3] = false;
-UI.POSITIONS[4] = false;
+UI.GRP_POSITIONS.LTR[1] = "left:0; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.LTR[2] = "left:68; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.LTR[3] = "left:136; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.LTR[4] = "left:204; top:0; height:64; width:64;";
 
-UI.GRP_POSITIONS[1] = "left:0; top:0; height:64; width:64;";
-UI.GRP_POSITIONS[2] = "left:68; top:0; height:64; width:64;";
-UI.GRP_POSITIONS[3] = "left:136; top:0; height:64; width:64;";
-UI.GRP_POSITIONS[4] = "left:204; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.RTL[1] = "right:64; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.RTL[2] = "right:132; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.RTL[3] = "right:200; top:0; height:64; width:64;";
+UI.GRP_POSITIONS.RTL[4] = "right:268; top:0; height:64; width:64;";
 
 ON_ABILITY_STATE["Heavy Armor"]     = true;
 ON_ABILITY_STATE["Thunderdome"]     = true;
@@ -208,6 +210,14 @@ function OnPlayerReady()
     end
 end
 
+function OnBattleframeChanged()
+    RUMPEL.RemoveTimers();
+end
+
+function OnDeath()
+    RUMPEL.RemoveTimers();
+end
+
 function OnOptionChanged(id, value)
     if "DEBUG_ENABLED" == id then
         SETTINGS.debug = value;
@@ -326,49 +336,32 @@ end
 -- ===============================
 
 function RUMPEL.CreateIcon(icon_id, duration, ability_name, ability_id)
-    local ALIGNMENT = {};
-    local position  = nil;
+    UI.active_timers = UI.active_timers + 1;
 
-    if "ltr" == SETTINGS.timers_alignment then
-        ALIGNMENT[1] = 1;
-        ALIGNMENT[2] = 2;
-        ALIGNMENT[3] = 3;
-        ALIGNMENT[4] = 4;
-    else
-        ALIGNMENT[1] = 4;
-        ALIGNMENT[2] = 3;
-        ALIGNMENT[3] = 2;
-        ALIGNMENT[4] = 1;
-    end
+    UI.UI_TIMERS[UI.active_timers] = {
+        id           = UI.active_timers,
+        ability_id   = ability_id,
+        icon_id      = icon_id,
+        duration     = duration,
+        ability_name = ability_name,
+        BP           = Component.CreateWidget("BP_IconTimer", UI.FRAME) -- from blueprint in xml
+    };
 
-    if false == UI.POSITIONS[ALIGNMENT[1]] then
-        UI.POSITIONS[ALIGNMENT[1]] = true;
-        position                   = ALIGNMENT[1];
-    elseif false == UI.POSITIONS[ALIGNMENT[2]] then
-        UI.POSITIONS[ALIGNMENT[2]] = true;
-        position                   = ALIGNMENT[2];
-    elseif false == UI.POSITIONS[ALIGNMENT[3]] then
-        UI.POSITIONS[ALIGNMENT[3]] = true;
-        position                   = ALIGNMENT[3];
-    elseif false == UI.POSITIONS[ALIGNMENT[4]] then
-        UI.POSITIONS[ALIGNMENT[4]] = true;
-        position                   = ALIGNMENT[4];
-    end
+    UI.UI_TIMERS[UI.active_timers].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[4]], 0);
 
-    if nil ~= position then
-        UI.UI_TIMERS[position] = {
-            ability_id   = ability_id,
-            icon_id      = icon_id,
-            duration     = duration,
-            position     = position,
-            ability_name = ability_name,
-            BP           = Component.CreateWidget("BP_IconTimer", UI.FRAME) -- from blueprint in xml
-        };
+    RUMPEL.DurTimerMsg(ability_name);
+    RUMPEL.SetTimer(UI.UI_TIMERS[UI.active_timers]);
+end
 
-        UI.UI_TIMERS[position].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[4]], 0);
+function RUMPEL.RemoveTimers()
+    local id            = 1;
+    local active_timers = UI.active_timers;
 
-        RUMPEL.DurTimerMsg(ability_name);
-        RUMPEL.SetTimer(UI.UI_TIMERS[position]);
+    while id <= active_timers do
+        Component.RemoveWidget(UI.UI_TIMERS[id].BP);
+
+        UI.active_timers = UI.active_timers - 1;
+        id               = id + 1;
     end
 end
 
@@ -380,11 +373,17 @@ function RUMPEL.SetTimer(UI_TIMER)
     local TIMER_OUTLINE_3 = GRP:GetChild("text_timer_outline_3");
     local TIMER_OUTLINE_4 = GRP:GetChild("text_timer_outline_4");
     local TIMER           = GRP:GetChild("text_timer");
-    -- local ICON_BG         = GRP:GetChild("icon_bg");
     local ICON            = GRP:GetChild("icon");
+    local GRP_POSITIONS   = nil;
     local font            = SETTINGS.FONT.name.."_"..tostring(SETTINGS.FONT.size);
 
-    GRP:MoveTo(UI.GRP_POSITIONS[UI_TIMER.position], 0.1);
+    if "ltr" == SETTINGS.timers_alignment then
+        GRP_POSITIONS = UI.GRP_POSITIONS.LTR;
+    else
+        GRP_POSITIONS = UI.GRP_POSITIONS.RTL;
+    end
+
+    GRP:MoveTo(GRP_POSITIONS[UI_TIMER.id], 0.1);
 
     -- Font
     TIMER:SetFont(font);
@@ -432,82 +431,29 @@ end
 function RUMPEL.UpdateTimerBind(UI_TIMER)
     Component.RemoveWidget(UI_TIMER.BP);
 
-    local ALIGNMENT = {};
+    local GRP_POSITIONS = nil;
+    local active_timers = UI.active_timers;
+    local id            = UI_TIMER.id + 1;
+
+    UI.UI_TIMERS[UI_TIMER.id] = nil;
+    UI.active_timers          = UI.active_timers - 1;
 
     if "ltr" == SETTINGS.timers_alignment then
-        ALIGNMENT[1] = {1};
-        ALIGNMENT[2] = {2,1};
-        ALIGNMENT[3] = {3,2};
-        ALIGNMENT[4] = {4,3};
+        GRP_POSITIONS = UI.GRP_POSITIONS.LTR;
     else
-        ALIGNMENT[1] = {4};
-        ALIGNMENT[2] = {3,4};
-        ALIGNMENT[3] = {2,3};
-        ALIGNMENT[4] = {1,2};
+        GRP_POSITIONS = UI.GRP_POSITIONS.RTL;
     end
 
-    if ALIGNMENT[4][1] == UI_TIMER.position then
-        UI.POSITIONS[ALIGNMENT[4][1]] = false;
-    elseif ALIGNMENT[3][1] == UI_TIMER.position then
-        UI.POSITIONS[ALIGNMENT[3][1]] = false;
+    while id <= active_timers do
+        local new_id = i - 1;
 
-        if false ~= UI.POSITIONS[ALIGNMENT[4][1]] then
-            UI.UI_TIMERS[ALIGNMENT[4][1]].position = ALIGNMENT[4][2];
-            UI.UI_TIMERS[ALIGNMENT[4][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[4][2]], 0.1);
+        UI.UI_TIMERS[id].id = new_id;
+        UI.UI_TIMERS[id].BP:GetChild("timer_grp"):MoveTo(GRP_POSITIONS[new_id], 0.1);
 
-            UI.POSITIONS[ALIGNMENT[4][1]] = false;
-            UI.POSITIONS[ALIGNMENT[4][2]] = true;
-            UI.UI_TIMERS[ALIGNMENT[4][2]] = UI.UI_TIMERS[ALIGNMENT[4][1]];
-        end
-    elseif ALIGNMENT[2][1] == UI_TIMER.position then
-        UI.POSITIONS[ALIGNMENT[2][1]] = false;
+        UI.UI_TIMERS[new_id] = UI.UI_TIMERS[id];
+        UI.UI_TIMERS[id]     = nil;
 
-        if false ~= UI.POSITIONS[ALIGNMENT[3][1]] then
-            UI.UI_TIMERS[ALIGNMENT[3][1]].position = ALIGNMENT[3][2];
-            UI.UI_TIMERS[ALIGNMENT[3][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[3][2]], 0.1);
-
-            UI.POSITIONS[ALIGNMENT[3][1]] = false;
-            UI.POSITIONS[ALIGNMENT[3][2]] = true;
-            UI.UI_TIMERS[ALIGNMENT[3][2]] = UI.UI_TIMERS[ALIGNMENT[3][1]];
-        end
-
-        if false ~= UI.POSITIONS[ALIGNMENT[4][1]] then
-            UI.UI_TIMERS[ALIGNMENT[4][1]].position = ALIGNMENT[4][2];
-            UI.UI_TIMERS[ALIGNMENT[4][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[4][2]], 0.1);
-
-            UI.POSITIONS[ALIGNMENT[4][1]] = false;
-            UI.POSITIONS[ALIGNMENT[4][2]] = true;
-            UI.UI_TIMERS[ALIGNMENT[4][2]] = UI.UI_TIMERS[ALIGNMENT[4][1]];
-        end
-    elseif ALIGNMENT[1][1] == UI_TIMER.position then
-        UI.POSITIONS[ALIGNMENT[1][1]] = false;
-
-        if false ~= UI.POSITIONS[ALIGNMENT[2][1]] then
-            UI.UI_TIMERS[ALIGNMENT[2][1]].position = ALIGNMENT[2][2];
-            UI.UI_TIMERS[ALIGNMENT[2][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[2][2]], 0.1);
-
-            UI.POSITIONS[ALIGNMENT[2][1]] = false;
-            UI.POSITIONS[ALIGNMENT[2][2]] = true;
-            UI.UI_TIMERS[ALIGNMENT[2][2]] = UI.UI_TIMERS[ALIGNMENT[2][1]];
-        end
-
-        if false ~= UI.POSITIONS[ALIGNMENT[3][1]] then
-            UI.UI_TIMERS[ALIGNMENT[3][1]].position = ALIGNMENT[3][2];
-            UI.UI_TIMERS[ALIGNMENT[3][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[3][2]], 0.1);
-
-            UI.POSITIONS[ALIGNMENT[3][1]] = false;
-            UI.POSITIONS[ALIGNMENT[3][2]] = true;
-            UI.UI_TIMERS[ALIGNMENT[3][2]] = UI.UI_TIMERS[ALIGNMENT[3][1]];
-        end
-
-        if false ~= UI.POSITIONS[ALIGNMENT[4][1]] then
-            UI.UI_TIMERS[ALIGNMENT[4][1]].position = ALIGNMENT[4][2];
-            UI.UI_TIMERS[ALIGNMENT[4][1]].BP:GetChild("timer_grp"):MoveTo(UI.GRP_POSITIONS[ALIGNMENT[4][2]], 0.1);
-
-            UI.POSITIONS[ALIGNMENT[4][1]] = false;
-            UI.POSITIONS[ALIGNMENT[4][2]] = true;
-            UI.UI_TIMERS[ALIGNMENT[4][2]] = UI.UI_TIMERS[ALIGNMENT[4][1]];
-        end
+        id = id + 1;
     end
 end
 
