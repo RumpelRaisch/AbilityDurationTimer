@@ -308,7 +308,7 @@ function OnAbilityUsed(ARGS)
         RUMPEL.ConsoleLog("DURATION: "..tostring(ability_duration));
 
         if nil ~= ability_duration and true ~= ON_ABILITY_STATE[ABILITY_INFO.name] and true == SETTINGS.TIMERS[ABILITY_INFO.name] then
-            RUMPEL.ConsoleLog("OnAbilityUsed:CreateIcon");
+            RUMPEL.ConsoleLog("OnAbilityUsed:CreateUiTimer()");
             RUMPEL.CreateUiTimer(ABILITY_INFO.iconId, ability_duration, ABILITY_INFO.name, ARGS.id);
         end
     end
@@ -327,7 +327,7 @@ function OnAbilityState(ARGS)
         RUMPEL.ConsoleLog("ON_ABILITY_STATE[ability_id]: "..tostring(ON_ABILITY_STATE[ability_id]));
 
         if true == SETTINGS.TIMERS[ability_name] and false ~= ON_ABILITY_STATE[ability_name] and false ~= ON_ABILITY_STATE[ability_id] then
-            RUMPEL.ConsoleLog("OnAbilityState:CreateIcon");
+            RUMPEL.ConsoleLog("OnAbilityState:CreateUiTimer()");
             RUMPEL.CreateUiTimer(ABILITY_INFOS[ability_id].icon_id, ARGS.state_dur_total, ability_name, ability_id);
         end
     end
