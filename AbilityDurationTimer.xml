@@ -35,11 +35,11 @@
                 <StillArt name="circle" dimensions="height:64; width:64;" style="texture:icon_bg; alpha:1;" />
                 <StillArt name="rocketeers_wings" dimensions="height:64; width:64;" style="texture:rocketeers_wings; alpha:0;" />
                 <Icon name="icon" dimensions="width:64; height:64;" />
-                <TextTimer name="text_timer_outline_1" dimensions="center-x:50%+1; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-                <TextTimer name="text_timer_outline_2" dimensions="center-x:50%+1; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-                <TextTimer name="text_timer_outline_3" dimensions="center-x:50%-1; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-                <TextTimer name="text_timer_outline_4" dimensions="center-x:50%-1; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-                <TextTimer name="text_timer" dimensions="center-x:50%; center-y:50%; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#FF8800; format:%.1s" />
+                <TextTimer name="text_timer_outline_1" dimensions="center-x:50%+1; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s; alpha:1;" />
+                <TextTimer name="text_timer_outline_2" dimensions="center-x:50%+1; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s; alpha:1;" />
+                <TextTimer name="text_timer_outline_3" dimensions="center-x:50%-1; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s; alpha:1;" />
+                <TextTimer name="text_timer_outline_4" dimensions="center-x:50%-1; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s; alpha:1;" />
+                <TextTimer name="text_timer" dimensions="center-x:50%; center-y:50%; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#FF8800; format:%.1s; alpha:1;" />
             </Group>
         </BluePrint>
     </BluePrints>
