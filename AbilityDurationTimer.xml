@@ -45,7 +45,7 @@
     </BluePrints>
     
     <Frames>
-        <HUDFrame name="adt_frame" dimensions="center-x:50%-300; center-y:50%; height:64; width:404" style="halign:center; valign:center" visible="true" />
+        <HUDFrame name="adt_frame" dimensions="center-x:50%-300; center-y:50%; height:64; width:64" style="halign:center; valign:center" visible="true" />
     </Frames>
 
 </Component>
