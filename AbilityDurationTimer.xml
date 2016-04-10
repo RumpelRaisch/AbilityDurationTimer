@@ -7,7 +7,7 @@
 
     <Info
         title="Ability Duration Timer"
-        author="Rumpel, Vollmond"
+        author="Rumpel"
         description="Shows duration timer for abilities."
         url="http://forums.firefall.com/community/threads/8254722/"
         uiVersion="1000"
@@ -28,10 +28,10 @@
     </Textures>
     
     <Events>    
-        <Event name="ON_COMPONENT_LOAD"      bind="OnComponentLoad"      />
-        <Event name="ON_COMPONENT_UNLOAD"    bind="OnComponentUnload"    />
         <Event name="ON_BATTLEFRAME_CHANGED" bind="OnBattleframeChanged" />
         <Event name="ON_DEATH"               bind="OnDeath"              />
+        <Event name="ON_COMPONENT_LOAD"      bind="OnComponentLoad"      />
+        <Event name="ON_COMPONENT_UNLOAD"    bind="OnComponentUnload"    />
         <Event name="ON_ABILITY_STATE"       bind="OnAbilityState"       />
         <Event name="ON_ABILITY_USED"        bind="OnAbilityUsed"        />
 

@@ -1,21 +1,26 @@
 -- =============================================================================
--- Ability Duration Timer
--- by: Rumpel, Vollmond
+--  Ability Duration Timer
+--  by: Rumpel
 -- =============================================================================
--- Shows duration timer for abilities.
+--  Shows duration timer for abilities.
 -- =============================================================================
--- Thanks to NoReal and Reddeyfish for StatusIndicator addon wich was/is an
--- inspiration.
+--  Thanks to Vollmond for sharing his little addon "Simple Ability Timer" on
+--  wich this addon is based on.
+--   - http://forums.firefall.com/community/threads/7375721/#post-106885821
 --
--- Also thanks to:
--- Arkii
--- BurstBiscuit
--- Syna
--- Xsear
+--  Thanks to NoReal and Reddeyfish for StatusIndicator addon wich was/is an
+--  inspiration.
 --
--- Special thanks to my testers:
--- Fac3man
--- Safada
+--  Also thanks to (for answering my questions in IRC):
+--   - Arkii
+--   - BurstBiscuit
+--   - Hanachi
+--   - Syna
+--   - Xsear
+--
+--  Special thanks to my (main) testers:
+--   - Fac3man
+--   - Safada
 -- =============================================================================
 
 require "string";
@@ -27,27 +32,33 @@ require "lib/lib_Slash";
 --  Variables
 -- =============================================================================
 
-local UI                         = {};
-local RUMPEL                     = {};
-local SETTINGS                   = {};
-local ABILITY_INFOS              = {};
-local ABILITY_ALIAS              = {};
-local ABILITY_ALIAS_PLAYER_STATS = {};
-local ABILITY_DURATIONS          = {};
-local SHOW_TIMERS                = {};
-local ON_ABILITY_STATE           = {};
-local TELEPORT_BEACON            = nil;
-local slash_list                 = "adt";
+local UI                = {};
+local RUMPEL            = {};
+local SETTINGS          = {};
+local ABILITY_INFOS     = {};
+local ABILITY_ALIAS     = {};
+local ABILITY_DURATIONS = {};
+local ON_ABILITY_STATE  = {};
+local TELEPORT_BEACON   = nil;
+local slash_list        = "adt";
 
 UI.active_timers = 0;
+UI.unique        = 0;
 UI.TIMERS        = {};
-UI.ltr           = 68;
-UI.rtl           = -68;
+UI.ALIGNMENT     = {};
 UI.FRAME         = Component.GetFrame("adt_frame");
+
+UI.ALIGNMENT["ltr"] = 68;
+UI.ALIGNMENT["rtl"] = -68;
 
 RUMPEL.KNOWN_ABILITIES                     = {};
 RUMPEL.KNOWN_ABILITIES["ON_ABILITY_USED"]  = {};
 RUMPEL.KNOWN_ABILITIES["ON_ABILITY_STATE"] = {};
+
+RUMPEL.ABILITIES_RM_ON_REUSE                               = {};
+-- RUMPEL.ABILITIES_RM_ON_REUSE["Bulwark"]                    = true; -- TODO: check this
+RUMPEL.ABILITIES_RM_ON_REUSE["ort Beacon|Teleport Beacon"] = true;
+RUMPEL.ABILITIES_RM_ON_REUSE["[TEST]"]                     = true;
 
 SETTINGS = {
     debug            = false,
@@ -83,10 +94,17 @@ ABILITY_ALIAS["Activate: Rocket Wings"] = "Rocketeer's Wings";
 ABILITY_ALIAS["Adrenaline"]             = "Adrenaline Rush";
 ABILITY_ALIAS["Cryo Bolt"]              = "Cryo Shot";
 
-ABILITY_ALIAS_PLAYER_STATS["Artillery Strike"] = "Accord Artillery Strike";
-ABILITY_ALIAS_PLAYER_STATS["Cryo Bolt"]        = "Cryo Bomb Snare"; -- Cryo Shot
-ABILITY_ALIAS_PLAYER_STATS["Fuel Air Bomb"]    = "Fuel Air Bomb Fire Patch";
-ABILITY_ALIAS_PLAYER_STATS["Hellfire"]         = "Missile Barrage";
+ABILITY_ALIAS["[ON_ABILITY_STATE]"]                    = {};
+ABILITY_ALIAS["[ON_ABILITY_STATE]"]["Teleport Beacon"] = "ort Beacon"; -- TODO: check this
+ABILITY_ALIAS["[ON_ABILITY_STATE]"]["ort Beacon"]      = "Teleport Beacon"; -- TODO: check this
+
+ABILITY_ALIAS["[ON_ABILITY_USED]"] = {};
+
+ABILITY_ALIAS["[PLAYER_STATS]"]                     = {};
+ABILITY_ALIAS["[PLAYER_STATS]"]["Artillery Strike"] = "Accord Artillery Strike";
+ABILITY_ALIAS["[PLAYER_STATS]"]["Cryo Bolt"]        = "Cryo Bomb Snare"; -- Cryo Shot
+ABILITY_ALIAS["[PLAYER_STATS]"]["Fuel Air Bomb"]    = "Fuel Air Bomb Fire Patch";
+ABILITY_ALIAS["[PLAYER_STATS]"]["Hellfire"]         = "Missile Barrage";
 
 ABILITY_DURATIONS["Activate: Rocket Wings"] = 16;
 
@@ -362,7 +380,7 @@ function OnAbilityUsed(ARGS)
         RUMPEL.ConsoleLog("NAME: "..ABILITY_INFO.name);
         RUMPEL.ConsoleLog("ICON ID: "..tostring(ABILITY_INFO.iconId));
 
-        local ability_duration = ABILITY_DURATIONS[ABILITY_INFO.name] or RUMPEL.GetAbilityDuration((ABILITY_ALIAS_PLAYER_STATS[ABILITY_INFO.name] or ABILITY_INFO.name));
+        local ability_duration = ABILITY_DURATIONS[ABILITY_INFO.name] or RUMPEL.GetAbilityDuration((ABILITY_ALIAS["[PLAYER_STATS]"][ABILITY_INFO.name] or ABILITY_INFO.name));
 
         RUMPEL.ConsoleLog("DURATION: "..tostring(ability_duration));
 
@@ -381,18 +399,38 @@ function OnAbilityUsed(ARGS)
             ability_reports_duration = tostring(ability_reports_duration)
         });
 
-        if "ort Beacon" == ABILITY_INFO.name and nil ~= TELEPORT_BEACON then
-            TELEPORT_BEACON.UPDATE_TIMER:Reschedule(0);
+        -- RUMPEL.SystemMsg("ON_ABILITY_USED");
+
+        local name_check = ABILITY_INFO.name;
+
+        if nil ~= ABILITY_ALIAS["[ON_ABILITY_STATE]"][ABILITY_INFO.name] then
+            name_check = name_check.."|"..ABILITY_ALIAS["[ON_ABILITY_STATE]"][ABILITY_INFO.name]; -- ON_ABILITY_STATE last
+        elseif nil ~= ABILITY_ALIAS["[ON_ABILITY_USED]"][ABILITY_INFO.name] then -- meh
+            -- RUMPEL.SystemMsg(RUMPEL.ABILITIES_RM_ON_REUSE[name_check.."|"..ABILITY_ALIAS["[ON_ABILITY_USED]"][ABILITY_INFO.name]]);
+            -- RUMPEL.SystemMsg(RUMPEL.ABILITIES_RM_ON_REUSE[ABILITY_ALIAS["[ON_ABILITY_USED]"][ABILITY_INFO.name].."|"..name_check]);
+
+            if nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[name_check.."|"..ABILITY_ALIAS["[ON_ABILITY_USED]"][ABILITY_INFO.name]] then
+                name_check = name_check.."|"..ABILITY_ALIAS["[ON_ABILITY_USED]"][ABILITY_INFO.name];
+            elseif nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[ABILITY_ALIAS["[ON_ABILITY_USED]"][ABILITY_INFO.name].."|"..name_check] then
+                name_check = ABILITY_ALIAS["[ON_ABILITY_USED]"][ABILITY_INFO.name].."|"..name_check;
+            end
+        end
+
+        -- RUMPEL.SystemMsg(name_check);
+        -- RUMPEL.SystemMsg(RUMPEL.ABILITIES_RM_ON_REUSE[name_check]);
+
+        if nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[name_check] and "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[name_check]) then
+            RUMPEL.ABILITIES_RM_ON_REUSE[name_check]:Reschedule(0);
         elseif nil ~= ability_duration and true ~= ON_ABILITY_STATE[ABILITY_INFO.name] and true == SETTINGS.TIMERS[ABILITY_INFO.name] then
             RUMPEL.ConsoleLog("OnAbilityUsed:CreateUiTimer()");
-            RUMPEL.CreateUiTimer(ABILITY_INFO.iconId, ability_duration, ABILITY_INFO.name, ARGS.id);
+            RUMPEL.CreateUiTimer(ABILITY_INFO.iconId, ability_duration, ABILITY_INFO.name, ARGS.id, name_check);
         end
     end
 end
 
 function OnAbilityState(ARGS)
     if -1 ~= ARGS.index then
-        local ability_name = ARGS.state;
+        local ability_name = tostring(ARGS.state);
         local ability_id   = tonumber(ARGS.id);
         local icon_id      = 0;
 
@@ -417,14 +455,36 @@ function OnAbilityState(ARGS)
         {
             ability_id               = tostring(ability_id),
             ability_icon_id          = tostring(icon_id),
-            ability_name             = tostring(ability_name),
+            ability_name             = ability_name,
             ability_event            = "ON_ABILITY_STATE",
             ability_reports_duration = tostring(ability_reports_duration)
         });
 
-        if true == SETTINGS.TIMERS[ability_name] and false ~= ON_ABILITY_STATE[ability_name] and false ~= ON_ABILITY_STATE[ability_id] then
+        -- RUMPEL.SystemMsg("ON_ABILITY_STATE");
+
+        local name_check = ability_name;
+
+        if nil ~= ABILITY_ALIAS["[ON_ABILITY_USED]"][ability_name] then
+            name_check = ABILITY_ALIAS["[ON_ABILITY_USED]"][ability_name].."|"..name_check; -- ON_ABILITY_STATE last
+        elseif nil ~= ABILITY_ALIAS["[ON_ABILITY_STATE]"][ability_name] then -- meh
+            -- RUMPEL.SystemMsg(RUMPEL.ABILITIES_RM_ON_REUSE[name_check.."|"..ABILITY_ALIAS["[ON_ABILITY_STATE]"][ability_name]]);
+            -- RUMPEL.SystemMsg(RUMPEL.ABILITIES_RM_ON_REUSE[ABILITY_ALIAS["[ON_ABILITY_STATE]"][ability_name].."|"..name_check]);
+
+            if nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[name_check.."|"..ABILITY_ALIAS["[ON_ABILITY_STATE]"][ability_name]] then
+                name_check = name_check.."|"..ABILITY_ALIAS["[ON_ABILITY_STATE]"][ability_name];
+            elseif nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[ABILITY_ALIAS["[ON_ABILITY_STATE]"][ability_name].."|"..name_check] then
+                name_check = ABILITY_ALIAS["[ON_ABILITY_STATE]"][ability_name].."|"..name_check;
+            end
+        end
+
+        -- RUMPEL.SystemMsg(name_check);
+        -- RUMPEL.SystemMsg(RUMPEL.ABILITIES_RM_ON_REUSE[name_check]);
+
+        if nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[name_check] and "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[name_check]) then
+            RUMPEL.ABILITIES_RM_ON_REUSE[name_check]:Reschedule(0);
+        elseif true == SETTINGS.TIMERS[ability_name] and false ~= ON_ABILITY_STATE[ability_name] and false ~= ON_ABILITY_STATE[ability_id] then
             RUMPEL.ConsoleLog("OnAbilityState:CreateUiTimer()");
-            RUMPEL.CreateUiTimer(ABILITY_INFOS[ability_id].icon_id, ARGS.state_dur_total, ability_name, ability_id);
+            RUMPEL.CreateUiTimer(ABILITY_INFOS[ability_id].icon_id, ARGS.state_dur_total, ability_name, ability_id, name_check);
         end
     end
 end
@@ -433,19 +493,22 @@ end
 --  Functions
 -- =============================================================================
 
-function RUMPEL.CreateUiTimer(icon_id, duration, ability_name, ability_id)
+function RUMPEL.CreateUiTimer(icon_id, duration, ability_name, ability_id, name_check)
     UI.active_timers = UI.active_timers + 1;
 
-    local i = UI.active_timers; -- to shorten the following lines
+    local i           = RUMPEL.GetUniqueId();
+    local duration_ms = tonumber(duration) * 1000;
 
     UI.TIMERS[i] = {
-        id              = i,
+        pos             = RUMPEL.GetMaxPos() + 1,
         ability_id      = ability_id,
         icon_id         = icon_id,
         ability_name    = ability_name,
+        name_check      = name_check,
         start_time      = tonumber(System.GetClientTime()),
         duration        = tonumber(duration),
-        duration_ms     = tonumber(duration) * 1000,
+        duration_ms     = duration_ms * 1000,
+        remaining       = duration_ms * 1000,
         SetTimer        = RUMPEL.SetTimer,
         UpdateTimerBind = RUMPEL.UpdateTimerBind,
         BP              = Component.CreateWidget("BP_IconTimer", UI.FRAME), -- from blueprint in xml
@@ -463,8 +526,40 @@ function RUMPEL.CreateUiTimer(icon_id, duration, ability_name, ability_id)
     UI.TIMERS[i].TIMER_OUTLINE_4 = UI.TIMERS[i].GRP:GetChild("text_timer_outline_4");
     UI.TIMERS[i].TIMER           = UI.TIMERS[i].GRP:GetChild("text_timer");
 
-    if "Teleport Beacon" == ability_name then
-        TELEPORT_BEACON = UI.TIMERS[i];
+    UI.TIMERS[i].Reschedule = function (UI_TIMER, delay)
+        UI_TIMER.UPDATE_TIMER:Reschedule(delay);
+    end
+
+    UI.TIMERS[i].Release = function (UI_TIMER)
+        UI_TIMER.UPDATE_TIMER:Release();
+    end
+
+    UI.TIMERS[i].MoveTo = function (UI_TIMER, dimensions, delay)
+        UI_TIMER.GRP:MoveTo(dimensions, delay);
+    end
+
+    UI.TIMERS[i].Relocate = function (UI_TIMER)
+        -- MoveTo UI_TIMER.pos related dimensions
+        UI_TIMER:MoveTo("left:"..tostring(0 + UI.ALIGNMENT[SETTINGS.timers_alignment] * (UI_TIMER.pos - 1)).."; top:0; height:64; width:64;", 0.1);
+
+        -- hide
+        if UI_TIMER.pos > SETTINGS.max_timers then
+            UI_TIMER.GRP:ParamTo("alpha", 0, 0.1);
+        end
+    end
+
+    if nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[UI.TIMERS[i].name_check] then
+        if true == RUMPEL.ABILITIES_RM_ON_REUSE[UI.TIMERS[i].name_check] then
+            RUMPEL.ABILITIES_RM_ON_REUSE[name_check] = UI.TIMERS[i];
+        elseif "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[UI.TIMERS[i].name_check]) then
+            RUMPEL.ABILITIES_RM_ON_REUSE[UI.TIMERS[i].name_check]:Reschedule(0);
+
+            while "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[UI.TIMERS[i].name_check]) do
+                -- nothing
+            end
+
+            RUMPEL.ABILITIES_RM_ON_REUSE[UI.TIMERS[i].name_check] = UI.TIMERS[i];
+        end
     end
 
     RUMPEL.ConsoleLog("RUMPEL.CreateUiTimer()::UI.active_timers: "..tostring(i));
@@ -472,8 +567,7 @@ function RUMPEL.CreateUiTimer(icon_id, duration, ability_name, ability_id)
 end
 
 function RUMPEL.SetTimer(UI_TIMER)
-    local ALIGNMENT = nil;
-    local font      = SETTINGS.FONT.name.."_"..tostring(SETTINGS.FONT.size);
+    local font = SETTINGS.FONT.name.."_"..tostring(SETTINGS.FONT.size);
 
     RUMPEL.DurTimerMsg(UI_TIMER.ability_name);
 
@@ -481,14 +575,8 @@ function RUMPEL.SetTimer(UI_TIMER)
         UI_TIMER.GRP:ParamTo("alpha", 1, 0);
     end
 
-    if "ltr" == SETTINGS.timers_alignment then
-        ALIGNMENT = UI.ltr;
-    else
-        ALIGNMENT = UI.rtl;
-    end
-
-    UI_TIMER.GRP:MoveTo("left:"..tostring(0 + ALIGNMENT * (UI_TIMER.id - 1) + ALIGNMENT).."; top:0; height:64; width:64;", 0); -- start opposite to slide in
-    UI_TIMER.GRP:MoveTo("left:"..tostring(0 + ALIGNMENT * (UI_TIMER.id - 1)).."; top:0; height:64; width:64;", 0.1); -- slide in
+    UI_TIMER:MoveTo("left:"..tostring(0 + UI.ALIGNMENT[SETTINGS.timers_alignment] * (UI_TIMER.pos - 1) + UI.ALIGNMENT[SETTINGS.timers_alignment]).."; top:0; height:64; width:64;", 0); -- start opposite to slide in
+    UI_TIMER:MoveTo("left:"..tostring(0 + UI.ALIGNMENT[SETTINGS.timers_alignment] * (UI_TIMER.pos - 1)).."; top:0; height:64; width:64;", 0.1); -- slide in
 
     -- Font
     UI_TIMER.TIMER:SetFont(font);
@@ -521,43 +609,56 @@ function RUMPEL.SetTimer(UI_TIMER)
 
     UI_TIMER.UPDATE_TIMER:Bind(
         function()
-            UI_TIMER:UpdateTimerBind(ALIGNMENT);
+            UI_TIMER:UpdateTimerBind();
         end
     );
-    UI_TIMER.UPDATE_TIMER:Schedule(tonumber(UI_TIMER.duration));
+    UI_TIMER.UPDATE_TIMER:Schedule(UI_TIMER.duration);
 end
 
-function RUMPEL.UpdateTimerBind(UI_TIMER, ALIGNMENT)
+function RUMPEL.UpdateTimerBind(UI_TIMER)
     Component.RemoveWidget(UI_TIMER.BP);
 
-    if "Teleport Beacon" == UI_TIMER.ability_name then
-        TELEPORT_BEACON = nil;
+    if nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[UI_TIMER.name_check] and "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[UI_TIMER.name_check]) then
+        RUMPEL.ABILITIES_RM_ON_REUSE[UI_TIMER.name_check] = true;
     end
 
-    local active_timers = UI.active_timers;
-    local id            = UI_TIMER.id + 1;
+    local pos = UI_TIMER.pos;
 
-    UI.TIMERS[UI_TIMER.id] = nil;
-    UI.active_timers       = UI.active_timers - 1;
+    RUMPEL.SystemMsg("=================");
 
-    while id <= active_timers do
-        local new_id = id - 1;
+    for i,_ in pairs(UI.TIMERS) do
+        RUMPEL.SystemMsg("UI.TIMERS["..tostring(i).."].pos = "..UI.TIMERS[i].pos);
 
-        if SETTINGS.max_timers >= new_id then
-            UI.TIMERS[id].GRP:ParamTo("alpha", 1, 0);
+        if UI.TIMERS[i].pos == pos then
+            UI.TIMERS[i]     = nil;
+            UI.active_timers = UI.active_timers - 1;
+        elseif pos < UI.TIMERS[i].pos then
+            UI.TIMERS[i].pos = UI.TIMERS[i].pos - 1;
+
+            UI.TIMERS[i]:Relocate();
         end
+    end  
 
-        UI.TIMERS[id].id = new_id;
-        UI.TIMERS[id].GRP:MoveTo("left:"..tostring(0 + ALIGNMENT * (new_id - 1)).."; top:0; height:64; width:64;", 0.1);
+    -- local active_timers = UI.active_timers;
+    -- local id            = UI_TIMER.pos + 1;
 
-        UI.TIMERS[new_id] = UI.TIMERS[id];
-        UI.TIMERS[id]     = nil;
+    -- UI.TIMERS[UI_TIMER.pos] = nil;
+    -- UI.active_timers        = UI.active_timers - 1;  
 
-        -- RUMPEL.ConsoleLog(UI.TIMERS[new_id]);
-        -- RUMPEL.ConsoleLog(UI.TIMERS[id]);
+    -- while id <= active_timers do
+    --     local new_id = id - 1;
 
-        id = id + 1;
-    end
+    --     UI.TIMERS[id].pos = new_id;
+    --     UI.TIMERS[id]:Relocate();
+
+    --     UI.TIMERS[new_id] = UI.TIMERS[id];
+    --     UI.TIMERS[id]     = nil;
+
+    --     -- RUMPEL.ConsoleLog(UI.TIMERS[new_id]);
+    --     -- RUMPEL.ConsoleLog(UI.TIMERS[id]);
+
+    --     id = id + 1;
+    -- end
 
     if 0 > UI.active_timers then
         UI.active_timers = 0;
@@ -575,6 +676,8 @@ function RUMPEL.UpdateDuration(UI_TIMER)
     local remaining = UI_TIMER.duration_ms - duration;
     local angle     = -180 + (duration / UI_TIMER.duration_ms) * 360;
 
+    UI_TIMER.remaining = remaining;
+
     if 5000 >= remaining then
         UI_TIMER.ARC:SetParam("tint", "#FF0000", 0.1);
     end
@@ -589,17 +692,27 @@ function RUMPEL.UpdateDuration(UI_TIMER)
 end
 
 function RUMPEL.RemoveTimers()
-    local id            = 1;
-    local active_timers = UI.active_timers;
+    for i,_ in pairs(UI.TIMERS) do
+        Component.RemoveWidget(UI.TIMERS[i].BP);
 
-    while id <= active_timers do
-        Component.RemoveWidget(UI.TIMERS[id].BP);
+        UI.TIMERS[i]:Release();
 
-        UI.TIMERS[id].UPDATE_TIMER:Release();
+        UI.TIMERS[i] = nil;
 
         UI.active_timers = UI.active_timers - 1;
-        id               = id + 1;
     end
+
+    -- local id            = 1;
+    -- local active_timers = UI.active_timers;
+
+    -- while id <= active_timers do
+    --     Component.RemoveWidget(UI.TIMERS[id].BP);
+
+    --     UI.TIMERS[id]:Release();
+
+    --     UI.active_timers = UI.active_timers - 1;
+    --     id               = id + 1;
+    -- end
 
     -- should be always 0 ... but meh
     if 0 > UI.active_timers then
@@ -631,13 +744,6 @@ function RUMPEL.GetAbilityDuration(ability_name)
             return tonumber(PLAYER_ALL_STATS.item_attributes[i].current_value);
         end
     end
-end
-
-function RUMPEL.TestTimers()
-    RUMPEL.CreateUiTimer(202130, 25, "Heavy Armor", 3782);
-    RUMPEL.CreateUiTimer(222527, 15, "Thunderdome", 1726);
-    RUMPEL.CreateUiTimer(492574, 20, "Adrenaline Rush", 15206);
-    RUMPEL.CreateUiTimer(202115, 30, "Teleport Beacon", 12305);
 end
 
 function RUMPEL.GetKnownAbilities()
@@ -693,6 +799,24 @@ function RUMPEL.PostAbilityInfos(DATA)
     end
 end
 
+function RUMPEL.GetUniqueId()
+    UI.unique = UI.unique + 1;
+
+    return UI.unique;
+end
+
+function RUMPEL.GetMaxPos()
+    local max = 0;
+
+    for i,_ in pairs(UI.TIMERS) do
+        if UI.TIMERS[i].pos > max then
+            max = UI.TIMERS[i].pos;
+        end
+    end
+
+    return max;
+end
+
 function RUMPEL.ConsoleLog(message)
     if true == SETTINGS.debug then
         message = "[DEBUG] "..tostring(message);
@@ -717,6 +841,19 @@ function RUMPEL.DurTimerMsg(ability_name)
     end
 end
 
+function RUMPEL.TestTimers()
+    RUMPEL.CreateUiTimer(202130, 25, "Heavy Armor", 3782);
+    RUMPEL.CreateUiTimer(222527, 15, "Thunderdome", 1726);
+    RUMPEL.CreateUiTimer(492574, 20, "Adrenaline Rush", 15206);
+    RUMPEL.CreateUiTimer(202115, 30, "Teleport Beacon", 12305);
+end
+
 function RUMPEL.Test()
     RUMPEL.SystemMsg(ABILITY_INFOS);
+
+    local test = function ()
+        RUMPEL.CreateUiTimer(202130, 25, "Heavy Armor", 3782);
+    end
+
+    RUMPEL.SystemMsg(type(test));
 end
