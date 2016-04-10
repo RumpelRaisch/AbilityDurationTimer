@@ -443,11 +443,13 @@ function RUMPEL.CreateUiTimer(icon_id, duration, ability_name, ability_id)
         ability_id      = ability_id,
         icon_id         = icon_id,
         ability_name    = ability_name,
+        start_time      = tonumber(System.GetClientTime()),
         duration        = tonumber(duration),
         duration_ms     = tonumber(duration) * 1000,
-        BP              = Component.CreateWidget("BP_IconTimer", UI.FRAME), -- from blueprint in xml
         SetTimer        = RUMPEL.SetTimer,
-        UpdateTimerBind = RUMPEL.UpdateTimerBind
+        UpdateTimerBind = RUMPEL.UpdateTimerBind,
+        BP              = Component.CreateWidget("BP_IconTimer", UI.FRAME), -- from blueprint in xml
+        UPDATE_TIMER    = Callback2.Create()
     };
 
     UI.TIMERS[i].GRP = UI.TIMERS[i].BP:GetChild("timer_grp");
@@ -460,8 +462,6 @@ function RUMPEL.CreateUiTimer(icon_id, duration, ability_name, ability_id)
     UI.TIMERS[i].TIMER_OUTLINE_3 = UI.TIMERS[i].GRP:GetChild("text_timer_outline_3");
     UI.TIMERS[i].TIMER_OUTLINE_4 = UI.TIMERS[i].GRP:GetChild("text_timer_outline_4");
     UI.TIMERS[i].TIMER           = UI.TIMERS[i].GRP:GetChild("text_timer");
-    UI.TIMERS[i].UPDATE_TIMER    = Callback2.Create();
-    UI.TIMERS[i].start_time      = tonumber(System.GetClientTime());
 
     if "Teleport Beacon" == ability_name then
         TELEPORT_BEACON = UI.TIMERS[i];
@@ -517,14 +517,14 @@ function RUMPEL.SetTimer(UI_TIMER)
     UI_TIMER.TIMER_OUTLINE_3:StartTimer(UI_TIMER.duration, true);
     UI_TIMER.TIMER_OUTLINE_4:StartTimer(UI_TIMER.duration, true);
 
+    RUMPEL.UpdateDuration(UI_TIMER);
+
     UI_TIMER.UPDATE_TIMER:Bind(
         function()
             UI_TIMER:UpdateTimerBind(ALIGNMENT);
         end
     );
     UI_TIMER.UPDATE_TIMER:Schedule(tonumber(UI_TIMER.duration));
-
-    RUMPEL.UpdateDuration(UI_TIMER)
 end
 
 function RUMPEL.UpdateTimerBind(UI_TIMER, ALIGNMENT)
@@ -681,9 +681,10 @@ function RUMPEL.PostAbilityInfos(DATA)
     end
 
     if not HTTP.IsRequestPending() then
-        -- see http://php.bitshifting.de/api/firefall.adt.html
-        -- or http://php.bitshifting.de/api/firefall.adt.lua
-        -- for results
+        -- for results see
+        -- http://php.bitshifting.de/api/firefall.adt.html
+        -- or
+        -- http://php.bitshifting.de/api/firefall.adt.lua
         HTTP.IssueRequest("http://php.bitshifting.de/api/firefall.adt.json", "POST", DATA, nil);
 
         RUMPEL.KNOWN_ABILITIES[DATA.ability_event][key] = true; -- if it not worked we'll send it next session anyways
