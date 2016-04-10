@@ -107,22 +107,22 @@ SETTINGS.TIMERS["Thunderdome"]     = true;
 
 -- Biotech
 SETTINGS.TIMERS["Adrenaline"]     = true;
-SETTINGS.TIMERS["Creeping Death"] = true; -- new
+SETTINGS.TIMERS["Creeping Death"] = true;
 SETTINGS.TIMERS["Heroism"]        = true;
 SETTINGS.TIMERS["Necrosis"]       = true;
-SETTINGS.TIMERS["Poison Ball"]    = true; -- new
-SETTINGS.TIMERS["Poison Trail"]   = true; -- new
+SETTINGS.TIMERS["Poison Ball"]    = true;
+SETTINGS.TIMERS["Poison Trail"]   = true;
 
 -- Recon
-SETTINGS.TIMERS["Artillery Strike"] = true; -- new
-SETTINGS.TIMERS["Cryo Bolt"]        = true; -- new -- Cryo Shot
-SETTINGS.TIMERS["Decoy"]            = true; -- new
-SETTINGS.TIMERS["SIN Beacon"]       = true; -- new
+SETTINGS.TIMERS["Artillery Strike"] = true;
+SETTINGS.TIMERS["Cryo Bolt"]        = true; -- Cryo Shot
+SETTINGS.TIMERS["Decoy"]            = true;
+SETTINGS.TIMERS["SIN Beacon"]       = true;
 SETTINGS.TIMERS["Teleport Beacon"]  = true;
 
 -- Assault
--- SETTINGS.TIMERS["Fuel Air Bomb"] = true; -- new -- meh
--- SETTINGS.TIMERS["Fuel Cloud"]    = true; -- new -- meh
+-- SETTINGS.TIMERS["Fuel Air Bomb"] = true; -- meh
+-- SETTINGS.TIMERS["Fuel Cloud"]    = true; -- meh
 SETTINGS.TIMERS["Hellfire"]      = true;
 SETTINGS.TIMERS["Overcharge"]    = true;
 SETTINGS.TIMERS["Thermal Wave"]  = true;
