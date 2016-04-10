@@ -500,6 +500,7 @@ function RUMPEL.CreateUiTimer(icon_id, duration, ability_name, ability_id, name_
     local duration_ms = tonumber(duration) * 1000;
 
     UI.TIMERS[i] = {
+        id              = i,
         pos             = RUMPEL.GetMaxPos() + 1,
         ability_id      = ability_id,
         icon_id         = icon_id,
@@ -637,28 +638,7 @@ function RUMPEL.UpdateTimerBind(UI_TIMER)
 
             UI.TIMERS[i]:Relocate();
         end
-    end  
-
-    -- local active_timers = UI.active_timers;
-    -- local id            = UI_TIMER.pos + 1;
-
-    -- UI.TIMERS[UI_TIMER.pos] = nil;
-    -- UI.active_timers        = UI.active_timers - 1;  
-
-    -- while id <= active_timers do
-    --     local new_id = id - 1;
-
-    --     UI.TIMERS[id].pos = new_id;
-    --     UI.TIMERS[id]:Relocate();
-
-    --     UI.TIMERS[new_id] = UI.TIMERS[id];
-    --     UI.TIMERS[id]     = nil;
-
-    --     -- RUMPEL.ConsoleLog(UI.TIMERS[new_id]);
-    --     -- RUMPEL.ConsoleLog(UI.TIMERS[id]);
-
-    --     id = id + 1;
-    -- end
+    end
 
     if 0 > UI.active_timers then
         UI.active_timers = 0;
@@ -667,7 +647,7 @@ function RUMPEL.UpdateTimerBind(UI_TIMER)
     RUMPEL.ConsoleLog("RUMPEL.UpdateTimerBind()::UI.active_timers: "..tostring(UI.active_timers));
 end
 
-function RUMPEL.UpdateDuration(UI_TIMER)
+function RUMPEL.UpdateDuration(UI_TIMER) -- TODO: look into this!
     if "Arc" ~= type(UI_TIMER.ARC) then
         do return end
     end
@@ -701,18 +681,6 @@ function RUMPEL.RemoveTimers()
 
         UI.active_timers = UI.active_timers - 1;
     end
-
-    -- local id            = 1;
-    -- local active_timers = UI.active_timers;
-
-    -- while id <= active_timers do
-    --     Component.RemoveWidget(UI.TIMERS[id].BP);
-
-    --     UI.TIMERS[id]:Release();
-
-    --     UI.active_timers = UI.active_timers - 1;
-    --     id               = id + 1;
-    -- end
 
     -- should be always 0 ... but meh
     if 0 > UI.active_timers then
@@ -781,7 +749,7 @@ end
 
 function RUMPEL.PostAbilityInfos(DATA)
     local key = tostring(DATA.ability_id)..tostring(DATA.ability_icon_id)..tostring(DATA.ability_name)..tostring(DATA.ability_event)..tostring(DATA.ability_reports_duration);
-    
+
     if true == RUMPEL.KNOWN_ABILITIES[DATA.ability_event][key] then
         do return end
     end
