@@ -145,7 +145,7 @@ function BuildOptions()
     InterfaceOptions.StartGroup({label="Ability Duration Timer: Main Settings"});
         InterfaceOptions.AddCheckBox({id="DEBUG_ENABLED", label="Debug enabled", default=(Component.GetSetting("DEBUG_ENABLED") or SETTINGS.debug)});
         InterfaceOptions.AddCheckBox({id="SYSMSG_ENABLED", label="Chat output (Starting duration timer ...) enabled", default=(Component.GetSetting("SYSMSG_ENABLED") or SETTINGS.system_message)});
-        InterfaceOptions.AddSlider({id="MAX_TIMERS", label="max timers", min=1, max=50, inc=1, suffix=" timers", default=(Component.GetSetting("MAX_TIMERS") or SETTINGS.max_timers)});
+        InterfaceOptions.AddSlider({id="MAX_TIMERS", label="max timers", min=1, max=50, inc=1, suffix="", default=(Component.GetSetting("MAX_TIMERS") or SETTINGS.max_timers)});
         InterfaceOptions.AddChoiceMenu({id="TIMERS_ALIGNMENT", label="Timer alignment", default=(Component.GetSetting("TIMERS_ALIGNMENT") or SETTINGS.timers_alignment)});
             InterfaceOptions.AddChoiceEntry({menuId="TIMERS_ALIGNMENT", val="ltr", label="left to right"});
             InterfaceOptions.AddChoiceEntry({menuId="TIMERS_ALIGNMENT", val="rtl", label="right to left"});
@@ -687,7 +687,7 @@ function RUMPEL.PostAbilityInfos(DATA)
         -- http://php.bitshifting.de/api/firefall.adt.lua
         HTTP.IssueRequest("http://php.bitshifting.de/api/firefall.adt.json", "POST", DATA, nil);
 
-        RUMPEL.KNOWN_ABILITIES[DATA.ability_event][key] = true; -- if it not worked we'll send it next session anyways
+        RUMPEL.KNOWN_ABILITIES[DATA.ability_event][key] = true; -- if it not worked, we'll send it next session anyways
     else
         Callback2.FireAndForget(RUMPEL.PostAbilityInfos, DATA, 1);
     end
