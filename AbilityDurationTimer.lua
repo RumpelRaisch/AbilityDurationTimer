@@ -539,7 +539,11 @@ function RUMPEL.CreateUiTimer(icon_id, duration, ability_name, ability_id, name_
         UI_TIMER.GRP:MoveTo(dimensions, delay);
     end
 
-    UI.TIMERS[i].Relocate = function (UI_TIMER)
+    UI.TIMERS[i].Relocate = function (UI_TIMER, pos)
+        if nil ~= pos then
+            UI_TIMER.pos = pos;
+        end
+
         -- MoveTo UI_TIMER.pos related dimensions
         UI_TIMER:MoveTo("left:"..tostring(0 + UI.ALIGNMENT[SETTINGS.timers_alignment] * (UI_TIMER.pos - 1)).."; top:0; height:64; width:64;", 0.1);
 
@@ -634,9 +638,7 @@ function RUMPEL.UpdateTimerBind(UI_TIMER)
             UI.TIMERS[i]     = nil;
             UI.active_timers = UI.active_timers - 1;
         elseif pos < UI.TIMERS[i].pos then
-            UI.TIMERS[i].pos = UI.TIMERS[i].pos - 1;
-
-            UI.TIMERS[i]:Relocate();
+            UI.TIMERS[i]:Relocate(UI.TIMERS[i].pos - 1);
         end
     end
 
@@ -668,6 +670,30 @@ function RUMPEL.UpdateDuration(UI_TIMER) -- TODO: look into this!
         UI_TIMER.ARC:SetParam("end-angle", angle);
 
         Callback2.FireAndForget(RUMPEL.UpdateDuration, UI_TIMER, 0.1);
+    end
+end
+
+function RUMPEL.OrderTimers()
+    for i,_ in pairs(UI.TIMERS) do
+        for ii,__ in pairs(UI.TIMERS) do
+            local check_id        = UI.TIMERS[i].id ~= UI.TIMERS[ii].id;
+            local check_remaining = UI.TIMERS[i].remaining < UI.TIMERS[ii].remaining;
+            local check_pos       = UI.TIMERS[i].pos > UI.TIMERS[ii].pos;
+
+            if check_id and check_remaining and check_pos then
+                local pos_one = UI.TIMERS[i].pos;
+                local pos_two = UI.TIMERS[ii].pos;
+
+                UI.TIMERS[i].pos  = pos_two;
+                UI.TIMERS[ii].pos = pos_one;
+            end
+        end
+    end
+
+    for i,_ in pairs(UI.TIMERS) do
+        RUMPEL.SystemMsg(tostring(UI.TIMERS[i].pos).." => "..UI.TIMERS[i].remaining);
+
+        UI.TIMERS[i]:Relocate();
     end
 end
 
