@@ -27,6 +27,7 @@ require "string";
 require "lib/lib_Callback2";
 require "lib/lib_InterfaceOptions";
 require "lib/lib_Slash";
+require "./ADT";
 
 -- =============================================================================
 --  Variables
@@ -423,7 +424,21 @@ function OnAbilityUsed(ARGS)
             RUMPEL.ABILITIES_RM_ON_REUSE[name_check]:Reschedule(0);
         elseif nil ~= ability_duration and true ~= ON_ABILITY_STATE[ABILITY_INFO.name] and true == SETTINGS.TIMERS[ABILITY_INFO.name] then
             RUMPEL.ConsoleLog("OnAbilityUsed:CreateUiTimer()");
-            RUMPEL.CreateUiTimer(ABILITY_INFO.iconId, ability_duration, ABILITY_INFO.name, ARGS.id, name_check);
+            -- RUMPEL.CreateUiTimer(ABILITY_INFO.iconId, ability_duration, ABILITY_INFO.name, ARGS.id, name_check);
+
+            local ADT = AbilityDurationTimer.New(UI.FRAME);
+
+            ADT:SetAbilityID(ARGS.id);
+            ADT:SetAbilityName(ABILITY_INFO.name);
+            ADT:SetNameCheck(name_check);
+            ADT:SetIconID(ABILITY_INFO.iconId);
+            ADT:SetAlignment(UI.ALIGNMENT[SETTINGS.timers_alignment]);
+            ADT:SetDuration(ability_duration);
+            ADT:SetFontName(SETTINGS.FONT.name);
+            ADT:SetFontSize(SETTINGS.FONT.size);
+            ADT:SetFontColorTextTimer(SETTINGS.FONT.COLOR.text_timer);
+            ADT:SetFontColorTextTimerOutline(SETTINGS.FONT.COLOR.text_timer_outline);
+            ADT:StartTimer(RUMPEL.Callback);
         end
     end
 end
@@ -492,6 +507,14 @@ end
 -- =============================================================================
 --  Functions
 -- =============================================================================
+
+function RUMPEL.Callback(ADT)
+    local name_check = ADT:GetNameCheck();
+
+    if nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[name_check] and "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[name_check]) then
+        RUMPEL.ABILITIES_RM_ON_REUSE[name_check] = true;
+    end
+end
 
 function RUMPEL.CreateUiTimer(icon_id, duration, ability_name, ability_id, name_check)
     UI.active_timers = UI.active_timers + 1;
@@ -643,14 +666,15 @@ function RUMPEL.UpdateTimerBind(UI_TIMER)
         RUMPEL.ABILITIES_RM_ON_REUSE[UI_TIMER.name_check] = true;
     end
 
+    local id  = UI_TIMER.id;
     local pos = UI_TIMER.pos;
 
-    RUMPEL.SystemMsg("=================");
+    -- RUMPEL.SystemMsg("=================");
 
     for i,_ in pairs(UI.TIMERS) do
-        RUMPEL.SystemMsg("UI.TIMERS["..tostring(i).."].pos = "..UI.TIMERS[i].pos);
+        -- RUMPEL.SystemMsg("UI.TIMERS["..tostring(i).."].pos = "..UI.TIMERS[i].pos);
 
-        if UI.TIMERS[i].pos == pos then
+        if UI.TIMERS[i].id == id then
             UI.TIMERS[i]     = nil;
             UI.active_timers = UI.active_timers - 1;
         elseif pos < UI.TIMERS[i].pos then
@@ -665,7 +689,7 @@ function RUMPEL.UpdateTimerBind(UI_TIMER)
     RUMPEL.ConsoleLog("RUMPEL.UpdateTimerBind()::UI.active_timers: "..tostring(UI.active_timers));
 end
 
-function RUMPEL.UpdateDuration(UI_TIMER) -- TODO: look into this!
+function RUMPEL.UpdateDuration(UI_TIMER)
     if "Arc" ~= type(UI_TIMER.ARC) then
         do return end
     end
@@ -707,7 +731,7 @@ function RUMPEL.OrderTimers()
     end
 
     for i,_ in pairs(UI.TIMERS) do
-        RUMPEL.SystemMsg("pos["..tostring(UI.TIMERS[i].pos).."]:remaining["..UI.TIMERS[i].remaining.."]");
+        -- RUMPEL.SystemMsg("pos["..tostring(UI.TIMERS[i].pos).."]:remaining["..UI.TIMERS[i].remaining.."]");
 
         UI.TIMERS[i]:Relocate(0.1);
     end
