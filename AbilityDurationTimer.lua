@@ -508,8 +508,8 @@ function RUMPEL.CreateUiTimer(icon_id, duration, ability_name, ability_id, name_
         name_check      = name_check,
         start_time      = tonumber(System.GetClientTime()),
         duration        = tonumber(duration),
-        duration_ms     = duration_ms * 1000,
-        remaining       = duration_ms * 1000,
+        duration_ms     = duration_ms,
+        remaining       = duration_ms,
         SetTimer        = RUMPEL.SetTimer,
         UpdateTimerBind = RUMPEL.UpdateTimerBind,
         BP              = Component.CreateWidget("BP_IconTimer", UI.FRAME), -- from blueprint in xml
