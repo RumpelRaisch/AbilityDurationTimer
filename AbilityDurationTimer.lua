@@ -527,30 +527,44 @@ function RUMPEL.CreateUiTimer(icon_id, duration, ability_name, ability_id, name_
     UI.TIMERS[i].TIMER_OUTLINE_4 = UI.TIMERS[i].GRP:GetChild("text_timer_outline_4");
     UI.TIMERS[i].TIMER           = UI.TIMERS[i].GRP:GetChild("text_timer");
 
+    UI.TIMERS[i].SetPos = function (UI_TIMER, pos)
+        UI_TIMER.pos = pos;
+
+        return UI_TIMER;
+    end
+
     UI.TIMERS[i].Reschedule = function (UI_TIMER, delay)
         UI_TIMER.UPDATE_TIMER:Reschedule(delay);
+
+        return UI_TIMER;
     end
 
     UI.TIMERS[i].Release = function (UI_TIMER)
         UI_TIMER.UPDATE_TIMER:Release();
+
+        return UI_TIMER;
     end
 
     UI.TIMERS[i].MoveTo = function (UI_TIMER, dimensions, delay)
         UI_TIMER.GRP:MoveTo(dimensions, delay);
+
+        return UI_TIMER;
     end
 
-    UI.TIMERS[i].Relocate = function (UI_TIMER, pos)
-        if nil ~= pos then
-            UI_TIMER.pos = pos;
+    UI.TIMERS[i].Relocate = function (UI_TIMER, delay)
+        if nil ~= delay then
+            delay = 0.1;
         end
 
         -- MoveTo UI_TIMER.pos related dimensions
-        UI_TIMER:MoveTo("left:"..tostring(0 + UI.ALIGNMENT[SETTINGS.timers_alignment] * (UI_TIMER.pos - 1)).."; top:0; height:64; width:64;", 0.1);
+        UI_TIMER:MoveTo("left:"..tostring(0 + UI.ALIGNMENT[SETTINGS.timers_alignment] * (UI_TIMER.pos - 1)).."; top:0; height:64; width:64;", delay);
 
         -- hide
         if UI_TIMER.pos > SETTINGS.max_timers then
             UI_TIMER.GRP:ParamTo("alpha", 0, 0.1);
         end
+
+        return UI_TIMER;
     end
 
     if nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[UI.TIMERS[i].name_check] then
@@ -618,6 +632,8 @@ function RUMPEL.SetTimer(UI_TIMER)
         end
     );
     UI_TIMER.UPDATE_TIMER:Schedule(UI_TIMER.duration);
+
+    RUMPEL.OrderTimers();
 end
 
 function RUMPEL.UpdateTimerBind(UI_TIMER)
@@ -638,7 +654,7 @@ function RUMPEL.UpdateTimerBind(UI_TIMER)
             UI.TIMERS[i]     = nil;
             UI.active_timers = UI.active_timers - 1;
         elseif pos < UI.TIMERS[i].pos then
-            UI.TIMERS[i]:Relocate(UI.TIMERS[i].pos - 1);
+            UI.TIMERS[i]:SetPos(UI.TIMERS[i].pos - 1):Relocate(0.1);
         end
     end
 
@@ -684,16 +700,16 @@ function RUMPEL.OrderTimers()
                 local pos_one = UI.TIMERS[i].pos;
                 local pos_two = UI.TIMERS[ii].pos;
 
-                UI.TIMERS[i].pos  = pos_two;
-                UI.TIMERS[ii].pos = pos_one;
+                UI.TIMERS[i]:SetPos(pos_two);
+                UI.TIMERS[ii]:SetPos(pos_one);
             end
         end
     end
 
     for i,_ in pairs(UI.TIMERS) do
-        RUMPEL.SystemMsg(tostring(UI.TIMERS[i].pos).." => "..UI.TIMERS[i].remaining);
+        RUMPEL.SystemMsg("pos["..tostring(UI.TIMERS[i].pos).."]:remaining["..UI.TIMERS[i].remaining.."]");
 
-        UI.TIMERS[i]:Relocate();
+        UI.TIMERS[i]:Relocate(0.1);
     end
 end
 
