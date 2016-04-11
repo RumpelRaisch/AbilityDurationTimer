@@ -7,22 +7,31 @@
 
     <Info
         title="Ability Duration Timer"
-        author="Rumpel, Vollmond"
+        author="Rumpel"
         description="Shows duration timer for abilities."
         url="http://forums.firefall.com/community/threads/8254722/"
         uiVersion="1000"
     />
 
     <Textures>
-        <Texture name="icon_bg" src=".\res\background.png" premultiplied="false" />
-        <Texture name="rocketeers_wings" src=".\res\rocketeers_wings.png" premultiplied="false" />
+        <!-- <Texture name="icon_bg" src="./res/background.png" premultiplied="false" /> -->
+        <!-- <Texture name="rocketeers_wings" src=".\res\rocketeers_wings.png" premultiplied="false" /> -->
+        <Texture name="rocketeers_wings" src="components/../../assetdb/00367000/00367672.png" premultiplied="false" />
+        <Texture name="3dActionBar" src="components/MainUI/HUD/3dActionBar/3dactionbar.dds" premultiplied="false" minScale="1">
+            <Region name="Actionbar_Selector" leftPadding="true" rightPadding="true" topPadding="true" bottomPadding="true" top="25" bottom="156" left="689" right="820" />
+            <Region name="circle" leftPadding="true" rightPadding="true" topPadding="true" bottomPadding="true" top="170" bottom="210" left="596" right="636" />
+            <Region name="hkm_glow" leftPadding="true" rightPadding="true" topPadding="true" bottomPadding="true" top="25" bottom="160" left="451" right="586" />
+            <Region name="Actionbar_Cooldown" leftPadding="true" rightPadding="true" topPadding="true" bottomPadding="true" top="4" bottom="15" left="451" right="679" />
+            <Region name="burst" top="4" bottom="237" left="4" right="441" />
+            <Region name="circle_consumable" top="25" bottom="151" left="830" right="956" />
+        </Texture>
     </Textures>
     
     <Events>    
-        <Event name="ON_COMPONENT_LOAD"      bind="OnComponentLoad"      />
-        <Event name="ON_COMPONENT_UNLOAD"    bind="OnComponentUnload"    />
         <Event name="ON_BATTLEFRAME_CHANGED" bind="OnBattleframeChanged" />
         <Event name="ON_DEATH"               bind="OnDeath"              />
+        <Event name="ON_COMPONENT_LOAD"      bind="OnComponentLoad"      />
+        <Event name="ON_COMPONENT_UNLOAD"    bind="OnComponentUnload"    />
         <Event name="ON_ABILITY_STATE"       bind="OnAbilityState"       />
         <Event name="ON_ABILITY_USED"        bind="OnAbilityUsed"        />
 
@@ -32,20 +41,26 @@
     <BluePrints>
         <BluePrint name="BP_IconTimer" instantiable="true">
             <Group name="timer_grp" dimensions="left:0; top:0; height:64; width:64;" style="clip:false;">
-                <StillArt name="circle" dimensions="height:64; width:64;" style="texture:icon_bg; alpha:1;" />
+                <!-- <StillArt name="circle" dimensions="height:64; width:64;" style="texture:icon_bg; alpha:1;" /> -->
+                <StillArt name="circle" dimensions="width:64; height:64" style="texture:3dActionBar; region:circle; tint:000000; alpha:0.7;" />
                 <StillArt name="rocketeers_wings" dimensions="height:64; width:64;" style="texture:rocketeers_wings; alpha:0;" />
                 <Icon name="icon" dimensions="width:64; height:64;" />
-                <TextTimer name="text_timer_outline_1" dimensions="center-x:50%+1; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-                <TextTimer name="text_timer_outline_2" dimensions="center-x:50%+1; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-                <TextTimer name="text_timer_outline_3" dimensions="center-x:50%-1; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-                <TextTimer name="text_timer_outline_4" dimensions="center-x:50%-1; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s" />
-                <TextTimer name="text_timer" dimensions="center-x:50%; center-y:50%; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#FF8800; format:%.1s" />
+                <Arc
+                    name="arc"
+                    dimensions="center-x:50%; center-y:50%; width:66; height:66;" 
+                    style= "texture:3dActionBar; region:Actionbar_Cooldown; thickness:6; tessellation:33; tint:FF8800; start-angle:180; end-angle:-180; offset:180; shadow:0; visible:true; alpha:1;"
+                /> 
+                <TextTimer name="text_timer_outline_1" dimensions="center-x:50%+1; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s; alpha:1;" />
+                <TextTimer name="text_timer_outline_2" dimensions="center-x:50%+1; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s; alpha:1;" />
+                <TextTimer name="text_timer_outline_3" dimensions="center-x:50%-1; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s; alpha:1;" />
+                <TextTimer name="text_timer_outline_4" dimensions="center-x:50%-1; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s; alpha:1;" />
+                <TextTimer name="text_timer" dimensions="center-x:50%; center-y:50%; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#FF8800; format:%.1s; alpha:1;" />
             </Group>
         </BluePrint>
     </BluePrints>
     
     <Frames>
-        <HUDFrame name="adt_frame" dimensions="center-x:50%-300; center-y:50%; height:64; width:404" style="halign:center; valign:center" visible="true" />
+        <HUDFrame name="adt_frame" dimensions="center-x:50%-300; center-y:50%; height:64; width:64" style="halign:center; valign:center" visible="true" />
     </Frames>
 
 </Component>

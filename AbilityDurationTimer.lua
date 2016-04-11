@@ -1,41 +1,69 @@
--- ===============================
--- Ability Duration Timer
--- by: Rumpel, Vollmond
--- ===============================
--- 
--- ===============================
+-- =============================================================================
+--  Ability Duration Timer
+--  by: Rumpel
+-- =============================================================================
+--  Shows duration timer for abilities.
+-- =============================================================================
+--  Thanks to Vollmond for sharing his little addon "Simple Ability Timer" on
+--  wich this addon is based on.
+--   - http://forums.firefall.com/community/threads/7375721/#post-106885821
+--
+--  Thanks to NoReal and Reddeyfish for StatusIndicator addon wich was/is an
+--  inspiration.
+--
+--  Also thanks to (for answering my questions in IRC):
+--   - Arkii
+--   - BurstBiscuit
+--   - Hanachi
+--   - Syna
+--   - Xsear
+--
+--  Special thanks to my (main) testers:
+--   - Fac3man
+--   - Safada
+-- =============================================================================
 
 require "string";
 require "lib/lib_Callback2";
 require "lib/lib_InterfaceOptions";
 require "lib/lib_Slash";
 
--- ===============================
+-- =============================================================================
 --  Variables
--- ===============================
+-- =============================================================================
 
-local UI                         = {};
-local RUMPEL                     = {};
-local SETTINGS                   = {};
-local ABILITY_INFOS              = {};
-local ABILITY_ALIAS              = {};
-local ABILITY_ALIAS_PLAYER_STATS = {};
-local ABILITY_DURATIONS          = {};
-local SHOW_TIMERS                = {};
-local ON_ABILITY_STATE           = {};
-local slash_list                 = "adt";
+local UI                = {};
+local RUMPEL            = {};
+local SETTINGS          = {};
+local ABILITY_INFOS     = {};
+local ABILITY_ALIAS     = {};
+local ABILITY_DURATIONS = {};
+local ON_ABILITY_STATE  = {};
+local TELEPORT_BEACON   = nil;
+local slash_list        = "adt";
 
-UI.max_timers        = 6;
-UI.active_timers     = 0;
-UI.UI_TIMERS         = {};
-UI.GRP_POSITIONS     = {};
-UI.GRP_POSITIONS.LTR = {};
-UI.GRP_POSITIONS.RTL = {};
-UI.FRAME             = Component.GetFrame("adt_frame");
+UI.active_timers = 0;
+UI.unique        = 0;
+UI.TIMERS        = {};
+UI.ALIGNMENT     = {};
+UI.FRAME         = Component.GetFrame("adt_frame");
+
+UI.ALIGNMENT["ltr"] = 68;
+UI.ALIGNMENT["rtl"] = -68;
+
+RUMPEL.KNOWN_ABILITIES                     = {};
+RUMPEL.KNOWN_ABILITIES["ON_ABILITY_USED"]  = {};
+RUMPEL.KNOWN_ABILITIES["ON_ABILITY_STATE"] = {};
+
+RUMPEL.ABILITIES_RM_ON_REUSE                               = {};
+-- RUMPEL.ABILITIES_RM_ON_REUSE["Bulwark"]                    = true; -- TODO: check this
+RUMPEL.ABILITIES_RM_ON_REUSE["ort Beacon|Teleport Beacon"] = true;
+RUMPEL.ABILITIES_RM_ON_REUSE["[TEST]"]                     = true;
 
 SETTINGS = {
     debug            = false,
-    system_message   = true,
+    system_message   = false,
+    max_timers       = 12,
     timers_alignment = "ltr",
     -- objects
     TIMERS = {},
@@ -50,78 +78,84 @@ SETTINGS = {
     }
 };
 
--- no ability infos on event 'ON_ABILITY_STATE'
-ABILITY_INFOS[3782]  = {icon_id = 202130}; -- Heavy Armor
-ABILITY_INFOS[1726]  = {icon_id = 222527}; -- Thunderdome
-ABILITY_INFOS[34066] = {icon_id = 202138}; -- Dreadfield
-ABILITY_INFOS[41881] = {icon_id = 212177}; -- Absorption Bomb
-ABILITY_INFOS[15206] = {icon_id = 492574}; -- Adrenaline Rush
-ABILITY_INFOS[12305] = {icon_id = 202115}; -- Teleport Beacon
-ABILITY_INFOS[3639]  = {icon_id = 222507}; -- Overcharge
-ABILITY_INFOS[41880] = {icon_id = 222507}; -- Overclock [ON_ABILITY_USED]
-ABILITY_INFOS[15229] = {icon_id = 222507}; -- Overclock [ON_ABILITY_STATE] (named Overcharge ...)
-ABILITY_INFOS[35455] = {icon_id = 222475}; -- Bulwark
-ABILITY_INFOS[41886] = {icon_id = 222491}; -- Fortify
--- ABILITY_INFOS[38620] = {icon_id = 392110}; -- Rocketeer's Wings
+-- ABILITY_INFOS[3782]  = {icon_id = 202130}; -- Heavy Armor
+-- ABILITY_INFOS[1726]  = {icon_id = 222527}; -- Thunderdome
+-- ABILITY_INFOS[34066] = {icon_id = 202138}; -- Dreadfield
+-- ABILITY_INFOS[41881] = {icon_id = 212177}; -- Absorption Bomb
+-- ABILITY_INFOS[15206] = {icon_id = 492574}; -- Adrenaline Rush
+-- ABILITY_INFOS[12305] = {icon_id = 202115}; -- Teleport Beacon
+-- ABILITY_INFOS[3639]  = {icon_id = 222507}; -- Overcharge
+-- ABILITY_INFOS[41880] = {icon_id = 222507}; -- Overclock [ON_ABILITY_USED]
+-- ABILITY_INFOS[15229] = {icon_id = 222507}; -- Overclock [ON_ABILITY_STATE] (named Overcharge ...)
+-- ABILITY_INFOS[35455] = {icon_id = 222475}; -- Bulwark
+-- ABILITY_INFOS[41886] = {icon_id = 222491}; -- Fortify
 
-ABILITY_ALIAS["Adrenaline"]             = "Adrenaline Rush";
 ABILITY_ALIAS["Activate: Rocket Wings"] = "Rocketeer's Wings";
+ABILITY_ALIAS["Adrenaline"]             = "Adrenaline Rush";
+ABILITY_ALIAS["Cryo Bolt"]              = "Cryo Shot";
 
-ABILITY_ALIAS_PLAYER_STATS["Hellfire"] = "Missile Barrage";
+ABILITY_ALIAS["[ON_ABILITY_STATE]"]                    = {};
+ABILITY_ALIAS["[ON_ABILITY_STATE]"]["Teleport Beacon"] = "ort Beacon"; -- TODO: check this
+ABILITY_ALIAS["[ON_ABILITY_STATE]"]["ort Beacon"]      = "Teleport Beacon"; -- TODO: check this
+
+ABILITY_ALIAS["[ON_ABILITY_USED]"] = {};
+
+ABILITY_ALIAS["[PLAYER_STATS]"]                     = {};
+ABILITY_ALIAS["[PLAYER_STATS]"]["Artillery Strike"] = "Accord Artillery Strike";
+ABILITY_ALIAS["[PLAYER_STATS]"]["Cryo Bolt"]        = "Cryo Bomb Snare"; -- Cryo Shot
+ABILITY_ALIAS["[PLAYER_STATS]"]["Fuel Air Bomb"]    = "Fuel Air Bomb Fire Patch";
+ABILITY_ALIAS["[PLAYER_STATS]"]["Hellfire"]         = "Missile Barrage";
 
 ABILITY_DURATIONS["Activate: Rocket Wings"] = 16;
 
-UI.GRP_POSITIONS.LTR[1] = "left:0; top:0; height:64; width:64;";
-UI.GRP_POSITIONS.LTR[2] = "left:68; top:0; height:64; width:64;";
-UI.GRP_POSITIONS.LTR[3] = "left:136; top:0; height:64; width:64;";
-UI.GRP_POSITIONS.LTR[4] = "left:204; top:0; height:64; width:64;";
-UI.GRP_POSITIONS.LTR[5] = "left:272; top:0; height:64; width:64;";
-UI.GRP_POSITIONS.LTR[6] = "left:340; top:0; height:64; width:64;";
-
-UI.GRP_POSITIONS.RTL[1] = "left:340; top:0; height:64; width:64;";
-UI.GRP_POSITIONS.RTL[2] = "left:272; top:0; height:64; width:64;";
-UI.GRP_POSITIONS.RTL[3] = "left:204; top:0; height:64; width:64;";
-UI.GRP_POSITIONS.RTL[4] = "left:136; top:0; height:64; width:64;";
-UI.GRP_POSITIONS.RTL[5] = "left:68; top:0; height:64; width:64;";
-UI.GRP_POSITIONS.RTL[6] = "left:0; top:0; height:64; width:64;";
-
-ON_ABILITY_STATE["Heavy Armor"]     = true;
-ON_ABILITY_STATE["Thunderdome"]     = true;
 ON_ABILITY_STATE["Adrenaline"]      = true;
-ON_ABILITY_STATE["Teleport Beacon"] = true;
+ON_ABILITY_STATE["Heavy Armor"]     = true;
 ON_ABILITY_STATE["Overcharge"]      = true;
+ON_ABILITY_STATE["Teleport Beacon"] = true;
+ON_ABILITY_STATE["Thunderdome"]     = true;
 ON_ABILITY_STATE[15229]             = false; -- Overclock [ON_ABILITY_STATE] (named Overcharge ...)
+ON_ABILITY_STATE[2843]              = false; -- Decoy [ON_ABILITY_STATE] (named Heavy Armor ...)
+ON_ABILITY_STATE[15231]             = false; -- Absorption Bomb
 
 -- Dreadnaught
+SETTINGS.TIMERS["Absorption Bomb"] = true;
+SETTINGS.TIMERS["Dreadfield"]      = true;
 SETTINGS.TIMERS["Heavy Armor"]     = true;
 SETTINGS.TIMERS["Thunderdome"]     = true;
-SETTINGS.TIMERS["Dreadfield"]      = true;
-SETTINGS.TIMERS["Absorption Bomb"] = true;
 
 -- Biotech
-SETTINGS.TIMERS["Adrenaline"] = true;
-SETTINGS.TIMERS["Necrosis"]   = true;
-SETTINGS.TIMERS["Heroism"]    = true;
+SETTINGS.TIMERS["Adrenaline"]     = true;
+SETTINGS.TIMERS["Creeping Death"] = true;
+SETTINGS.TIMERS["Heroism"]        = true;
+SETTINGS.TIMERS["Necrosis"]       = true;
+SETTINGS.TIMERS["Poison Ball"]    = true;
+SETTINGS.TIMERS["Poison Trail"]   = true;
 
 -- Recon
-SETTINGS.TIMERS["Teleport Beacon"] = true;
+SETTINGS.TIMERS["Artillery Strike"] = true;
+SETTINGS.TIMERS["Cryo Bolt"]        = true; -- Cryo Shot
+SETTINGS.TIMERS["Decoy"]            = true;
+SETTINGS.TIMERS["SIN Beacon"]       = true;
+SETTINGS.TIMERS["Teleport Beacon"]  = true;
 
 -- Assault
-SETTINGS.TIMERS["Overcharge"]   = true;
-SETTINGS.TIMERS["Thermal Wave"] = true;
-SETTINGS.TIMERS["Hellfire"]     = true;
+-- SETTINGS.TIMERS["Fuel Air Bomb"] = true; -- meh
+-- SETTINGS.TIMERS["Fuel Cloud"]    = true; -- meh
+SETTINGS.TIMERS["Hellfire"]      = true;
+SETTINGS.TIMERS["Overcharge"]    = true;
+SETTINGS.TIMERS["Thermal Wave"]  = true;
 
 -- Engineer
-SETTINGS.TIMERS["Overclock"] = true;
 SETTINGS.TIMERS["Bulwark"]   = true;
 SETTINGS.TIMERS["Fortify"]   = true;
+SETTINGS.TIMERS["Overclock"] = true;
 
 -- Miscellaneous
 SETTINGS.TIMERS["Activate: Rocket Wings"] = true;
 
--- ===============================
+-- =============================================================================
 --  Options
--- ===============================
+-- =============================================================================
 
 function BuildOptions()
     InterfaceOptions.AddMovableFrame({frame=UI.FRAME, label="Ability Duration Timer", scalable=true});
@@ -129,51 +163,62 @@ function BuildOptions()
     InterfaceOptions.StartGroup({label="Ability Duration Timer: Main Settings"});
         InterfaceOptions.AddCheckBox({id="DEBUG_ENABLED", label="Debug enabled", default=(Component.GetSetting("DEBUG_ENABLED") or SETTINGS.debug)});
         InterfaceOptions.AddCheckBox({id="SYSMSG_ENABLED", label="Chat output (Starting duration timer ...) enabled", default=(Component.GetSetting("SYSMSG_ENABLED") or SETTINGS.system_message)});
+        InterfaceOptions.AddSlider({id="MAX_TIMERS", label="max timers", min=1, max=50, inc=1, suffix="", default=(Component.GetSetting("MAX_TIMERS") or SETTINGS.max_timers)});
         InterfaceOptions.AddChoiceMenu({id="TIMERS_ALIGNMENT", label="Timer alignment", default=(Component.GetSetting("TIMERS_ALIGNMENT") or SETTINGS.timers_alignment)});
-        InterfaceOptions.AddChoiceEntry({menuId="TIMERS_ALIGNMENT", val="ltr", label="left to right"});
-        InterfaceOptions.AddChoiceEntry({menuId="TIMERS_ALIGNMENT", val="rtl", label="right to left"});
+            InterfaceOptions.AddChoiceEntry({menuId="TIMERS_ALIGNMENT", val="ltr", label="left to right"});
+            InterfaceOptions.AddChoiceEntry({menuId="TIMERS_ALIGNMENT", val="rtl", label="right to left"});
         InterfaceOptions.AddChoiceMenu({id="FONT", label="Font", default=(Component.GetSetting("FONT") or SETTINGS.FONT.name)});
-        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Demi", label="Eurostile Medium"});
-        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Bold", label="Eurostile Bold"});
-        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuMedium", label="Ubuntu Medium"});
-        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuBold", label="Ubuntu Bold"});
-        InterfaceOptions.AddSlider({id="FONT_SIZE", label="Font size", min=8, max=20, inc=2, suffix="px", default=(Component.GetSetting("FONT_SIZE") or SETTINGS.FONT.size)});
+            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Demi", label="Eurostile Medium"});
+            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Narrow", label="Eurostile Narrow"});
+            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Wide", label="Eurostile Wide"});
+            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Bold", label="Eurostile Bold"});
+            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuRegular", label="Ubuntu Regular"});
+            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuMedium", label="Ubuntu Medium"});
+            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuBold", label="Ubuntu Bold"});
+        InterfaceOptions.AddSlider({id="FONT_SIZE", label="Font size", min=1, max=20, inc=1, suffix="", default=(Component.GetSetting("FONT_SIZE") or SETTINGS.FONT.size)});
         InterfaceOptions.AddColorPicker({id="TIMER_COLOR", label="Ability duration color", default={tint=(Component.GetSetting("TIMER_COLOR") or SETTINGS.FONT.COLOR.text_timer)}});
         InterfaceOptions.AddColorPicker({id="TIMER_COLOR_OUTLINE", label="Ability duration outline color", default={tint=(Component.GetSetting("TIMER_COLOR_OUTLINE") or SETTINGS.FONT.COLOR.text_timer_outline)}});
     InterfaceOptions.StopGroup();
 
     -- Dreadnaught
     InterfaceOptions.StartGroup({label="Dreadnaught"});
+        InterfaceOptions.AddCheckBox({id="ABSORPTION_BOMB_ENABLED", label="Absorption Bomb enabled", default=(Component.GetSetting("ABSORPTION_BOMB_ENABLED") or SETTINGS.TIMERS["Absorption Bomb"])});
+        InterfaceOptions.AddCheckBox({id="DREADFIELD_ENABLED", label="Dreadfield enabled", default=(Component.GetSetting("DREADFIELD_ENABLED") or SETTINGS.TIMERS["Dreadfield"])});
         InterfaceOptions.AddCheckBox({id="HEAVY_ARMOR_ENABLED", label="Heavy Armor enabled", default=(Component.GetSetting("HEAVY_ARMOR_ENABLED") or SETTINGS.TIMERS["Heavy Armor"])});
         InterfaceOptions.AddCheckBox({id="THUNDERDOME_ENABLED", label="Thunderdome enabled", default=(Component.GetSetting("THUNDERDOME_ENABLED") or SETTINGS.TIMERS["Thunderdome"])});
-        InterfaceOptions.AddCheckBox({id="DREADFIELD_ENABLED", label="Dreadfield enabled", default=(Component.GetSetting("DREADFIELD_ENABLED") or SETTINGS.TIMERS["Dreadfield"])});
-        InterfaceOptions.AddCheckBox({id="ABSORPTION_BOMB_ENABLED", label="Absorption Bomb enabled", default=(Component.GetSetting("ABSORPTION_BOMB_ENABLED") or SETTINGS.TIMERS["Absorption Bomb"])});
     InterfaceOptions.StopGroup();
 
     -- Biotech
     InterfaceOptions.StartGroup({label="Biotech"});
+        InterfaceOptions.AddCheckBox({id="CREEPING_DEATH_ENABLED", label="Creeping Death enabled", default=(Component.GetSetting("CREEPING_DEATH_ENABLED") or SETTINGS.TIMERS["Creeping Death"])});
         InterfaceOptions.AddCheckBox({id="ADRENALINE_RUSH_ENABLED", label="Adrenaline Rush enabled", default=(Component.GetSetting("ADRENALINE_RUSH_ENABLED") or SETTINGS.TIMERS["Adrenaline"])});
         InterfaceOptions.AddCheckBox({id="NECROSIS_ENABLED", label="Necrosis enabled", default=(Component.GetSetting("NECROSIS_ENABLED") or SETTINGS.TIMERS["Necrosis"])});
         InterfaceOptions.AddCheckBox({id="HEROISM_ENABLED", label="Heroism enabled", default=(Component.GetSetting("HEROISM_ENABLED") or SETTINGS.TIMERS["Heroism"])});
+        InterfaceOptions.AddCheckBox({id="POISON_BALL_ENABLED", label="Poison Ball enabled", default=(Component.GetSetting("POISON_BALL_ENABLED") or SETTINGS.TIMERS["Poison Ball"])});
+        InterfaceOptions.AddCheckBox({id="POISON_TRAIL_ENABLED", label="Poison Trail enabled", default=(Component.GetSetting("POISON_TRAIL_ENABLED") or SETTINGS.TIMERS["Poison Trail"])});
     InterfaceOptions.StopGroup();
 
     -- Recon
     InterfaceOptions.StartGroup({label="Recon"});
+        InterfaceOptions.AddCheckBox({id="ARTILLERY_STRIKE_ENABLED", label="Artillery Strike enabled", default=(Component.GetSetting("ARTILLERY_STRIKE_ENABLED") or SETTINGS.TIMERS["Artillery Strike"])});
+        InterfaceOptions.AddCheckBox({id="CRYO_BOLT_ENABLED", label="Cryo Shot enabled", default=(Component.GetSetting("CRYO_BOLT_ENABLED") or SETTINGS.TIMERS["Cryo Bolt"])});
+        InterfaceOptions.AddCheckBox({id="DECOY_ENABLED", label="Decoy enabled", default=(Component.GetSetting("DECOY_ENABLED") or SETTINGS.TIMERS["Decoy"])});
+        InterfaceOptions.AddCheckBox({id="SIN_BEACON_ENABLED", label="SIN Beacon enabled", default=(Component.GetSetting("SIN_BEACON_ENABLED") or SETTINGS.TIMERS["SIN Beacon"])});
         InterfaceOptions.AddCheckBox({id="TELEPORT_BEACON_ENABLED", label="Teleport Beacon enabled", default=(Component.GetSetting("TELEPORT_BEACON_ENABLED") or SETTINGS.TIMERS["Teleport Beacon"])});
     InterfaceOptions.StopGroup();
 
     -- Assault
     InterfaceOptions.StartGroup({label="Assault"});
+        InterfaceOptions.AddCheckBox({id="HELLFIRE_ENABLED", label="Hellfire enabled", default=(Component.GetSetting("HELLFIRE_ENABLED") or SETTINGS.TIMERS["Hellfire"])});
         InterfaceOptions.AddCheckBox({id="OVERCHARGE_ENABLED", label="Overcharge enabled", default=(Component.GetSetting("OVERCHARGE_ENABLED") or SETTINGS.TIMERS["Overcharge"])});
         InterfaceOptions.AddCheckBox({id="THERMAL_WAVE_ENABLED", label="Thermal Wave enabled", default=(Component.GetSetting("THERMAL_WAVE_ENABLED") or SETTINGS.TIMERS["Thermal Wave"])});
-        InterfaceOptions.AddCheckBox({id="HELLFIRE_ENABLED", label="Hellfire enabled", default=(Component.GetSetting("HELLFIRE_ENABLED") or SETTINGS.TIMERS["Hellfire"])});
     InterfaceOptions.StopGroup();
 
     -- Engineer
     InterfaceOptions.StartGroup({label="Engineer"});
+        InterfaceOptions.AddCheckBox({id="FORTIFY_ENABLED", label="Fortify enabled", default=(Component.GetSetting("FORTIFY_ENABLED") or SETTINGS.TIMERS["Fortify"])});
         InterfaceOptions.AddCheckBox({id="BULWARK_ENABLED", label="Bulwark enabled", default=(Component.GetSetting("BULWARK_ENABLED") or SETTINGS.TIMERS["Bulwark"])});
         InterfaceOptions.AddCheckBox({id="OVERCLOCK_ENABLED", label="Overclock enabled", default=(Component.GetSetting("OVERCLOCK_ENABLED") or SETTINGS.TIMERS["Overclock"])});
-        InterfaceOptions.AddCheckBox({id="FORTIFY_ENABLED", label="Fortify enabled", default=(Component.GetSetting("FORTIFY_ENABLED") or SETTINGS.TIMERS["Fortify"])});
     InterfaceOptions.StopGroup();
 
     -- Miscellaneous
@@ -182,9 +227,9 @@ function BuildOptions()
     InterfaceOptions.StopGroup();
 end
 
--- ===============================
+-- =============================================================================
 --  Events
--- ===============================
+-- =============================================================================
 
 function OnComponentLoad()
     BuildOptions();
@@ -192,6 +237,8 @@ function OnComponentLoad()
     InterfaceOptions.SetCallbackFunc(OnOptionChanged, "Ability Duration Timer");
 
     LIB_SLASH.BindCallback({slash_list=slash_list, func=OnSlash});
+
+    RUMPEL.GetKnownAbilities();
 end
 
 function OnComponentUnload()
@@ -209,6 +256,10 @@ function OnSlash(ARGS)
         log(tostring(Player.GetAllStats()));
     elseif "timers" == ARGS[1] then
         RUMPEL.SystemMsg("UI.active_timers: "..tostring(UI.active_timers));
+    elseif "test" == ARGS[1] then
+        RUMPEL.Test();
+    else
+        RUMPEL.SystemMsg("Unknown slash argument!");
     end
 end
 
@@ -225,12 +276,17 @@ function OnDeath()
 end
 
 function OnOptionChanged(id, value)
+    RUMPEL.RemoveTimers();
+
     if "DEBUG_ENABLED" == id then
         SETTINGS.debug = value;
         Component.SaveSetting("DEBUG_ENABLED", value);
     elseif "SYSMSG_ENABLED" == id then
         SETTINGS.system_message = value;
         Component.SaveSetting("SYSMSG_ENABLED", value);
+    elseif "MAX_TIMERS" == id then
+        SETTINGS.max_timers = value;
+        Component.SaveSetting("MAX_TIMERS", value);
     elseif "TIMERS_ALIGNMENT" == id then
         SETTINGS.timers_alignment = value;
         Component.SaveSetting("TIMERS_ALIGNMENT", value);
@@ -291,6 +347,27 @@ function OnOptionChanged(id, value)
     elseif "ROCKETEERS_WINGS_ENABLED" == id then
         SETTINGS.TIMERS["Activate: Rocket Wings"] = value;
         Component.SaveSetting("ROCKETEERS_WINGS_ENABLED", value);
+    elseif "CREEPING_DEATH_ENABLED" == id then
+        SETTINGS.TIMERS["Creeping Death"] = value;
+        Component.SaveSetting("CREEPING_DEATH_ENABLED", value);
+    elseif "POISON_BALL_ENABLED" == id then
+        SETTINGS.TIMERS["Poison Ball"] = value;
+        Component.SaveSetting("POISON_BALL_ENABLED", value);
+    elseif "POISON_TRAIL_ENABLED" == id then
+        SETTINGS.TIMERS["Poison Trail"] = value;
+        Component.SaveSetting("POISON_TRAIL_ENABLED", value);
+    elseif "ARTILLERY_STRIKE_ENABLED" == id then
+        SETTINGS.TIMERS["Artillery Strike"] = value;
+        Component.SaveSetting("ARTILLERY_STRIKE_ENABLED", value);
+    elseif "CRYO_BOLT_ENABLED" == id then
+        SETTINGS.TIMERS["Cryo Bolt"] = value;
+        Component.SaveSetting("CRYO_BOLT_ENABLED", value);
+    elseif "DECOY_ENABLED" == id then
+        SETTINGS.TIMERS["Decoy"] = value;
+        Component.SaveSetting("DECOY_ENABLED", value);
+    elseif "SIN_BEACON_ENABLED" == id then
+        SETTINGS.TIMERS["SIN Beacon"] = value;
+        Component.SaveSetting("SIN_BEACON_ENABLED", value);
     end
 end
 
@@ -303,200 +380,264 @@ function OnAbilityUsed(ARGS)
         RUMPEL.ConsoleLog("NAME: "..ABILITY_INFO.name);
         RUMPEL.ConsoleLog("ICON ID: "..tostring(ABILITY_INFO.iconId));
 
-        local ability_duration = ABILITY_DURATIONS[ABILITY_INFO.name] or RUMPEL.GetAbilityDuration((ABILITY_ALIAS_PLAYER_STATS[ABILITY_INFO.name] or ABILITY_INFO.name));
+        local ability_duration = ABILITY_DURATIONS[ABILITY_INFO.name] or RUMPEL.GetAbilityDuration((ABILITY_ALIAS["[PLAYER_STATS]"][ABILITY_INFO.name] or ABILITY_INFO.name));
 
         RUMPEL.ConsoleLog("DURATION: "..tostring(ability_duration));
 
-        if nil ~= ability_duration and true ~= ON_ABILITY_STATE[ABILITY_INFO.name] and true == SETTINGS.TIMERS[ABILITY_INFO.name] then
-            RUMPEL.ConsoleLog("OnAbilityUsed:CreateIcon");
-            RUMPEL.CreateIcon(ABILITY_INFO.iconId, ability_duration, ABILITY_INFO.name, ARGS.id);
+        local ability_reports_duration = 0;
+
+        if nil ~= ability_duration then
+            ability_reports_duration = 1;
+        end
+
+        RUMPEL.PostAbilityInfos(
+        {
+            ability_id               = tostring(ARGS.id),
+            ability_icon_id          = tostring(ABILITY_INFO.iconId),
+            ability_name             = tostring(ABILITY_INFO.name),
+            ability_event            = "ON_ABILITY_USED",
+            ability_reports_duration = tostring(ability_reports_duration)
+        });
+
+        -- RUMPEL.SystemMsg("ON_ABILITY_USED");
+
+        local name_check = ABILITY_INFO.name;
+
+        if nil ~= ABILITY_ALIAS["[ON_ABILITY_STATE]"][ABILITY_INFO.name] then
+            name_check = name_check.."|"..ABILITY_ALIAS["[ON_ABILITY_STATE]"][ABILITY_INFO.name]; -- ON_ABILITY_STATE last
+        elseif nil ~= ABILITY_ALIAS["[ON_ABILITY_USED]"][ABILITY_INFO.name] then -- meh
+            -- RUMPEL.SystemMsg(RUMPEL.ABILITIES_RM_ON_REUSE[name_check.."|"..ABILITY_ALIAS["[ON_ABILITY_USED]"][ABILITY_INFO.name]]);
+            -- RUMPEL.SystemMsg(RUMPEL.ABILITIES_RM_ON_REUSE[ABILITY_ALIAS["[ON_ABILITY_USED]"][ABILITY_INFO.name].."|"..name_check]);
+
+            if nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[name_check.."|"..ABILITY_ALIAS["[ON_ABILITY_USED]"][ABILITY_INFO.name]] then
+                name_check = name_check.."|"..ABILITY_ALIAS["[ON_ABILITY_USED]"][ABILITY_INFO.name];
+            elseif nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[ABILITY_ALIAS["[ON_ABILITY_USED]"][ABILITY_INFO.name].."|"..name_check] then
+                name_check = ABILITY_ALIAS["[ON_ABILITY_USED]"][ABILITY_INFO.name].."|"..name_check;
+            end
+        end
+
+        -- RUMPEL.SystemMsg(name_check);
+        -- RUMPEL.SystemMsg(RUMPEL.ABILITIES_RM_ON_REUSE[name_check]);
+
+        if nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[name_check] and "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[name_check]) then
+            RUMPEL.ABILITIES_RM_ON_REUSE[name_check]:Reschedule(0);
+        elseif nil ~= ability_duration and true ~= ON_ABILITY_STATE[ABILITY_INFO.name] and true == SETTINGS.TIMERS[ABILITY_INFO.name] then
+            RUMPEL.ConsoleLog("OnAbilityUsed:CreateUiTimer()");
+            RUMPEL.CreateUiTimer(ABILITY_INFO.iconId, ability_duration, ABILITY_INFO.name, ARGS.id, name_check);
         end
     end
 end
 
 function OnAbilityState(ARGS)
     if -1 ~= ARGS.index then
-        -- local ability_id    = tonumber(ARGS.id);
-        -- local ability_state = Player.GetAbilityState(ability_id);
-        -- local ability_info  = Player.GetAbilityInfo(ability_id);
-
-        -- RUMPEL.ConsoleLog("Ability ID: "..tostring(ability_id));
-        -- RUMPEL.ConsoleLog("Player.GetAbilityState()");
-        -- RUMPEL.ConsoleLog(ability_state);
-        -- RUMPEL.ConsoleLog("Player.GetAbilityInfo()");
-        -- RUMPEL.ConsoleLog(ability_info);
-
-        local ability_name = ARGS.state;
+        local ability_name = tostring(ARGS.state);
         local ability_id   = tonumber(ARGS.id);
+        local icon_id      = 0;
+
+        if nil ~= ABILITY_INFOS[ability_id] then
+            icon_id = ABILITY_INFOS[ability_id].icon_id;
+        end
 
         RUMPEL.ConsoleLog("Ability '"..ability_name.."' fired Event 'ON_ABILITY_STATE'!");
         RUMPEL.ConsoleLog("ID: "..tostring(ability_id));
         RUMPEL.ConsoleLog("NAME: "..ability_name);
-        RUMPEL.ConsoleLog("ICON ID: "..tostring(ABILITY_INFOS[tonumber(ability_id)].icon_id));
+        RUMPEL.ConsoleLog("ICON ID: "..tostring(icon_id));
         RUMPEL.ConsoleLog("DURATION: "..tostring(ARGS.state_dur_total));
-        RUMPEL.ConsoleLog("ON_ABILITY_STATE[ability_id]: "..tostring(ON_ABILITY_STATE[ability_id]));
+        RUMPEL.ConsoleLog("ON_ABILITY_STATE[ability_id]: "..tostring(ON_ABILITY_STATE[ability_id] or 0));
 
-        if true == SETTINGS.TIMERS[ability_name] and false ~= ON_ABILITY_STATE[ability_name] and false ~= ON_ABILITY_STATE[ability_id] then
-            RUMPEL.ConsoleLog("OnAbilityState:CreateIcon");
-            RUMPEL.CreateIcon(ABILITY_INFOS[ability_id].icon_id, ARGS.state_dur_total, ability_name, ability_id);
+        local ability_reports_duration = 0;
+
+        if nil ~= ARGS.state_dur_total then
+            ability_reports_duration = 1;
+        end
+
+        RUMPEL.PostAbilityInfos(
+        {
+            ability_id               = tostring(ability_id),
+            ability_icon_id          = tostring(icon_id),
+            ability_name             = ability_name,
+            ability_event            = "ON_ABILITY_STATE",
+            ability_reports_duration = tostring(ability_reports_duration)
+        });
+
+        -- RUMPEL.SystemMsg("ON_ABILITY_STATE");
+
+        local name_check = ability_name;
+
+        if nil ~= ABILITY_ALIAS["[ON_ABILITY_USED]"][ability_name] then
+            name_check = ABILITY_ALIAS["[ON_ABILITY_USED]"][ability_name].."|"..name_check; -- ON_ABILITY_STATE last
+        elseif nil ~= ABILITY_ALIAS["[ON_ABILITY_STATE]"][ability_name] then -- meh
+            -- RUMPEL.SystemMsg(RUMPEL.ABILITIES_RM_ON_REUSE[name_check.."|"..ABILITY_ALIAS["[ON_ABILITY_STATE]"][ability_name]]);
+            -- RUMPEL.SystemMsg(RUMPEL.ABILITIES_RM_ON_REUSE[ABILITY_ALIAS["[ON_ABILITY_STATE]"][ability_name].."|"..name_check]);
+
+            if nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[name_check.."|"..ABILITY_ALIAS["[ON_ABILITY_STATE]"][ability_name]] then
+                name_check = name_check.."|"..ABILITY_ALIAS["[ON_ABILITY_STATE]"][ability_name];
+            elseif nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[ABILITY_ALIAS["[ON_ABILITY_STATE]"][ability_name].."|"..name_check] then
+                name_check = ABILITY_ALIAS["[ON_ABILITY_STATE]"][ability_name].."|"..name_check;
+            end
+        end
+
+        -- RUMPEL.SystemMsg(name_check);
+        -- RUMPEL.SystemMsg(RUMPEL.ABILITIES_RM_ON_REUSE[name_check]);
+
+        if nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[name_check] and "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[name_check]) then
+            RUMPEL.ABILITIES_RM_ON_REUSE[name_check]:Reschedule(0);
+        elseif true == SETTINGS.TIMERS[ability_name] and false ~= ON_ABILITY_STATE[ability_name] and false ~= ON_ABILITY_STATE[ability_id] then
+            RUMPEL.ConsoleLog("OnAbilityState:CreateUiTimer()");
+            RUMPEL.CreateUiTimer(ABILITY_INFOS[ability_id].icon_id, ARGS.state_dur_total, ability_name, ability_id, name_check);
         end
     end
 end
 
--- ===============================
+-- =============================================================================
 --  Functions
--- ===============================
+-- =============================================================================
 
-function RUMPEL.CreateIcon(icon_id, duration, ability_name, ability_id)
-    local GRP_POSITIONS = nil;
-
-    -- RUMPEL.ConsoleLog("SETTINGS.timers_alignment: "..SETTINGS.timers_alignment);
-
-    if "ltr" == SETTINGS.timers_alignment then
-        GRP_POSITIONS = UI.GRP_POSITIONS.LTR;
-    else
-        GRP_POSITIONS = UI.GRP_POSITIONS.RTL;
-    end
-
+function RUMPEL.CreateUiTimer(icon_id, duration, ability_name, ability_id, name_check)
     UI.active_timers = UI.active_timers + 1;
 
-    if UI.max_timers < UI.active_timers then
-        UI.active_timers = UI.max_timers;
+    local i           = RUMPEL.GetUniqueId();
+    local duration_ms = tonumber(duration) * 1000;
 
-        do return end
-    end
-
-    UI.UI_TIMERS[UI.active_timers] = {
-        id           = UI.active_timers,
-        ability_id   = ability_id,
-        icon_id      = icon_id,
-        duration     = duration,
-        ability_name = ability_name,
-        BP           = Component.CreateWidget("BP_IconTimer", UI.FRAME) -- from blueprint in xml
+    UI.TIMERS[i] = {
+        id              = i,
+        pos             = RUMPEL.GetMaxPos() + 1,
+        ability_id      = ability_id,
+        icon_id         = icon_id,
+        ability_name    = ability_name,
+        name_check      = name_check,
+        start_time      = tonumber(System.GetClientTime()),
+        duration        = tonumber(duration),
+        duration_ms     = duration_ms * 1000,
+        remaining       = duration_ms * 1000,
+        SetTimer        = RUMPEL.SetTimer,
+        UpdateTimerBind = RUMPEL.UpdateTimerBind,
+        BP              = Component.CreateWidget("BP_IconTimer", UI.FRAME), -- from blueprint in xml
+        UPDATE_TIMER    = Callback2.Create()
     };
 
-    RUMPEL.ConsoleLog("RUMPEL.CreateIcon()::UI.active_timers: "..tostring(UI.active_timers));
+    UI.TIMERS[i].GRP = UI.TIMERS[i].BP:GetChild("timer_grp");
+    UI.TIMERS[i].GRP:ParamTo("alpha", 0, 0);
 
-    -- RUMPEL.ConsoleLog("GRP_POSITIONS[UI.active_timers]: "..GRP_POSITIONS[UI.active_timers]);
+    UI.TIMERS[i].ICON            = UI.TIMERS[i].GRP:GetChild("icon");
+    UI.TIMERS[i].ARC             = UI.TIMERS[i].GRP:GetChild("arc");
+    UI.TIMERS[i].TIMER_OUTLINE_1 = UI.TIMERS[i].GRP:GetChild("text_timer_outline_1");
+    UI.TIMERS[i].TIMER_OUTLINE_2 = UI.TIMERS[i].GRP:GetChild("text_timer_outline_2");
+    UI.TIMERS[i].TIMER_OUTLINE_3 = UI.TIMERS[i].GRP:GetChild("text_timer_outline_3");
+    UI.TIMERS[i].TIMER_OUTLINE_4 = UI.TIMERS[i].GRP:GetChild("text_timer_outline_4");
+    UI.TIMERS[i].TIMER           = UI.TIMERS[i].GRP:GetChild("text_timer");
 
-    UI.UI_TIMERS[UI.active_timers].BP:GetChild("timer_grp"):MoveTo(GRP_POSITIONS[UI.active_timers], 0);
-
-    RUMPEL.DurTimerMsg(ability_name);
-    RUMPEL.SetTimer(UI.UI_TIMERS[UI.active_timers]);
-end
-
-function RUMPEL.RemoveTimers()
-    local id            = 1;
-    local active_timers = UI.active_timers;
-
-    while id <= active_timers do
-        Component.RemoveWidget(UI.UI_TIMERS[id].BP);
-
-        UI.UI_TIMERS[id].UPDATE_TIMER:Release();
-
-        UI.active_timers = UI.active_timers - 1;
-        id               = id + 1;
+    UI.TIMERS[i].Reschedule = function (UI_TIMER, delay)
+        UI_TIMER.UPDATE_TIMER:Reschedule(delay);
     end
 
-    if 0 > UI.active_timers then
-        UI.active_timers = 0;
+    UI.TIMERS[i].Release = function (UI_TIMER)
+        UI_TIMER.UPDATE_TIMER:Release();
     end
 
-    RUMPEL.ConsoleLog("RUMPEL.RemoveTimers()::UI.active_timers: "..tostring(UI.active_timers));
+    UI.TIMERS[i].MoveTo = function (UI_TIMER, dimensions, delay)
+        UI_TIMER.GRP:MoveTo(dimensions, delay);
+    end
+
+    UI.TIMERS[i].Relocate = function (UI_TIMER)
+        -- MoveTo UI_TIMER.pos related dimensions
+        UI_TIMER:MoveTo("left:"..tostring(0 + UI.ALIGNMENT[SETTINGS.timers_alignment] * (UI_TIMER.pos - 1)).."; top:0; height:64; width:64;", 0.1);
+
+        -- hide
+        if UI_TIMER.pos > SETTINGS.max_timers then
+            UI_TIMER.GRP:ParamTo("alpha", 0, 0.1);
+        end
+    end
+
+    if nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[UI.TIMERS[i].name_check] then
+        if true == RUMPEL.ABILITIES_RM_ON_REUSE[UI.TIMERS[i].name_check] then
+            RUMPEL.ABILITIES_RM_ON_REUSE[name_check] = UI.TIMERS[i];
+        elseif "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[UI.TIMERS[i].name_check]) then
+            RUMPEL.ABILITIES_RM_ON_REUSE[UI.TIMERS[i].name_check]:Reschedule(0);
+
+            while "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[UI.TIMERS[i].name_check]) do
+                -- nothing
+            end
+
+            RUMPEL.ABILITIES_RM_ON_REUSE[UI.TIMERS[i].name_check] = UI.TIMERS[i];
+        end
+    end
+
+    RUMPEL.ConsoleLog("RUMPEL.CreateUiTimer()::UI.active_timers: "..tostring(i));
+    UI.TIMERS[i]:SetTimer();
 end
 
 function RUMPEL.SetTimer(UI_TIMER)
-    local GRP             = UI_TIMER.BP:GetChild("timer_grp");
-    local TIMER_OUTLINE_1 = GRP:GetChild("text_timer_outline_1");
-    local TIMER_OUTLINE_2 = GRP:GetChild("text_timer_outline_2");
-    local TIMER_OUTLINE_3 = GRP:GetChild("text_timer_outline_3");
-    local TIMER_OUTLINE_4 = GRP:GetChild("text_timer_outline_4");
-    local TIMER           = GRP:GetChild("text_timer");
-    local ICON            = GRP:GetChild("icon");
-    local GRP_POSITIONS   = nil;
-    local font            = SETTINGS.FONT.name.."_"..tostring(SETTINGS.FONT.size);
+    local font = SETTINGS.FONT.name.."_"..tostring(SETTINGS.FONT.size);
 
-    UI_TIMER.UPDATE_TIMER = Callback2.Create();
+    RUMPEL.DurTimerMsg(UI_TIMER.ability_name);
 
-    if "ltr" == SETTINGS.timers_alignment then
-        GRP_POSITIONS = UI.GRP_POSITIONS.LTR;
-    else
-        GRP_POSITIONS = UI.GRP_POSITIONS.RTL;
+    if SETTINGS.max_timers >= UI.active_timers then
+        UI_TIMER.GRP:ParamTo("alpha", 1, 0);
     end
 
-    GRP:MoveTo(GRP_POSITIONS[UI_TIMER.id], 0.1);
+    UI_TIMER:MoveTo("left:"..tostring(0 + UI.ALIGNMENT[SETTINGS.timers_alignment] * (UI_TIMER.pos - 1) + UI.ALIGNMENT[SETTINGS.timers_alignment]).."; top:0; height:64; width:64;", 0); -- start opposite to slide in
+    UI_TIMER:MoveTo("left:"..tostring(0 + UI.ALIGNMENT[SETTINGS.timers_alignment] * (UI_TIMER.pos - 1)).."; top:0; height:64; width:64;", 0.1); -- slide in
 
     -- Font
-    TIMER:SetFont(font);
-    TIMER_OUTLINE_1:SetFont(font);
-    TIMER_OUTLINE_2:SetFont(font);
-    TIMER_OUTLINE_3:SetFont(font);
-    TIMER_OUTLINE_4:SetFont(font);
+    UI_TIMER.TIMER:SetFont(font);
+    UI_TIMER.TIMER_OUTLINE_1:SetFont(font);
+    UI_TIMER.TIMER_OUTLINE_2:SetFont(font);
+    UI_TIMER.TIMER_OUTLINE_3:SetFont(font);
+    UI_TIMER.TIMER_OUTLINE_4:SetFont(font);
 
     -- Font color
-    TIMER_OUTLINE_1:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer_outline);
-    TIMER_OUTLINE_2:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer_outline);
-    TIMER_OUTLINE_3:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer_outline);
-    TIMER_OUTLINE_4:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer_outline);
-    TIMER:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer);
+    UI_TIMER.TIMER:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer);
+    UI_TIMER.TIMER_OUTLINE_1:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer_outline);
+    UI_TIMER.TIMER_OUTLINE_2:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer_outline);
+    UI_TIMER.TIMER_OUTLINE_3:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer_outline);
+    UI_TIMER.TIMER_OUTLINE_4:SetTextColor("#"..SETTINGS.FONT.COLOR.text_timer_outline);
 
     if "Activate: Rocket Wings" == UI_TIMER.ability_name then
-        local ROCKETEERS_WINGS = GRP:GetChild("rocketeers_wings");
-
-        ROCKETEERS_WINGS:ParamTo("alpha", 1, 0);
+        UI_TIMER.GRP:GetChild("rocketeers_wings"):ParamTo("alpha", 1, 0);
     else
-        ICON:SetIcon(UI_TIMER.icon_id);
+        UI_TIMER.ICON:SetIcon(UI_TIMER.icon_id);
     end
 
-    TIMER:StartTimer(UI_TIMER.duration, true);
-    TIMER_OUTLINE_1:StartTimer(UI_TIMER.duration, true);
-    TIMER_OUTLINE_2:StartTimer(UI_TIMER.duration, true);
-    TIMER_OUTLINE_3:StartTimer(UI_TIMER.duration, true);
-    TIMER_OUTLINE_4:StartTimer(UI_TIMER.duration, true);
+    -- start timer
+    UI_TIMER.TIMER:StartTimer(UI_TIMER.duration, true);
+    UI_TIMER.TIMER_OUTLINE_1:StartTimer(UI_TIMER.duration, true);
+    UI_TIMER.TIMER_OUTLINE_2:StartTimer(UI_TIMER.duration, true);
+    UI_TIMER.TIMER_OUTLINE_3:StartTimer(UI_TIMER.duration, true);
+    UI_TIMER.TIMER_OUTLINE_4:StartTimer(UI_TIMER.duration, true);
 
-    TIMER:ParamTo("alpha", 1, 0.1);
-    TIMER_OUTLINE_1:ParamTo("alpha", 1, 0.1);
-    TIMER_OUTLINE_2:ParamTo("alpha", 1, 0.1);
-    TIMER_OUTLINE_3:ParamTo("alpha", 1, 0.1);
-    TIMER_OUTLINE_4:ParamTo("alpha", 1, 0.1);
+    RUMPEL.UpdateDuration(UI_TIMER);
 
     UI_TIMER.UPDATE_TIMER:Bind(
         function()
-            RUMPEL.UpdateTimerBind(UI_TIMER);
+            UI_TIMER:UpdateTimerBind();
         end
     );
-    UI_TIMER.UPDATE_TIMER:Schedule(tonumber(UI_TIMER.duration));
+    UI_TIMER.UPDATE_TIMER:Schedule(UI_TIMER.duration);
 end
 
 function RUMPEL.UpdateTimerBind(UI_TIMER)
     Component.RemoveWidget(UI_TIMER.BP);
 
-    local GRP_POSITIONS = nil;
-    local active_timers = UI.active_timers;
-    local id            = UI_TIMER.id + 1;
-
-    UI.UI_TIMERS[UI_TIMER.id] = nil;
-    UI.active_timers          = UI.active_timers - 1;
-
-    if "ltr" == SETTINGS.timers_alignment then
-        GRP_POSITIONS = UI.GRP_POSITIONS.LTR;
-    else
-        GRP_POSITIONS = UI.GRP_POSITIONS.RTL;
+    if nil ~= RUMPEL.ABILITIES_RM_ON_REUSE[UI_TIMER.name_check] and "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[UI_TIMER.name_check]) then
+        RUMPEL.ABILITIES_RM_ON_REUSE[UI_TIMER.name_check] = true;
     end
 
-    while id <= active_timers do
-        local new_id = id - 1;
+    local pos = UI_TIMER.pos;
 
-        UI.UI_TIMERS[id].id = new_id;
-        UI.UI_TIMERS[id].BP:GetChild("timer_grp"):MoveTo(GRP_POSITIONS[new_id], 0.1);
+    RUMPEL.SystemMsg("=================");
 
-        UI.UI_TIMERS[new_id] = UI.UI_TIMERS[id];
-        UI.UI_TIMERS[id]     = nil;
+    for i,_ in pairs(UI.TIMERS) do
+        RUMPEL.SystemMsg("UI.TIMERS["..tostring(i).."].pos = "..UI.TIMERS[i].pos);
 
-        -- RUMPEL.ConsoleLog(UI.UI_TIMERS[new_id]);
-        -- RUMPEL.ConsoleLog(UI.UI_TIMERS[id]);
+        if UI.TIMERS[i].pos == pos then
+            UI.TIMERS[i]     = nil;
+            UI.active_timers = UI.active_timers - 1;
+        elseif pos < UI.TIMERS[i].pos then
+            UI.TIMERS[i].pos = UI.TIMERS[i].pos - 1;
 
-        id = id + 1;
+            UI.TIMERS[i]:Relocate();
+        end
     end
 
     if 0 > UI.active_timers then
@@ -506,37 +647,156 @@ function RUMPEL.UpdateTimerBind(UI_TIMER)
     RUMPEL.ConsoleLog("RUMPEL.UpdateTimerBind()::UI.active_timers: "..tostring(UI.active_timers));
 end
 
+function RUMPEL.UpdateDuration(UI_TIMER) -- TODO: look into this!
+    if "Arc" ~= type(UI_TIMER.ARC) then
+        do return end
+    end
+
+    local duration  = tonumber(System.GetClientTime()) - UI_TIMER.start_time;
+    local remaining = UI_TIMER.duration_ms - duration;
+    local angle     = -180 + (duration / UI_TIMER.duration_ms) * 360;
+
+    UI_TIMER.remaining = remaining;
+
+    if 5000 >= remaining then
+        UI_TIMER.ARC:SetParam("tint", "#FF0000", 0.1);
+    end
+
+    if 180 <= angle then
+        UI_TIMER.ARC:SetParam("end-angle", 180);
+    else
+        UI_TIMER.ARC:SetParam("end-angle", angle);
+
+        Callback2.FireAndForget(RUMPEL.UpdateDuration, UI_TIMER, 0.1);
+    end
+end
+
+function RUMPEL.RemoveTimers()
+    for i,_ in pairs(UI.TIMERS) do
+        Component.RemoveWidget(UI.TIMERS[i].BP);
+
+        UI.TIMERS[i]:Release();
+
+        UI.TIMERS[i] = nil;
+
+        UI.active_timers = UI.active_timers - 1;
+    end
+
+    -- should be always 0 ... but meh
+    if 0 > UI.active_timers then
+        UI.active_timers = 0;
+    end
+
+    RUMPEL.ConsoleLog("RUMPEL.RemoveTimers()::UI.active_timers: "..tostring(UI.active_timers));
+end
+
 function RUMPEL.GetAbilityDuration(ability_name)
     local PLAYER_ALL_STATS = Player.GetAllStats();
 
+    ability_name = string.lower(ability_name);
+
     for i,_ in pairs(PLAYER_ALL_STATS.item_attributes) do
-        local MATCH = {
-            {string.find(PLAYER_ALL_STATS.item_attributes[i].designer_name, "^(.*) Ability Duration")},
-            {string.find(PLAYER_ALL_STATS.item_attributes[i].designer_name, "^(.*) Buff Duration")},
-            {string.find(PLAYER_ALL_STATS.item_attributes[i].designer_name, "^(.*) Duration")}
+        local designer_name = string.lower(PLAYER_ALL_STATS.item_attributes[i].designer_name);
+        local MATCH         = {
+            {string.find(designer_name, "^(.*) ability duration")},
+            {string.find(designer_name, "^(.*) buff duration")},
+            {string.find(designer_name, "^(.*) duration")}
         };
 
+        -- RUMPEL.ConsoleLog("RUMPEL.GetAbilityDuration()::MATCH[1][3]: "..tostring(MATCH[1][3]));
+        -- RUMPEL.ConsoleLog("RUMPEL.GetAbilityDuration()::MATCH[2][3]: "..tostring(MATCH[2][3]));
+        -- RUMPEL.ConsoleLog("RUMPEL.GetAbilityDuration()::MATCH[3][3]: "..tostring(MATCH[3][3]));
+
         if ability_name == MATCH[1][3] or ability_name == MATCH[2][3] or ability_name == MATCH[3][3] then
+            RUMPEL.ConsoleLog("RUMPEL.GetAbilityDuration()::PLAYER_ALL_STATS.item_attributes[i].current_value: "..tostring(PLAYER_ALL_STATS.item_attributes[i].current_value));
             return tonumber(PLAYER_ALL_STATS.item_attributes[i].current_value);
         end
     end
 end
 
-function RUMPEL.TestTimers()
-    RUMPEL.CreateIcon(202130, 25, "Heavy Armor", 3782);
-    RUMPEL.CreateIcon(222527, 15, "Thunderdome", 1726);
-    RUMPEL.CreateIcon(492574, 20, "Adrenaline Rush", 15206);
-    RUMPEL.CreateIcon(202115, 30, "Teleport Beacon", 12305);
+function RUMPEL.GetKnownAbilities()
+    HTTP.IssueRequest("http://php.bitshifting.de/api/firefall.adt.json", "GET", nil, RUMPEL.SaveKnownAbilities);
+end
+
+function RUMPEL.SaveKnownAbilities(ARGS, ERR)
+    if ERR then
+        RUMPEL.Log(ERR);
+    else
+        for _,ABILITY in pairs(ARGS) do
+            local key = tostring(ABILITY.ability_id)..tostring(ABILITY.ability_icon_id)..tostring(ABILITY.ability_name)..tostring(ABILITY.ability_event)..tostring(ABILITY.ability_reports_duration);
+
+            if nil == RUMPEL.KNOWN_ABILITIES[ABILITY.ability_event][key] then
+                RUMPEL.KNOWN_ABILITIES[ABILITY.ability_event][key] = true;
+            end
+
+            ABILITY.ability_id               = tonumber(ABILITY.ability_id);
+            ABILITY.ability_icon_id          = tonumber(ABILITY.ability_icon_id);
+            ABILITY.ability_reports_duration = tonumber(ABILITY.ability_reports_duration);
+
+            if 0 < ABILITY.ability_icon_id then
+                ABILITY_INFOS[ABILITY.ability_id] = {
+                    icon_id = ABILITY.ability_icon_id,
+                    ability_name = ABILITY.ability_name,
+                    reports_duration = (1 == ABILITY.ability_reports_duration and true or false),
+                    event = ABILITY.ability_event
+                };
+            end
+        end
+
+        RUMPEL.Log(RUMPEL.KNOWN_ABILITIES);
+    end
+end
+
+function RUMPEL.PostAbilityInfos(DATA)
+    local key = tostring(DATA.ability_id)..tostring(DATA.ability_icon_id)..tostring(DATA.ability_name)..tostring(DATA.ability_event)..tostring(DATA.ability_reports_duration);
+
+    if true == RUMPEL.KNOWN_ABILITIES[DATA.ability_event][key] then
+        do return end
+    end
+
+    if not HTTP.IsRequestPending() then
+        -- for results see
+        -- http://php.bitshifting.de/api/firefall.adt.html
+        -- or
+        -- http://php.bitshifting.de/api/firefall.adt.lua
+        HTTP.IssueRequest("http://php.bitshifting.de/api/firefall.adt.json", "POST", DATA, nil);
+
+        RUMPEL.KNOWN_ABILITIES[DATA.ability_event][key] = true; -- if it not worked, we'll send it next session anyways
+    else
+        Callback2.FireAndForget(RUMPEL.PostAbilityInfos, DATA, 1);
+    end
+end
+
+function RUMPEL.GetUniqueId()
+    UI.unique = UI.unique + 1;
+
+    return UI.unique;
+end
+
+function RUMPEL.GetMaxPos()
+    local max = 0;
+
+    for i,_ in pairs(UI.TIMERS) do
+        if UI.TIMERS[i].pos > max then
+            max = UI.TIMERS[i].pos;
+        end
+    end
+
+    return max;
 end
 
 function RUMPEL.ConsoleLog(message)
     if true == SETTINGS.debug then
         message = "[DEBUG] "..tostring(message);
 
-        log(message);
+        RUMPEL.log(message);
 
         RUMPEL.SystemMsg(message);
     end
+end
+
+function RUMPEL.Log(message)
+    log(tostring(message));
 end
 
 function RUMPEL.SystemMsg(message)
@@ -547,4 +807,21 @@ function RUMPEL.DurTimerMsg(ability_name)
     if true == SETTINGS.system_message then
         RUMPEL.SystemMsg("Starting duration timer for '"..(ABILITY_ALIAS[ability_name] or ability_name).."'.");
     end
+end
+
+function RUMPEL.TestTimers()
+    RUMPEL.CreateUiTimer(202130, 25, "Heavy Armor", 3782);
+    RUMPEL.CreateUiTimer(222527, 15, "Thunderdome", 1726);
+    RUMPEL.CreateUiTimer(492574, 20, "Adrenaline Rush", 15206);
+    RUMPEL.CreateUiTimer(202115, 30, "Teleport Beacon", 12305);
+end
+
+function RUMPEL.Test()
+    RUMPEL.SystemMsg(ABILITY_INFOS);
+
+    local test = function ()
+        RUMPEL.CreateUiTimer(202130, 25, "Heavy Armor", 3782);
+    end
+
+    RUMPEL.SystemMsg(type(test));
 end
