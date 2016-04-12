@@ -32,22 +32,27 @@ require "lib/lib_Callback2";
 -- local
 local PRIVATE = {};
 
-PRIVATE.max_visible = 0;
-PRIVATE.active      = 0;
-PRIVATE.unique      = 1;
-PRIVATE.is_ordering = false;
-PRIVATE.ADTS        = {};
-PRIVATE.PROPERTIES  = {};
+PRIVATE.max_visible        = 0;
+PRIVATE.alignment          = 0;
+PRIVATE.font_name          = "";
+PRIVATE.font_size          = 0;
+PRIVATE.font_color         = "";
+PRIVATE.font_color_outline = "";
+PRIVATE.active             = 0;
+PRIVATE.unique             = 1;
+PRIVATE.is_ordering        = false;
+PRIVATE.ADTS               = {};
+PRIVATE.PROPERTIES         = {};
 
 PRIVATE.GetUniqueId = function ()
-    PRIVATE.SystemMsg("PRIVATE:GetUniqueId()");
+    -- PRIVATE.SystemMsg("PRIVATE:GetUniqueId()");
     PRIVATE.unique = PRIVATE.unique + 1;
 
     return PRIVATE.unique;
 end
 
 PRIVATE.GetMaxPos = function ()
-    PRIVATE.SystemMsg("PRIVATE:GetMaxPos()");
+    -- PRIVATE.SystemMsg("PRIVATE:GetMaxPos()");
 
     local max = 0;
 
@@ -61,7 +66,7 @@ PRIVATE.GetMaxPos = function ()
 end
 
 PRIVATE.OrderTimers = function ()
-    PRIVATE.SystemMsg("PRIVATE:OrderTimers()");
+    -- PRIVATE.SystemMsg("PRIVATE:OrderTimers()");
 
     if PRIVATE.is_ordering then
         Callback2.FireAndForget(PRIVATE.OrderTimers, nil, 0.1);
@@ -146,21 +151,22 @@ AbilityDurationTimer.New = function (FRAME)
 
     -- ADT_NEW:Reschedule = function (delay) -- not supported in FireFall
     ADT_NEW.Reschedule = function (self, delay)
-        PRIVATE.SystemMsg("ADT:Reschedule()");
+        -- PRIVATE.SystemMsg("ADT:Reschedule()");
         PRIVATE.PROPERTIES[self.id].UPDATE_TIMER:Reschedule(delay);
 
         return self;
     end
 
     ADT_NEW.Release = function (self)
-        PRIVATE.SystemMsg("ADT:Release()");
-        PRIVATE.PROPERTIES[self.id].UPDATE_TIMER:Release();
+        -- PRIVATE.SystemMsg("ADT:Release()");
+        -- PRIVATE.PROPERTIES[self.id].UPDATE_TIMER:Release();
+        PRIVATE.PROPERTIES[self.id].UPDATE_TIMER:Reschedule(0);
 
         return self;
     end
 
     ADT_NEW.VisibilityTo = function (self, val, delay)
-        PRIVATE.SystemMsg("ADT:VisibilityTo()");
+        -- PRIVATE.SystemMsg("ADT:VisibilityTo()");
 
         if "Group" ~= type(PRIVATE.PROPERTIES[self.id].GRP) then
             return self;
@@ -170,13 +176,18 @@ AbilityDurationTimer.New = function (FRAME)
             delay = 0;
         end
 
+        -- PRIVATE.SystemMsg("val: "..tostring(val));
+        -- PRIVATE.SystemMsg("delay: "..tostring(delay));
+
         PRIVATE.PROPERTIES[self.id].GRP:ParamTo("alpha", val, delay);
 
         return self;
     end
 
     ADT_NEW.MoveTo = function (self, left, delay)
-        PRIVATE.SystemMsg("ADT:MoveTo()");
+        -- PRIVATE.SystemMsg("ADT:MoveTo()");
+        -- PRIVATE.SystemMsg("left: "..tostring(left));
+        -- PRIVATE.SystemMsg("delay: "..tostring(delay));
 
         if "Group" ~= type(PRIVATE.PROPERTIES[self.id].GRP) then
             return self;
@@ -192,17 +203,18 @@ AbilityDurationTimer.New = function (FRAME)
     end
 
     ADT_NEW.Relocate = function (self, delay)
-        PRIVATE.SystemMsg("ADT:Relocate()");
+        -- PRIVATE.SystemMsg("ADT:Relocate()");
+        -- PRIVATE.SystemMsg("delay: "..tostring(delay));
 
         if nil ~= delay then
             delay = 0.1;
         end
 
         -- move to pos related dimensions
-        self:MoveTo((0 + PRIVATE.PROPERTIES[self.id].alignment * (PRIVATE.PROPERTIES[self.id].pos - 1)), delay);
+        self:MoveTo((0 + PRIVATE.alignment * (PRIVATE.PROPERTIES[self.id].pos - 1)), delay);
 
         -- hide
-        if self:GetPos() > AbilityDurationTimer.GetMaxVisible() then
+        if self:GetPos() > PRIVATE.max_visible then
             self:VisibilityTo(0, 0.1);
         end
 
@@ -210,16 +222,16 @@ AbilityDurationTimer.New = function (FRAME)
     end
 
     ADT_NEW.StartTimer = function (self, callback)
-        PRIVATE.SystemMsg("ADT:StartTimer()");
+        -- PRIVATE.SystemMsg("ADT:StartTimer()");
 
-        local font = self:GetFontName().."_"..tostring(self:GetFontSize());
+        local font = PRIVATE.font_name.."_"..tostring(PRIVATE.font_size);
 
         if PRIVATE.max_visible >= PRIVATE.active then
             self:VisibilityTo(1, 0);
         end
 
-        self:MoveTo((0 + PRIVATE.PROPERTIES[self.id].alignment * (PRIVATE.PROPERTIES[self.id].pos - 1) + PRIVATE.PROPERTIES[self.id].alignment), 0); -- start opposite to slide in
-        self:MoveTo((0 + PRIVATE.PROPERTIES[self.id].alignment * (PRIVATE.PROPERTIES[self.id].pos - 1)), 0.1); -- slide in
+        self:MoveTo((0 + PRIVATE.alignment * (PRIVATE.PROPERTIES[self.id].pos - 1) + PRIVATE.alignment), 0); -- start opposite to slide in
+        self:MoveTo((0 + PRIVATE.alignment * (PRIVATE.PROPERTIES[self.id].pos - 1)), 0.1); -- slide in
 
         -- Font
         PRIVATE.PROPERTIES[self.id].TIMER:SetFont(font);
@@ -229,11 +241,11 @@ AbilityDurationTimer.New = function (FRAME)
         PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_4:SetFont(font);
 
         -- Font color
-        PRIVATE.PROPERTIES[self.id].TIMER:SetTextColor("#"..self:GetFontColorTextTimer());
-        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_1:SetTextColor("#"..self:GetFontColorTextTimerOutline());
-        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_2:SetTextColor("#"..self:GetFontColorTextTimerOutline());
-        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_3:SetTextColor("#"..self:GetFontColorTextTimerOutline());
-        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_4:SetTextColor("#"..self:GetFontColorTextTimerOutline());
+        PRIVATE.PROPERTIES[self.id].TIMER:SetTextColor("#"..PRIVATE.font_color);
+        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_1:SetTextColor("#"..PRIVATE.font_color_outline);
+        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_2:SetTextColor("#"..PRIVATE.font_color_outline);
+        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_3:SetTextColor("#"..PRIVATE.font_color_outline);
+        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_4:SetTextColor("#"..PRIVATE.font_color_outline);
 
         if "Activate: Rocket Wings" == PRIVATE.PROPERTIES[self.id].ability_name then
             PRIVATE.PROPERTIES[self.id].GRP:GetChild("rocketeers_wings"):ParamTo("alpha", 1, 0);
@@ -261,7 +273,7 @@ AbilityDurationTimer.New = function (FRAME)
     end
 
     ADT_NEW.UpdateTimerBind = function (self, callback)
-        PRIVATE.SystemMsg("ADT:UpdateTimerBind()");
+        -- PRIVATE.SystemMsg("ADT:UpdateTimerBind()");
 
         Component.RemoveWidget(PRIVATE.PROPERTIES[self.id].BP);
 
@@ -292,7 +304,7 @@ AbilityDurationTimer.New = function (FRAME)
     end
 
     ADT_NEW.UpdateDuration = function (self)
-        PRIVATE.SystemMsg("ADT:UpdateDuration()");
+        -- PRIVATE.SystemMsg("ADT:UpdateDuration()");
 
         if nil == PRIVATE.PROPERTIES[self.id] or "Arc" ~= type(PRIVATE.PROPERTIES[self.id].ARC) then
             do return end
@@ -302,7 +314,7 @@ AbilityDurationTimer.New = function (FRAME)
         local remaining = PRIVATE.PROPERTIES[self.id].duration_ms - duration;
         local angle     = -180 + (duration / PRIVATE.PROPERTIES[self.id].duration_ms) * 360;
 
-        PRIVATE.PROPERTIES[self.id].remaining = remaining;
+        PRIVATE.PROPERTIES[self.id].remaining_ms = remaining;
 
         if 5000 >= remaining then
             PRIVATE.PROPERTIES[self.id].ARC:SetParam("tint", "#FF0000", 0.1);
@@ -364,21 +376,13 @@ AbilityDurationTimer.New = function (FRAME)
     ADT_NEW.SetIconID = function (self, val)
         PRIVATE.PROPERTIES[self.id].icon_id = tonumber(val);
 
+        -- PRIVATE.SystemMsg("Icon ID: "..tostring(PRIVATE.PROPERTIES[self.id].icon_id));
+
         return self;
     end
 
     ADT_NEW.GetIconID = function (self)
         return PRIVATE.PROPERTIES[self.id].icon_id;
-    end
-
-    ADT_NEW.SetAlignment = function (self, val)
-        PRIVATE.PROPERTIES[self.id].alignment = tonumber(val);
-
-        return self;
-    end
-
-    ADT_NEW.GetAlignment = function (self)
-        return PRIVATE.PROPERTIES[self.id].alignment;
     end
 
     ADT_NEW.SetDuration = function (self, val)
@@ -401,46 +405,6 @@ AbilityDurationTimer.New = function (FRAME)
         return PRIVATE.PROPERTIES[self.id].remaining_ms;
     end
 
-    ADT_NEW.SetFontName = function (self, val)
-        PRIVATE.PROPERTIES[self.id].font_name = tostring(val);
-
-        return self;
-    end
-
-    ADT_NEW.GetFontName = function (self)
-        return PRIVATE.PROPERTIES[self.id].font_name;
-    end
-
-    ADT_NEW.SetFontSize = function (self, val)
-        PRIVATE.PROPERTIES[self.id].font_size = tonumber(val);
-
-        return self;
-    end
-
-    ADT_NEW.GetFontSize = function (self)
-        return PRIVATE.PROPERTIES[self.id].font_size;
-    end
-
-    ADT_NEW.SetFontColorTextTimer = function (self, val)
-        PRIVATE.PROPERTIES[self.id].font_color_text_timer = tostring(val);
-
-        return self;
-    end
-
-    ADT_NEW.GetFontColorTextTimer = function (self)
-        return PRIVATE.PROPERTIES[self.id].font_color_text_timer;
-    end
-
-    ADT_NEW.SetFontColorTextTimerOutline = function (self, val)
-        PRIVATE.PROPERTIES[self.id].font_color_text_timer_outline = tostring(val);
-
-        return self;
-    end
-
-    ADT_NEW.GetFontColorTextTimerOutline = function (self)
-        return PRIVATE.PROPERTIES[self.id].font_color_text_timer_outline;
-    end
-
     -- =========================================================================
     -- = finish creation
     -- =========================================================================
@@ -454,10 +418,54 @@ end
 
 AbilityDurationTimer.SetMaxVisible = function (val)
     PRIVATE.max_visible = tonumber(val);
+
+    log("PRIVATE.max_visible: "..tostring(PRIVATE.max_visible));
+
+    return AbilityDurationTimer;
 end
 
-AbilityDurationTimer.GetMaxVisible = function ()
-    return PRIVATE.max_visible;
+AbilityDurationTimer.SetAlignment = function (val)
+    PRIVATE.alignment = tonumber(val);
+
+    log("PRIVATE.alignment: "..tostring(PRIVATE.alignment));
+
+    return AbilityDurationTimer;
+end
+
+AbilityDurationTimer.SetFontName = function (val)
+    PRIVATE.font_name = tostring(val);
+
+    log("PRIVATE.font_name: "..PRIVATE.font_name);
+
+    return AbilityDurationTimer;
+end
+
+AbilityDurationTimer.SetFontSize = function (val)
+    PRIVATE.font_size = tonumber(val);
+
+    log("PRIVATE.font_size: "..tostring(PRIVATE.font_size));
+
+    return AbilityDurationTimer;
+end
+
+AbilityDurationTimer.SetFontColor = function (val)
+    PRIVATE.font_color = tostring(val);
+
+    log("PRIVATE.font_color: "..PRIVATE.font_color);
+
+    return AbilityDurationTimer;
+end
+
+AbilityDurationTimer.SetFontColorOutline = function (val)
+    PRIVATE.font_color_outline = tostring(val);
+
+    log("PRIVATE.: "..PRIVATE.font_color_outline);
+
+    return AbilityDurationTimer;
+end
+
+AbilityDurationTimer.GetActive = function ()
+    return PRIVATE.active;
 end
 
 AbilityDurationTimer.KillAll = function ()
