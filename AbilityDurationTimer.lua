@@ -585,8 +585,9 @@ function RUMPEL.SaveKnownAbilities(ARGS, ERR)
             ABILITY.ability_id               = tonumber(ABILITY.ability_id);
             ABILITY.ability_icon_id          = tonumber(ABILITY.ability_icon_id);
             ABILITY.ability_reports_duration = tonumber(ABILITY.ability_reports_duration);
+            ABILITY.ability_used_by_addon    = tonumber(ABILITY.ability_used_by_addon);
 
-            if nil ~= ABILITY.ability_icon_id and 0 < ABILITY.ability_icon_id then
+            if nil ~= ABILITY.ability_icon_id and 0 < ABILITY.ability_icon_id and 1 == ABILITY.ability_used_by_addon then
                 ABILITY_INFOS[ABILITY.ability_id] = {
                     icon_id = ABILITY.ability_icon_id,
                     ability_name = ABILITY.ability_name,
