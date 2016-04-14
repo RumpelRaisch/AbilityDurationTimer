@@ -1,22 +1,20 @@
 --[[ Usage:
     ADT = AbilityDurationTimer.New(FRAME[, callback]); <- callback is called shortly before timer ends and ADT gets destroyed
 
-    ADT:Reschedule(delay)         -- make private
-    ADT:Release()                 -- make private
-    ADT:VisibilityTo(val, delay)  -- make private
-    ADT:MoveTo(left, delay)       -- make private
-    ADT:Relocate(delay)           -- make private
-    ADT:StartTimer(callback)      -- this we need public
-    ADT:UpdateTimerBind(callback) -- make private
-    ADT:UpdateDuration()          -- make private
-    ADT:SetPos(val)               -- make private
+    ADT:Reschedule(delay)         -> this we need public
+    ADT:Release()                 -> make private
+    ADT:VisibilityTo(val, delay)  -> make private
+    ADT:MoveTo(left, delay)       -> make private
+    ADT:Relocate(delay)           -> make private
+    ADT:StartTimer(callback)      -> this we need public
+    ADT:UpdateTimerBind(callback) -> make private
+    ADT:UpdateDuration()          -> make private
+    ADT:SetPos(val)               -> make private
     ADT:GetPos()
     ADT:SetAbilityID(val)
     ADT:GetAbilityID()
     ADT:SetAbilityName(val)
     ADT:GetAbilityName()
-    ADT:SetNameCheck(val)         -- do we need this here?
-    ADT:GetNameCheck()            -- do we need this here?
     ADT:SetIconID(val)
     ADT:GetIconID()
     ADT:SetAlignment(val)
@@ -124,7 +122,6 @@ AbilityDurationTimer.New = function (FRAME)
     PRIVATE.PROPERTIES[ADT_NEW.id].start_time   = tonumber(System.GetClientTime());
     PRIVATE.PROPERTIES[ADT_NEW.id].ability_id   = 0;
     PRIVATE.PROPERTIES[ADT_NEW.id].ability_name = "";
-    PRIVATE.PROPERTIES[ADT_NEW.id].name_check   = "";
     PRIVATE.PROPERTIES[ADT_NEW.id].icon_id      = 0;
     PRIVATE.PROPERTIES[ADT_NEW.id].alignment    = 0;
     PRIVATE.PROPERTIES[ADT_NEW.id].duration     = 0;
@@ -361,16 +358,6 @@ AbilityDurationTimer.New = function (FRAME)
 
     ADT_NEW.GetAbilityName = function (self)
         return PRIVATE.PROPERTIES[self.id].ability_name;
-    end
-
-    ADT_NEW.SetNameCheck = function (self, val)
-        PRIVATE.PROPERTIES[self.id].name_check = tostring(val);
-
-        return self;
-    end
-
-    ADT_NEW.GetNameCheck = function (self)
-        return PRIVATE.PROPERTIES[self.id].name_check;
     end
 
     ADT_NEW.SetIconID = function (self, val)
