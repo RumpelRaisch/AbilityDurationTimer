@@ -23,6 +23,7 @@
 --   - Safada
 -- =============================================================================
 
+require "math";
 require "string";
 require "lib/lib_Callback2";
 require "lib/lib_InterfaceOptions";
@@ -59,10 +60,11 @@ RUMPEL.ABILITIES_RM_ON_REUSE[35909] = {ADT = true, alias = 12305}; -- Teleport B
 RUMPEL.ABILITIES_RM_ON_REUSE[12305] = {ADT = true, alias = 35909}; -- ort Beacon
 
 SETTINGS = {
-    debug            = false,
-    system_message   = false,
-    max_timers       = 12,
-    timers_alignment = "ltr",
+    debug               = false,
+    system_message      = false,
+    system_message_text = "Starting duration timer for '${name}' (${duration}s).",
+    max_timers          = 12,
+    timers_alignment    = "ltr",
     -- objects
     TIMERS = {},
     FONT   = {
@@ -183,6 +185,7 @@ function BuildOptions()
     InterfaceOptions.StartGroup({label="Ability Duration Timer: Main Settings"});
         InterfaceOptions.AddCheckBox({id="DEBUG_ENABLED", label="Debug enabled", default=(Component.GetSetting("DEBUG_ENABLED") or SETTINGS.debug)});
         InterfaceOptions.AddCheckBox({id="SYSMSG_ENABLED", label="Chat output (Starting duration timer ...) enabled", default=(Component.GetSetting("SYSMSG_ENABLED") or SETTINGS.system_message)});
+        InterfaceOptions.AddTextInput({id="SYSMSG_TEXT", label="Chat output message", default=SETTINGS.system_message_text, tooltip="Message to show when the timer starts.\nAvailable parameter: ${name} and ${duration}"});
         InterfaceOptions.AddSlider({id="MAX_TIMERS", label="max timers", min=1, max=50, inc=1, suffix="", default=(Component.GetSetting("MAX_TIMERS") or SETTINGS.max_timers)});
         InterfaceOptions.AddChoiceMenu({id="TIMERS_ALIGNMENT", label="Timer alignment", default=(Component.GetSetting("TIMERS_ALIGNMENT") or SETTINGS.timers_alignment)});
             InterfaceOptions.AddChoiceEntry({menuId="TIMERS_ALIGNMENT", val="ltr", label="left to right"});
@@ -258,6 +261,10 @@ function OnComponentLoad()
 
     LIB_SLASH.BindCallback({slash_list=slash_list, func=OnSlash});
 
+    getmetatable("").__mod = function (s, tab)
+        return (s:gsub('($%b{})', function(w) return tab[w:sub(3, -2)] or w end))
+    end
+
     RUMPEL.GetKnownAbilities();
 end
 
@@ -271,11 +278,11 @@ function OnSlash(ARGS)
     if 42 == tonumber(ARGS[1]) then
         RUMPEL.TestTimers();
     elseif "rm" == ARGS[1] then
-        AbilityDurationTimer.KillAll();
+        ADTStatic.KillAll();
     elseif "pstats" == ARGS[1] then
         log(tostring(Player.GetAllStats()));
     elseif "timers" == ARGS[1] then
-        RUMPEL.SystemMsg("Active Timers: "..tostring(AbilityDurationTimer.GetActive()));
+        RUMPEL.SystemMsg("Active Timers: "..tostring(ADTStatic.GetActive()));
     elseif "test" == ARGS[1] then
         RUMPEL.Test();
     else
@@ -288,15 +295,15 @@ function OnShow(ARGS)
 end
 
 function OnBattleframeChanged()
-    AbilityDurationTimer.KillAll();
+    ADTStatic.KillAll();
 end
 
 function OnDeath()
-    AbilityDurationTimer.KillAll();
+    ADTStatic.KillAll();
 end
 
 function OnOptionChanged(id, value)
-    AbilityDurationTimer.KillAll();
+    ADTStatic.KillAll();
 
     if "DEBUG_ENABLED" == id then
         SETTINGS.debug = value;
@@ -304,30 +311,33 @@ function OnOptionChanged(id, value)
     elseif "SYSMSG_ENABLED" == id then
         SETTINGS.system_message = value;
         Component.SaveSetting("SYSMSG_ENABLED", value);
+    elseif "SYSMSG_TEXT" == id then
+        SETTINGS.system_message_text = value;
+        Component.SaveSetting("SYSMSG_TEXT", value);
     elseif "MAX_TIMERS" == id then
         SETTINGS.max_timers = value;
         Component.SaveSetting("MAX_TIMERS", value);
-        AbilityDurationTimer.SetMaxVisible(value);
+        ADTStatic.SetMaxVisible(value);
     elseif "TIMERS_ALIGNMENT" == id then
         SETTINGS.timers_alignment = value;
         Component.SaveSetting("TIMERS_ALIGNMENT", value);
-        AbilityDurationTimer.SetAlignment(UI.ALIGNMENT[value]);
+        ADTStatic.SetAlignment(UI.ALIGNMENT[value]);
     elseif "FONT" == id then
         SETTINGS.FONT.name = value;
         Component.SaveSetting("FONT", value);
-        AbilityDurationTimer.SetFontName(value);
+        ADTStatic.SetFontName(value);
     elseif "FONT_SIZE" == id then
         SETTINGS.FONT.size = value;
         Component.SaveSetting("FONT_SIZE", value);
-        AbilityDurationTimer.SetFontSize(value);
+        ADTStatic.SetFontSize(value);
     elseif "TIMER_COLOR" == id then
         SETTINGS.FONT.COLOR.text_timer = value.tint;
         Component.SaveSetting("TIMER_COLOR", value.tint);
-        AbilityDurationTimer.SetFontColor(value.tint);
+        ADTStatic.SetFontColor(value.tint);
     elseif "TIMER_COLOR_OUTLINE" == id then
         SETTINGS.FONT.COLOR.text_timer_outline = value.tint;
         Component.SaveSetting("TIMER_COLOR_OUTLINE", value.tint);
-        AbilityDurationTimer.SetFontColorOutline(value.tint);
+        ADTStatic.SetFontColorOutline(value.tint);
     elseif "HEAVY_ARMOR_ENABLED" == id then
         SETTINGS.TIMERS[3782] = value;
         Component.SaveSetting("HEAVY_ARMOR_ENABLED", value);
@@ -437,11 +447,11 @@ function OnAbilityUsed(ARGS)
                 rm_on_reuse_alias = RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].alias;
             end
 
-            if "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT) then
+            if "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT) then
                 RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT:Reschedule(0);
                 RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT = true;
 
-                if nil ~= rm_on_reuse_alias and "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT) then
+                if nil ~= rm_on_reuse_alias and "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT) then
                     RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT = true;
                 end
 
@@ -451,10 +461,9 @@ function OnAbilityUsed(ARGS)
 
         if nil ~= ability_duration and true ~= ON_ABILITY_STATE[ability_id] and true == SETTINGS.TIMERS[ability_id] then
             RUMPEL.ConsoleLog("AbilityDurationTimer.New()");
+            RUMPEL.DurTimerMsg(ABILITY_INFO.name, ability_duration);
 
-            RUMPEL.DurTimerMsg(ABILITY_INFO.name);
-
-            local ADT = AbilityDurationTimer.New(UI.FRAME);
+            local ADT = AbilityDurationTimer(UI.FRAME);
 
             ADT:SetAbilityID(ability_id);
             ADT:SetAbilityName(ABILITY_INFO.name);
@@ -514,11 +523,11 @@ function OnAbilityState(ARGS)
                 rm_on_reuse_alias = RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].alias;
             end
 
-            if "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT) then
+            if "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT) then
                 RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT:Reschedule(0);
                 RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT = true;
 
-                if nil ~= rm_on_reuse_alias and "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT) then
+                if nil ~= rm_on_reuse_alias and "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT) then
                     RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT = true;
                 end
 
@@ -528,10 +537,9 @@ function OnAbilityState(ARGS)
 
         if true == SETTINGS.TIMERS[ability_id] and false ~= ON_ABILITY_STATE[ability_id] then
             RUMPEL.ConsoleLog("AbilityDurationTimer.New()");
+            RUMPEL.DurTimerMsg(ability_name, ARGS.state_dur_total);
 
-            RUMPEL.DurTimerMsg(ability_name);
-
-            local ADT = AbilityDurationTimer.New(UI.FRAME);
+            local ADT = AbilityDurationTimer(UI.FRAME);
 
             ADT:SetAbilityID(ability_id);
             ADT:SetAbilityName(ability_name);
@@ -665,9 +673,12 @@ function RUMPEL.SystemMsg(message)
     Component.GenerateEvent("MY_SYSTEM_MESSAGE", {text = "[ADT] "..tostring(message)});
 end
 
-function RUMPEL.DurTimerMsg(ability_name)
+function RUMPEL.DurTimerMsg(ability_name, duration)
     if true == SETTINGS.system_message then
-        RUMPEL.SystemMsg("Starting duration timer for '"..ability_name.."'.");
+        RUMPEL.SystemMsg(SETTINGS.system_message_text % {
+            name     = ability_name,
+            duration = tostring(math.floor((tonumber(duration) * 100) + 0.5) / 100)
+        });
     end
 end
 

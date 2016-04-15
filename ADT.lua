@@ -41,14 +41,14 @@ PRIVATE.unique             = 1;
 PRIVATE.is_ordering        = false;
 PRIVATE.ADTS               = {};
 
-PRIVATE.GetUniqueId = function ()
+function PRIVATE.GetUniqueId()
     -- PRIVATE.SystemMsg("PRIVATE:GetUniqueId()");
     PRIVATE.unique = PRIVATE.unique + 1;
 
     return PRIVATE.unique;
 end
 
-PRIVATE.GetMaxPos = function ()
+function PRIVATE.GetMaxPos()
     -- PRIVATE.SystemMsg("PRIVATE:GetMaxPos()");
 
     local max = 0;
@@ -62,7 +62,7 @@ PRIVATE.GetMaxPos = function ()
     return max;
 end
 
-PRIVATE.OrderTimers = function ()
+function PRIVATE.OrderTimers()
     -- PRIVATE.SystemMsg("PRIVATE:OrderTimers()");
 
     if PRIVATE.is_ordering then
@@ -75,7 +75,7 @@ PRIVATE.OrderTimers = function ()
 
     for i,_ in pairs(PRIVATE.ADTS) do
         for ii,__ in pairs(PRIVATE.ADTS) do
-            local check_id        = PRIVATE.ADTS[i].id ~= PRIVATE.ADTS[ii].id;
+            local check_id        = PRIVATE.ADTS[i]:GetId() ~= PRIVATE.ADTS[ii]:GetId();
             local check_remaining = PRIVATE.ADTS[i]:GetRemainingMs() < PRIVATE.ADTS[ii]:GetRemainingMs();
             local check_pos       = PRIVATE.ADTS[i]:GetPos() > PRIVATE.ADTS[ii]:GetPos();
 
@@ -98,19 +98,22 @@ PRIVATE.OrderTimers = function ()
     return PRIVATE;
 end
 
-PRIVATE.SystemMsg = function (message)
+function PRIVATE.SystemMsg(message)
     Component.GenerateEvent("MY_SYSTEM_MESSAGE", {text = "[ADT] "..tostring(message)});
 end
 
 -- global
 AbilityDurationTimer = {};
+AbilityDurationTimer.__index = AbilityDurationTimer
 
-AbilityDurationTimer.New = function (FRAME)
+setmetatable(AbilityDurationTimer, {__call = function(CLS, ...) return CLS.New(...) end});
+
+function AbilityDurationTimer.New(FRAME)
     -- =========================================================================
     -- = private properties
     -- =========================================================================
 
-    local ADT          = {}; -- instance
+    local ADT          = setmetatable({}, AbilityDurationTimer); -- instance
     local id           = PRIVATE.GetUniqueId();
     local pos          = PRIVATE.GetMaxPos() + 1;
     local start_time   = tonumber(System.GetClientTime());
@@ -124,7 +127,6 @@ AbilityDurationTimer.New = function (FRAME)
 
     local BP  = Component.CreateWidget("BP_IconTimer", FRAME); -- from blueprint in xml
     local GRP = BP:GetChild("timer_grp");
-    local GRP:ParamTo("alpha", 0, 0);
 
     local ICON            = GRP:GetChild("icon");
     local ARC             = GRP:GetChild("arc");
@@ -137,6 +139,14 @@ AbilityDurationTimer.New = function (FRAME)
     local UPDATE_TIMER = Callback2.Create();
 
     -- =========================================================================
+    -- = init stuff
+    -- =========================================================================
+
+    GRP:ParamTo("alpha", 0, 0);
+
+    -- PRIVATE.SystemMsg(type(ADT));
+
+    -- =========================================================================
     -- = public properties
     -- =========================================================================
 
@@ -147,15 +157,14 @@ AbilityDurationTimer.New = function (FRAME)
     -- = public methods
     -- =========================================================================
 
-    -- ADT:Reschedule = function (delay) -- not supported in FireFall
-    ADT.Reschedule = function (self, delay)
+    function ADT:Reschedule(delay)
         -- PRIVATE.SystemMsg("ADT:Reschedule()");
         UPDATE_TIMER:Reschedule(delay);
 
         return self;
     end
 
-    ADT.Release = function (self)
+    function ADT:Release()
         -- PRIVATE.SystemMsg("ADT:Release()");
         -- UPDATE_TIMER:Release();
         UPDATE_TIMER:Reschedule(0);
@@ -163,7 +172,7 @@ AbilityDurationTimer.New = function (FRAME)
         return self;
     end
 
-    ADT.VisibilityTo = function (self, val, delay)
+    function ADT:VisibilityTo(val, delay)
         -- PRIVATE.SystemMsg("ADT:VisibilityTo()");
 
         if "Group" ~= type(GRP) then
@@ -182,7 +191,7 @@ AbilityDurationTimer.New = function (FRAME)
         return self;
     end
 
-    ADT.MoveTo = function (self, left, delay)
+    function ADT:MoveTo(left, delay)
         -- PRIVATE.SystemMsg("ADT:MoveTo()");
         -- PRIVATE.SystemMsg("left: "..tostring(left));
         -- PRIVATE.SystemMsg("delay: "..tostring(delay));
@@ -200,7 +209,7 @@ AbilityDurationTimer.New = function (FRAME)
         return self;
     end
 
-    ADT.Relocate = function (self, delay)
+    function ADT:Relocate(delay)
         -- PRIVATE.SystemMsg("ADT:Relocate()");
         -- PRIVATE.SystemMsg("delay: "..tostring(delay));
 
@@ -219,7 +228,7 @@ AbilityDurationTimer.New = function (FRAME)
         return self;
     end
 
-    ADT.StartTimer = function (self, callback)
+    function ADT:StartTimer(callback)
         -- PRIVATE.SystemMsg("ADT:StartTimer()");
 
         local font = PRIVATE.font_name.."_"..tostring(PRIVATE.font_size);
@@ -270,7 +279,7 @@ AbilityDurationTimer.New = function (FRAME)
         PRIVATE.OrderTimers();
     end
 
-    ADT.UpdateTimerBind = function (self, callback)
+    function ADT:UpdateTimerBind(callback)
         -- PRIVATE.SystemMsg("ADT:UpdateTimerBind()");
 
         Component.RemoveWidget(BP);
@@ -284,9 +293,8 @@ AbilityDurationTimer.New = function (FRAME)
 
         for i,_ in pairs(PRIVATE.ADTS) do
             if PRIVATE.ADTS[i]:GetId() == _id then
-                PRIVATE.ADTS[i]       = nil;
-                PRIVATE.PROPERTIES[i] = nil;
-                PRIVATE.active        = PRIVATE.active - 1;
+                PRIVATE.ADTS[i] = nil;
+                PRIVATE.active  = PRIVATE.active - 1;
             elseif PRIVATE.ADTS[i]:GetPos() > _pos then
                 PRIVATE.ADTS[i]:SetPos(PRIVATE.ADTS[i]:GetPos() - 1):Relocate(0.1);
             end
@@ -301,7 +309,7 @@ AbilityDurationTimer.New = function (FRAME)
         return self;
     end
 
-    ADT.UpdateDuration = function (self)
+    function ADT:UpdateDuration()
         -- PRIVATE.SystemMsg("ADT:UpdateDuration()");
 
         if "Arc" ~= type(ARC) then
@@ -331,37 +339,41 @@ AbilityDurationTimer.New = function (FRAME)
     -- = getter and setter
     -- =========================================================================
 
-    ADT.SetPos = function (self, val)
+    function ADT:GetId()
+        return id;
+    end
+
+    function ADT:SetPos(val)
         pos = tonumber(val);
 
         return self;
     end
 
-    ADT.GetPos = function (self)
+    function ADT:GetPos()
         return pos;
     end
 
-    ADT.SetAbilityID = function (self, val)
+    function ADT:SetAbilityID(val)
         ability_id = tonumber(val);
 
         return self;
     end
 
-    ADT.GetAbilityID = function (self)
+    function ADT:GetAbilityID()
         return ability_id;
     end
 
-    ADT.SetAbilityName = function (self, val)
+    function ADT:SetAbilityName(val)
         ability_name = tostring(val);
 
         return self;
     end
 
-    ADT.GetAbilityName = function (self)
+    function ADT:GetAbilityName()
         return ability_name;
     end
 
-    ADT.SetIconID = function (self, val)
+    function ADT:SetIconID(val)
         icon_id = tonumber(val);
 
         -- PRIVATE.SystemMsg("Icon ID: "..tostring(icon_id));
@@ -369,11 +381,11 @@ AbilityDurationTimer.New = function (FRAME)
         return self;
     end
 
-    ADT.GetIconID = function (self)
+    function ADT:GetIconID()
         return icon_id;
     end
 
-    ADT.SetDuration = function (self, val)
+    function ADT:SetDuration(val)
         duration     = tonumber(val);
         duration_ms  = tonumber(val) * 1000;
         remaining_ms = tonumber(val) * 1000;
@@ -381,15 +393,15 @@ AbilityDurationTimer.New = function (FRAME)
         return self;
     end
 
-    ADT.GetDuration = function (self)
+    function ADT:GetDuration()
         return duration;
     end
 
-    ADT.GetDurationMs = function (self)
+    function ADT:GetDurationMs()
         return duration_ms;
     end
 
-    ADT.GetRemainingMs = function (self)
+    function ADT:GetRemainingMs()
         return remaining_ms;
     end
 
@@ -397,14 +409,17 @@ AbilityDurationTimer.New = function (FRAME)
     -- = finish creation
     -- =========================================================================
 
-    PRIVATE.ADTS[ADT.id] = ADT;
+    PRIVATE.ADTS[id] = ADT;
 
     PRIVATE.active = PRIVATE.active + 1;
 
     return ADT;
 end
 
-AbilityDurationTimer.SetMaxVisible = function (val)
+-- global
+ADTStatic = {};
+
+function ADTStatic.SetMaxVisible(val)
     PRIVATE.max_visible = tonumber(val);
 
     log("PRIVATE.max_visible: "..tostring(PRIVATE.max_visible));
@@ -412,7 +427,7 @@ AbilityDurationTimer.SetMaxVisible = function (val)
     return AbilityDurationTimer;
 end
 
-AbilityDurationTimer.SetAlignment = function (val)
+function ADTStatic.SetAlignment(val)
     PRIVATE.alignment = tonumber(val);
 
     log("PRIVATE.alignment: "..tostring(PRIVATE.alignment));
@@ -420,7 +435,7 @@ AbilityDurationTimer.SetAlignment = function (val)
     return AbilityDurationTimer;
 end
 
-AbilityDurationTimer.SetFontName = function (val)
+function ADTStatic.SetFontName(val)
     PRIVATE.font_name = tostring(val);
 
     log("PRIVATE.font_name: "..PRIVATE.font_name);
@@ -428,7 +443,7 @@ AbilityDurationTimer.SetFontName = function (val)
     return AbilityDurationTimer;
 end
 
-AbilityDurationTimer.SetFontSize = function (val)
+function ADTStatic.SetFontSize(val)
     PRIVATE.font_size = tonumber(val);
 
     log("PRIVATE.font_size: "..tostring(PRIVATE.font_size));
@@ -436,7 +451,7 @@ AbilityDurationTimer.SetFontSize = function (val)
     return AbilityDurationTimer;
 end
 
-AbilityDurationTimer.SetFontColor = function (val)
+function ADTStatic.SetFontColor(val)
     PRIVATE.font_color = tostring(val);
 
     log("PRIVATE.font_color: "..PRIVATE.font_color);
@@ -444,7 +459,7 @@ AbilityDurationTimer.SetFontColor = function (val)
     return AbilityDurationTimer;
 end
 
-AbilityDurationTimer.SetFontColorOutline = function (val)
+function ADTStatic.SetFontColorOutline(val)
     PRIVATE.font_color_outline = tostring(val);
 
     log("PRIVATE.: "..PRIVATE.font_color_outline);
@@ -452,14 +467,30 @@ AbilityDurationTimer.SetFontColorOutline = function (val)
     return AbilityDurationTimer;
 end
 
-AbilityDurationTimer.GetActive = function ()
+function ADTStatic.GetActive()
     return PRIVATE.active;
 end
 
-AbilityDurationTimer.KillAll = function ()
+function ADTStatic.KillAll()
     for i,_ in pairs(PRIVATE.ADTS) do
         PRIVATE.ADTS[i]:Release();
 
         PRIVATE.ADTS[i] = nil;
     end
+end
+
+-- =============================================================================
+-- = patch type function [http://stackoverflow.com/a/19349078/1549628]
+-- =============================================================================
+
+local original_type = type;
+
+type = function (obj)
+    local otype = original_type(obj)
+
+    if otype == "table" and getmetatable(obj) == AbilityDurationTimer then
+        return "AbilityDurationTimer"
+    end
+
+    return otype
 end
