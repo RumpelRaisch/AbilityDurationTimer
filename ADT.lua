@@ -2,14 +2,15 @@
     ADT = AbilityDurationTimer.New(FRAME[, callback]); <- callback is called shortly before timer ends and ADT gets destroyed
 
     ADT:Reschedule(delay)         -> this we need public
-    ADT:Release()                 -> make private
-    ADT:VisibilityTo(val, delay)  -> make private
-    ADT:MoveTo(left, delay)       -> make private
-    ADT:Relocate(delay)           -> make private
+    ADT:Release()                 -> make private (maybe?)
+    ADT:VisibilityTo(val, delay)  -> make private (maybe?)
+    ADT:MoveTo(left, delay)       -> make private (maybe?)
+    ADT:Relocate(delay)           -> make private (maybe?)
     ADT:StartTimer(callback)      -> this we need public
-    ADT:UpdateTimerBind(callback) -> make private
-    ADT:UpdateDuration()          -> make private
-    ADT:SetPos(val)               -> make private
+    ADT:UpdateTimerBind(callback) -> make private (maybe?)
+    ADT:UpdateDuration()          -> make private (maybe?)
+    ADT:GetID()
+    ADT:SetPos(val)               -> make private (maybe?)
     ADT:GetPos()
     ADT:SetAbilityID(val)
     ADT:GetAbilityID()
@@ -75,7 +76,7 @@ function PRIVATE.OrderTimers()
 
     for i,_ in pairs(PRIVATE.ADTS) do
         for ii,__ in pairs(PRIVATE.ADTS) do
-            local check_id        = PRIVATE.ADTS[i]:GetId() ~= PRIVATE.ADTS[ii]:GetId();
+            local check_id        = PRIVATE.ADTS[i]:GetID() ~= PRIVATE.ADTS[ii]:GetID();
             local check_remaining = PRIVATE.ADTS[i]:GetRemainingMs() < PRIVATE.ADTS[ii]:GetRemainingMs();
             local check_pos       = PRIVATE.ADTS[i]:GetPos() > PRIVATE.ADTS[ii]:GetPos();
 
@@ -292,7 +293,7 @@ function AbilityDurationTimer.New(FRAME)
         local _pos = pos;
 
         for i,_ in pairs(PRIVATE.ADTS) do
-            if PRIVATE.ADTS[i]:GetId() == _id then
+            if PRIVATE.ADTS[i]:GetID() == _id then
                 PRIVATE.ADTS[i] = nil;
                 PRIVATE.active  = PRIVATE.active - 1;
             elseif PRIVATE.ADTS[i]:GetPos() > _pos then
@@ -339,7 +340,7 @@ function AbilityDurationTimer.New(FRAME)
     -- = getter and setter
     -- =========================================================================
 
-    function ADT:GetId()
+    function ADT:GetID()
         return id;
     end
 
