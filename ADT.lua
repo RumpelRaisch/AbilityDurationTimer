@@ -1,5 +1,5 @@
 --[[ Usage:
-    ADT = AbilityDurationTimer.New(FRAME[, callback]); <- callback is called shortly before timer ends and ADT gets destroyed
+    ADT = AbilityDurationTimer(FRAME[, callback]); <- callback is called shortly before timer ends and ADT gets destroyed
 
     ADT:Reschedule(delay)         -> this we need public
     ADT:Release()                 -> make private (maybe?)
