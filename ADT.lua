@@ -110,8 +110,7 @@ AbilityDurationTimer.New = function (FRAME)
     -- = private properties
     -- =========================================================================
 
-
-    local ADT          = {};
+    local ADT          = {}; -- instance
     local id           = PRIVATE.GetUniqueId();
     local pos          = PRIVATE.GetMaxPos() + 1;
     local start_time   = tonumber(System.GetClientTime());
@@ -136,6 +135,13 @@ AbilityDurationTimer.New = function (FRAME)
     local TIMER           = GRP:GetChild("text_timer");
 
     local UPDATE_TIMER = Callback2.Create();
+
+    -- =========================================================================
+    -- = public properties
+    -- =========================================================================
+
+    -- public properties go in the instance table
+    -- ADT.property_name = value;
 
     -- =========================================================================
     -- = public methods
