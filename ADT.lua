@@ -40,7 +40,6 @@ PRIVATE.active             = 0;
 PRIVATE.unique             = 1;
 PRIVATE.is_ordering        = false;
 PRIVATE.ADTS               = {};
-PRIVATE.PROPERTIES         = {};
 
 PRIVATE.GetUniqueId = function ()
     -- PRIVATE.SystemMsg("PRIVATE:GetUniqueId()");
@@ -108,64 +107,60 @@ AbilityDurationTimer = {};
 
 AbilityDurationTimer.New = function (FRAME)
     -- =========================================================================
-    -- = public properties (meh ... we need this one)
-    -- =========================================================================
-
-    local ADT_NEW = {id = PRIVATE.GetUniqueId()};
-
-    -- =========================================================================
     -- = private properties
     -- =========================================================================
 
-    PRIVATE.PROPERTIES[ADT_NEW.id]              = {};
-    PRIVATE.PROPERTIES[ADT_NEW.id].pos          = PRIVATE.GetMaxPos() + 1;
-    PRIVATE.PROPERTIES[ADT_NEW.id].start_time   = tonumber(System.GetClientTime());
-    PRIVATE.PROPERTIES[ADT_NEW.id].ability_id   = 0;
-    PRIVATE.PROPERTIES[ADT_NEW.id].ability_name = "";
-    PRIVATE.PROPERTIES[ADT_NEW.id].icon_id      = 0;
-    PRIVATE.PROPERTIES[ADT_NEW.id].alignment    = 0;
-    PRIVATE.PROPERTIES[ADT_NEW.id].duration     = 0;
-    PRIVATE.PROPERTIES[ADT_NEW.id].duration_ms  = 0;
-    PRIVATE.PROPERTIES[ADT_NEW.id].remaining_ms = 0;
 
-    PRIVATE.PROPERTIES[ADT_NEW.id].BP  = Component.CreateWidget("BP_IconTimer", FRAME); -- from blueprint in xml
-    PRIVATE.PROPERTIES[ADT_NEW.id].GRP = PRIVATE.PROPERTIES[ADT_NEW.id].BP:GetChild("timer_grp");
-    PRIVATE.PROPERTIES[ADT_NEW.id].GRP:ParamTo("alpha", 0, 0);
+    local ADT          = {};
+    local id           = PRIVATE.GetUniqueId();
+    local pos          = PRIVATE.GetMaxPos() + 1;
+    local start_time   = tonumber(System.GetClientTime());
+    local ability_id   = 0;
+    local ability_name = "";
+    local icon_id      = 0;
+    local alignment    = 0;
+    local duration     = 0;
+    local duration_ms  = 0;
+    local remaining_ms = 0;
 
-    PRIVATE.PROPERTIES[ADT_NEW.id].ICON            = PRIVATE.PROPERTIES[ADT_NEW.id].GRP:GetChild("icon");
-    PRIVATE.PROPERTIES[ADT_NEW.id].ARC             = PRIVATE.PROPERTIES[ADT_NEW.id].GRP:GetChild("arc");
-    PRIVATE.PROPERTIES[ADT_NEW.id].TIMER_OUTLINE_1 = PRIVATE.PROPERTIES[ADT_NEW.id].GRP:GetChild("text_timer_outline_1");
-    PRIVATE.PROPERTIES[ADT_NEW.id].TIMER_OUTLINE_2 = PRIVATE.PROPERTIES[ADT_NEW.id].GRP:GetChild("text_timer_outline_2");
-    PRIVATE.PROPERTIES[ADT_NEW.id].TIMER_OUTLINE_3 = PRIVATE.PROPERTIES[ADT_NEW.id].GRP:GetChild("text_timer_outline_3");
-    PRIVATE.PROPERTIES[ADT_NEW.id].TIMER_OUTLINE_4 = PRIVATE.PROPERTIES[ADT_NEW.id].GRP:GetChild("text_timer_outline_4");
-    PRIVATE.PROPERTIES[ADT_NEW.id].TIMER           = PRIVATE.PROPERTIES[ADT_NEW.id].GRP:GetChild("text_timer");
+    local BP  = Component.CreateWidget("BP_IconTimer", FRAME); -- from blueprint in xml
+    local GRP = BP:GetChild("timer_grp");
+    local GRP:ParamTo("alpha", 0, 0);
 
-    PRIVATE.PROPERTIES[ADT_NEW.id].UPDATE_TIMER = Callback2.Create();
+    local ICON            = GRP:GetChild("icon");
+    local ARC             = GRP:GetChild("arc");
+    local TIMER_OUTLINE_1 = GRP:GetChild("text_timer_outline_1");
+    local TIMER_OUTLINE_2 = GRP:GetChild("text_timer_outline_2");
+    local TIMER_OUTLINE_3 = GRP:GetChild("text_timer_outline_3");
+    local TIMER_OUTLINE_4 = GRP:GetChild("text_timer_outline_4");
+    local TIMER           = GRP:GetChild("text_timer");
+
+    local UPDATE_TIMER = Callback2.Create();
 
     -- =========================================================================
     -- = public methods
     -- =========================================================================
 
-    -- ADT_NEW:Reschedule = function (delay) -- not supported in FireFall
-    ADT_NEW.Reschedule = function (self, delay)
+    -- ADT:Reschedule = function (delay) -- not supported in FireFall
+    ADT.Reschedule = function (self, delay)
         -- PRIVATE.SystemMsg("ADT:Reschedule()");
-        PRIVATE.PROPERTIES[self.id].UPDATE_TIMER:Reschedule(delay);
+        UPDATE_TIMER:Reschedule(delay);
 
         return self;
     end
 
-    ADT_NEW.Release = function (self)
+    ADT.Release = function (self)
         -- PRIVATE.SystemMsg("ADT:Release()");
-        -- PRIVATE.PROPERTIES[self.id].UPDATE_TIMER:Release();
-        PRIVATE.PROPERTIES[self.id].UPDATE_TIMER:Reschedule(0);
+        -- UPDATE_TIMER:Release();
+        UPDATE_TIMER:Reschedule(0);
 
         return self;
     end
 
-    ADT_NEW.VisibilityTo = function (self, val, delay)
+    ADT.VisibilityTo = function (self, val, delay)
         -- PRIVATE.SystemMsg("ADT:VisibilityTo()");
 
-        if "Group" ~= type(PRIVATE.PROPERTIES[self.id].GRP) then
+        if "Group" ~= type(GRP) then
             return self;
         end
 
@@ -176,17 +171,17 @@ AbilityDurationTimer.New = function (FRAME)
         -- PRIVATE.SystemMsg("val: "..tostring(val));
         -- PRIVATE.SystemMsg("delay: "..tostring(delay));
 
-        PRIVATE.PROPERTIES[self.id].GRP:ParamTo("alpha", val, delay);
+        GRP:ParamTo("alpha", val, delay);
 
         return self;
     end
 
-    ADT_NEW.MoveTo = function (self, left, delay)
+    ADT.MoveTo = function (self, left, delay)
         -- PRIVATE.SystemMsg("ADT:MoveTo()");
         -- PRIVATE.SystemMsg("left: "..tostring(left));
         -- PRIVATE.SystemMsg("delay: "..tostring(delay));
 
-        if "Group" ~= type(PRIVATE.PROPERTIES[self.id].GRP) then
+        if "Group" ~= type(GRP) then
             return self;
         end
 
@@ -194,12 +189,12 @@ AbilityDurationTimer.New = function (FRAME)
             delay = 0;
         end
 
-        PRIVATE.PROPERTIES[self.id].GRP:MoveTo("left:"..tostring(left).."; top:0; height:64; width:64;", delay);
+        GRP:MoveTo("left:"..tostring(left).."; top:0; height:64; width:64;", delay);
 
         return self;
     end
 
-    ADT_NEW.Relocate = function (self, delay)
+    ADT.Relocate = function (self, delay)
         -- PRIVATE.SystemMsg("ADT:Relocate()");
         -- PRIVATE.SystemMsg("delay: "..tostring(delay));
 
@@ -208,7 +203,7 @@ AbilityDurationTimer.New = function (FRAME)
         end
 
         -- move to pos related dimensions
-        self:MoveTo((0 + PRIVATE.alignment * (PRIVATE.PROPERTIES[self.id].pos - 1)), delay);
+        self:MoveTo((0 + PRIVATE.alignment * (pos - 1)), delay);
 
         -- hide
         if self:GetPos() > PRIVATE.max_visible then
@@ -218,7 +213,7 @@ AbilityDurationTimer.New = function (FRAME)
         return self;
     end
 
-    ADT_NEW.StartTimer = function (self, callback)
+    ADT.StartTimer = function (self, callback)
         -- PRIVATE.SystemMsg("ADT:StartTimer()");
 
         local font = PRIVATE.font_name.."_"..tostring(PRIVATE.font_size);
@@ -227,66 +222,66 @@ AbilityDurationTimer.New = function (FRAME)
             self:VisibilityTo(1, 0);
         end
 
-        self:MoveTo((0 + PRIVATE.alignment * (PRIVATE.PROPERTIES[self.id].pos - 1) + PRIVATE.alignment), 0); -- start opposite to slide in
-        self:MoveTo((0 + PRIVATE.alignment * (PRIVATE.PROPERTIES[self.id].pos - 1)), 0.1); -- slide in
+        self:MoveTo((0 + PRIVATE.alignment * (pos - 1) + PRIVATE.alignment), 0); -- start opposite to slide in
+        self:MoveTo((0 + PRIVATE.alignment * (pos - 1)), 0.1); -- slide in
 
         -- Font
-        PRIVATE.PROPERTIES[self.id].TIMER:SetFont(font);
-        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_1:SetFont(font);
-        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_2:SetFont(font);
-        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_3:SetFont(font);
-        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_4:SetFont(font);
+        TIMER:SetFont(font);
+        TIMER_OUTLINE_1:SetFont(font);
+        TIMER_OUTLINE_2:SetFont(font);
+        TIMER_OUTLINE_3:SetFont(font);
+        TIMER_OUTLINE_4:SetFont(font);
 
         -- Font color
-        PRIVATE.PROPERTIES[self.id].TIMER:SetTextColor("#"..PRIVATE.font_color);
-        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_1:SetTextColor("#"..PRIVATE.font_color_outline);
-        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_2:SetTextColor("#"..PRIVATE.font_color_outline);
-        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_3:SetTextColor("#"..PRIVATE.font_color_outline);
-        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_4:SetTextColor("#"..PRIVATE.font_color_outline);
+        TIMER:SetTextColor("#"..PRIVATE.font_color);
+        TIMER_OUTLINE_1:SetTextColor("#"..PRIVATE.font_color_outline);
+        TIMER_OUTLINE_2:SetTextColor("#"..PRIVATE.font_color_outline);
+        TIMER_OUTLINE_3:SetTextColor("#"..PRIVATE.font_color_outline);
+        TIMER_OUTLINE_4:SetTextColor("#"..PRIVATE.font_color_outline);
 
-        if "Activate: Rocket Wings" == PRIVATE.PROPERTIES[self.id].ability_name then
-            PRIVATE.PROPERTIES[self.id].GRP:GetChild("rocketeers_wings"):ParamTo("alpha", 1, 0);
+        if "Activate: Rocket Wings" == ability_name then
+            GRP:GetChild("rocketeers_wings"):ParamTo("alpha", 1, 0);
         else
-            PRIVATE.PROPERTIES[self.id].ICON:SetIcon(PRIVATE.PROPERTIES[self.id].icon_id);
+            ICON:SetIcon(icon_id);
         end
 
         -- start timer
-        PRIVATE.PROPERTIES[self.id].TIMER:StartTimer(PRIVATE.PROPERTIES[self.id].duration, true);
-        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_1:StartTimer(PRIVATE.PROPERTIES[self.id].duration, true);
-        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_2:StartTimer(PRIVATE.PROPERTIES[self.id].duration, true);
-        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_3:StartTimer(PRIVATE.PROPERTIES[self.id].duration, true);
-        PRIVATE.PROPERTIES[self.id].TIMER_OUTLINE_4:StartTimer(PRIVATE.PROPERTIES[self.id].duration, true);
+        TIMER:StartTimer(duration, true);
+        TIMER_OUTLINE_1:StartTimer(duration, true);
+        TIMER_OUTLINE_2:StartTimer(duration, true);
+        TIMER_OUTLINE_3:StartTimer(duration, true);
+        TIMER_OUTLINE_4:StartTimer(duration, true);
 
         self:UpdateDuration();
 
-        PRIVATE.PROPERTIES[self.id].UPDATE_TIMER:Bind(
+        UPDATE_TIMER:Bind(
             function()
                 self:UpdateTimerBind(callback);
             end
         );
-        PRIVATE.PROPERTIES[self.id].UPDATE_TIMER:Schedule(PRIVATE.PROPERTIES[self.id].duration);
+        UPDATE_TIMER:Schedule(duration);
 
         PRIVATE.OrderTimers();
     end
 
-    ADT_NEW.UpdateTimerBind = function (self, callback)
+    ADT.UpdateTimerBind = function (self, callback)
         -- PRIVATE.SystemMsg("ADT:UpdateTimerBind()");
 
-        Component.RemoveWidget(PRIVATE.PROPERTIES[self.id].BP);
+        Component.RemoveWidget(BP);
 
         if "function" == type(callback) then
             callback(self);
         end
 
-        local id  = self.id;
-        local pos = PRIVATE.PROPERTIES[self.id].pos;
+        local _id  = id;
+        local _pos = pos;
 
         for i,_ in pairs(PRIVATE.ADTS) do
-            if PRIVATE.ADTS[i].id == id then
+            if PRIVATE.ADTS[i]:GetId() == _id then
                 PRIVATE.ADTS[i]       = nil;
                 PRIVATE.PROPERTIES[i] = nil;
                 PRIVATE.active        = PRIVATE.active - 1;
-            elseif PRIVATE.ADTS[i]:GetPos() > pos then
+            elseif PRIVATE.ADTS[i]:GetPos() > _pos then
                 PRIVATE.ADTS[i]:SetPos(PRIVATE.ADTS[i]:GetPos() - 1):Relocate(0.1);
             end
         end
@@ -300,27 +295,27 @@ AbilityDurationTimer.New = function (FRAME)
         return self;
     end
 
-    ADT_NEW.UpdateDuration = function (self)
+    ADT.UpdateDuration = function (self)
         -- PRIVATE.SystemMsg("ADT:UpdateDuration()");
 
-        if nil == PRIVATE.PROPERTIES[self.id] or "Arc" ~= type(PRIVATE.PROPERTIES[self.id].ARC) then
+        if "Arc" ~= type(ARC) then
             do return end
         end
 
-        local duration  = tonumber(System.GetClientTime()) - PRIVATE.PROPERTIES[self.id].start_time;
-        local remaining = PRIVATE.PROPERTIES[self.id].duration_ms - duration;
-        local angle     = -180 + (duration / PRIVATE.PROPERTIES[self.id].duration_ms) * 360;
+        local duration  = tonumber(System.GetClientTime()) - start_time;
+        local remaining = duration_ms - duration;
+        local angle     = -180 + (duration / duration_ms) * 360;
 
-        PRIVATE.PROPERTIES[self.id].remaining_ms = remaining;
+        remaining_ms = remaining;
 
         if 5000 >= remaining then
-            PRIVATE.PROPERTIES[self.id].ARC:SetParam("tint", "#FF0000", 0.1);
+            ARC:SetParam("tint", "#FF0000", 0.1);
         end
 
         if 180 <= angle then
-            PRIVATE.PROPERTIES[self.id].ARC:SetParam("end-angle", 180);
+            ARC:SetParam("end-angle", 180);
         else
-            PRIVATE.PROPERTIES[self.id].ARC:SetParam("end-angle", angle);
+            ARC:SetParam("end-angle", angle);
 
             Callback2.FireAndForget(self.UpdateDuration, self, 0.1);
         end
@@ -330,77 +325,77 @@ AbilityDurationTimer.New = function (FRAME)
     -- = getter and setter
     -- =========================================================================
 
-    ADT_NEW.SetPos = function (self, val)
-        PRIVATE.PROPERTIES[self.id].pos = tonumber(val);
+    ADT.SetPos = function (self, val)
+        pos = tonumber(val);
 
         return self;
     end
 
-    ADT_NEW.GetPos = function (self)
-        return PRIVATE.PROPERTIES[self.id].pos;
+    ADT.GetPos = function (self)
+        return pos;
     end
 
-    ADT_NEW.SetAbilityID = function (self, val)
-        PRIVATE.PROPERTIES[self.id].ability_id = tonumber(val);
+    ADT.SetAbilityID = function (self, val)
+        ability_id = tonumber(val);
 
         return self;
     end
 
-    ADT_NEW.GetAbilityID = function (self)
-        return PRIVATE.PROPERTIES[self.id].ability_id;
+    ADT.GetAbilityID = function (self)
+        return ability_id;
     end
 
-    ADT_NEW.SetAbilityName = function (self, val)
-        PRIVATE.PROPERTIES[self.id].ability_name = tostring(val);
+    ADT.SetAbilityName = function (self, val)
+        ability_name = tostring(val);
 
         return self;
     end
 
-    ADT_NEW.GetAbilityName = function (self)
-        return PRIVATE.PROPERTIES[self.id].ability_name;
+    ADT.GetAbilityName = function (self)
+        return ability_name;
     end
 
-    ADT_NEW.SetIconID = function (self, val)
-        PRIVATE.PROPERTIES[self.id].icon_id = tonumber(val);
+    ADT.SetIconID = function (self, val)
+        icon_id = tonumber(val);
 
-        -- PRIVATE.SystemMsg("Icon ID: "..tostring(PRIVATE.PROPERTIES[self.id].icon_id));
+        -- PRIVATE.SystemMsg("Icon ID: "..tostring(icon_id));
 
         return self;
     end
 
-    ADT_NEW.GetIconID = function (self)
-        return PRIVATE.PROPERTIES[self.id].icon_id;
+    ADT.GetIconID = function (self)
+        return icon_id;
     end
 
-    ADT_NEW.SetDuration = function (self, val)
-        PRIVATE.PROPERTIES[self.id].duration     = tonumber(val);
-        PRIVATE.PROPERTIES[self.id].duration_ms  = tonumber(val) * 1000;
-        PRIVATE.PROPERTIES[self.id].remaining_ms = tonumber(val) * 1000;
+    ADT.SetDuration = function (self, val)
+        duration     = tonumber(val);
+        duration_ms  = tonumber(val) * 1000;
+        remaining_ms = tonumber(val) * 1000;
 
         return self;
     end
 
-    ADT_NEW.GetDuration = function (self)
-        return PRIVATE.PROPERTIES[self.id].duration;
+    ADT.GetDuration = function (self)
+        return duration;
     end
 
-    ADT_NEW.GetDurationMs = function (self)
-        return PRIVATE.PROPERTIES[self.id].duration_ms;
+    ADT.GetDurationMs = function (self)
+        return duration_ms;
     end
 
-    ADT_NEW.GetRemainingMs = function (self)
-        return PRIVATE.PROPERTIES[self.id].remaining_ms;
+    ADT.GetRemainingMs = function (self)
+        return remaining_ms;
     end
 
     -- =========================================================================
     -- = finish creation
     -- =========================================================================
 
-    PRIVATE.ADTS[ADT_NEW.id] = ADT_NEW;
+    PRIVATE.ADTS[ADT.id] = ADT;
 
     PRIVATE.active = PRIVATE.active + 1;
 
-    return ADT_NEW;
+    return ADT;
 end
 
 AbilityDurationTimer.SetMaxVisible = function (val)
