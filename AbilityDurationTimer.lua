@@ -267,6 +267,10 @@ function OnComponentLoad()
     RUMPEL.GetKnownAbilities();
 end
 
+function OnPlayerReady()
+    ADTStatic.Init();
+end
+
 function OnComponentUnload()
     LIB_SLASH.UnbindCallback(slash_list);
 end

@@ -99,6 +99,12 @@ function PRIVATE.OrderTimers()
     return PRIVATE;
 end
 
+function PRIVATE.OrderTimersLoop()
+    PRIVATE.OrderTimers();
+
+    Callback2.FireAndForget(PRIVATE.OrderTimersLoop, {}, 1);
+end
+
 function PRIVATE.SystemMsg(message)
     Component.GenerateEvent("MY_SYSTEM_MESSAGE", {text = "[ADT] "..tostring(message)});
 end
@@ -425,6 +431,10 @@ end
 
 -- global
 ADTStatic = {};
+
+function ADTStatic.Init()
+    Callback2.FireAndForget(PRIVATE.OrderTimersLoop, {}, 1);
+end
 
 function ADTStatic.SetMaxVisible(val)
     PRIVATE.max_visible = tonumber(val);

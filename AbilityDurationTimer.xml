@@ -26,18 +26,19 @@
             <Region name="circle_consumable" top="25" bottom="151" left="830" right="956" />
         </Texture>
     </Textures>
-    
-    <Events>    
-        <Event name="ON_BATTLEFRAME_CHANGED" bind="OnBattleframeChanged" />
-        <Event name="ON_DEATH"               bind="OnDeath"              />
-        <Event name="ON_COMPONENT_LOAD"      bind="OnComponentLoad"      />
-        <Event name="ON_COMPONENT_UNLOAD"    bind="OnComponentUnload"    />
+
+    <Events>
         <Event name="ON_ABILITY_STATE"       bind="OnAbilityState"       />
         <Event name="ON_ABILITY_USED"        bind="OnAbilityUsed"        />
+        <Event name="ON_BATTLEFRAME_CHANGED" bind="OnBattleframeChanged" />
+        <Event name="ON_COMPONENT_LOAD"      bind="OnComponentLoad"      />
+        <Event name="ON_COMPONENT_UNLOAD"    bind="OnComponentUnload"    />
+        <Event name="ON_DEATH"               bind="OnDeath"              />
+        <Event name="ON_PLAYER_READY"        bind="OnPlayerReady"        />
 
         <Event name="MY_HUD_SHOW"            bind="OnShow"               />
     </Events>
-    
+
     <BluePrints>
         <BluePrint name="BP_IconTimer" instantiable="true">
             <Group name="timer_grp" dimensions="left:0; top:0; height:64; width:64;" style="clip:false;">
@@ -47,9 +48,9 @@
                 <Icon name="icon" dimensions="width:64; height:64;" />
                 <Arc
                     name="arc"
-                    dimensions="center-x:50%; center-y:50%; width:66; height:66;" 
+                    dimensions="center-x:50%; center-y:50%; width:66; height:66;"
                     style= "texture:3dActionBar; region:Actionbar_Cooldown; thickness:6; tessellation:33; tint:FF8800; start-angle:180; end-angle:-180; offset:180; shadow:0; visible:true; alpha:1;"
-                /> 
+                />
                 <TextTimer name="text_timer_outline_1" dimensions="center-x:50%+1; center-y:50%+1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s; alpha:1;" />
                 <TextTimer name="text_timer_outline_2" dimensions="center-x:50%+1; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s; alpha:1;" />
                 <TextTimer name="text_timer_outline_3" dimensions="center-x:50%-1; center-y:50%-1; width:64; height:64;" style="font:Demi_18; valign:middle; halign:center; clip:false; wrap:false; padding:0; visible:true; text-color:#000000; format:%.1s; alpha:1;" />
@@ -58,7 +59,7 @@
             </Group>
         </BluePrint>
     </BluePrints>
-    
+
     <Frames>
         <HUDFrame name="adt_frame" dimensions="center-x:50%-300; center-y:50%; height:64; width:64" style="halign:center; valign:center" visible="true" />
     </Frames>
