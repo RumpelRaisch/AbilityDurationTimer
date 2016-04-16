@@ -58,6 +58,7 @@ RUMPEL.ABILITIES_RM_ON_REUSE        = {};
 RUMPEL.ABILITIES_RM_ON_REUSE[35455] = {ADT = true, alias = false}; -- Bulwark -- TODO: check this
 RUMPEL.ABILITIES_RM_ON_REUSE[35909] = {ADT = true, alias = 12305}; -- Teleport Beacon
 RUMPEL.ABILITIES_RM_ON_REUSE[12305] = {ADT = true, alias = 35909}; -- ort Beacon
+RUMPEL.ABILITIES_RM_ON_REUSE[38620] = {ADT = true, alias = false}; -- Rocketeers
 
 SETTINGS = {
     debug               = false,
@@ -117,6 +118,10 @@ DESIGNER_NAMES[39405] = "Cryo Bomb Snare"; -- Cryo Shot
 DESIGNER_NAMES[35458] = "Fuel Air Bomb Fire Patch"; -- Thermal Wave
 DESIGNER_NAMES[41682] = "Missile Barrage"; -- Hellfire
 DESIGNER_NAMES[38620] = "Activate: Rocket Wings";
+DESIGNER_NAMES[34928] = "Healing Dome";
+DESIGNER_NAMES[41875] = "Penetrating Rounds";
+DESIGNER_NAMES[35345] = "Smoke Screen";
+-- DESIGNER_NAMES[] = ""; -- NEW
 
 ABILITY_DURATIONS[38620] = 16; -- Activate: Rocket Wings
 
@@ -133,11 +138,13 @@ ON_ABILITY_STATE[15231] = false; -- Absorption Bomb
 SETTINGS.TIMERS[41881] = true; -- Absorption Bomb
 SETTINGS.TIMERS[34066] = true; -- Dreadfield
 SETTINGS.TIMERS[3782]  = true; -- Heavy Armor
+SETTINGS.TIMERS[41875] = true; -- Penetrating Rounds
 SETTINGS.TIMERS[1726]  = true; -- Thunderdome
 
 -- Biotech
 SETTINGS.TIMERS[15206] = true; -- Adrenaline
 SETTINGS.TIMERS[34734] = true; -- Creeping Death
+SETTINGS.TIMERS[34928] = true; -- Healing Dome
 SETTINGS.TIMERS[41867] = true; -- Heroism
 SETTINGS.TIMERS[35620] = true; -- Necrosis
 SETTINGS.TIMERS[41865] = true; -- Poison Ball
@@ -148,6 +155,7 @@ SETTINGS.TIMERS[35567] = true; -- Artillery Strike
 SETTINGS.TIMERS[39405] = true; -- Cryo Bolt -- Cryo Shot
 SETTINGS.TIMERS[34957] = true; -- Decoy
 SETTINGS.TIMERS[34526] = true; -- SIN Beacon
+SETTINGS.TIMERS[35345] = true; -- Smoke Screen
 SETTINGS.TIMERS[12305] = true; -- Teleport Beacon
 
 -- Assault
@@ -439,11 +447,9 @@ function OnAbilityUsed(ARGS)
                 RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT:Reschedule(0);
                 RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT = true;
 
-                if nil ~= rm_on_reuse_alias and "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT) then
+                if nil ~= rm_on_reuse_alias then
                     RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT = true;
                 end
-
-                return nil;
             end
         end
 
@@ -457,7 +463,7 @@ function OnAbilityUsed(ARGS)
             ADT:SetAbilityName(ABILITY_INFO.name);
             ADT:SetIconID(ABILITY_INFO.iconId);
             ADT:SetDuration(ability_duration);
-            ADT:StartTimer();
+            ADT:StartTimer(RUMPEL.Callback);
 
             if nil ~= rm_on_reuse and true == RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT then
                 RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT = ADT;
@@ -515,11 +521,9 @@ function OnAbilityState(ARGS)
                 RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT:Reschedule(0);
                 RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT = true;
 
-                if nil ~= rm_on_reuse_alias and "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT) then
+                if nil ~= rm_on_reuse_alias then
                     RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT = true;
                 end
-
-                return nil;
             end
         end
 
@@ -533,7 +537,7 @@ function OnAbilityState(ARGS)
             ADT:SetAbilityName(ability_name);
             ADT:SetIconID(icon_id);
             ADT:SetDuration(ARGS.state_dur_total);
-            ADT:StartTimer();
+            ADT:StartTimer(RUMPEL.Callback);
 
             if nil ~= rm_on_reuse and true == RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT then
                 RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT = ADT;
@@ -549,6 +553,28 @@ end
 -- =============================================================================
 --  Functions
 -- =============================================================================
+
+function RUMPEL.Callback(ADT)
+    local ability_id        = ADT:GetAbilityID();
+    local rm_on_reuse       = nil;
+    local rm_on_reuse_alias = nil;
+
+    if "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[ability_id]) then
+        rm_on_reuse = ability_id;
+
+        if false ~= RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].alias then
+            rm_on_reuse_alias = RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].alias;
+        end
+
+        if "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT) then
+            RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT = true;
+
+            if nil ~= rm_on_reuse_alias then
+                RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT = true;
+            end
+        end
+    end
+end
 
 function RUMPEL.GetAbilityDuration(ability_id)
     local PLAYER_ALL_STATS = Player.GetAllStats();

@@ -1,4 +1,8 @@
-V 0.5.3 - added option to change the text output
+V 0.5.5 - added abilities
+          + Healing Dome
+          + Penetrating Rounds
+          + Smoke Screen
+V 0.5.4 - added option to change the text output
 V 0.5.3 - added icon ordering by remaining duration
         - reworked addon to ability ids as identifiers
         - fixed an issue with other languages than english
