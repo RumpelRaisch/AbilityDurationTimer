@@ -102,33 +102,21 @@ DESIGNER_NAMES[35620] = "Necrosis";
 DESIGNER_NAMES[34066] = "Dreadfield";
 DESIGNER_NAMES[40592] = "Poison Trail";
 DESIGNER_NAMES[34066] = "Dreadfield";
-DESIGNER_NAMES[39405] = "Cryo Bolt";
 DESIGNER_NAMES[34066] = "Dreadfield";
 DESIGNER_NAMES[34526] = "SIN Beacon";
 DESIGNER_NAMES[34066] = "Dreadfield";
-DESIGNER_NAMES[41682] = "Hellfire";
 DESIGNER_NAMES[3639]  = "Overcharge";
 DESIGNER_NAMES[34066] = "Dreadfield";
 DESIGNER_NAMES[35455] = "Bulwark";
 DESIGNER_NAMES[34066] = "Dreadfield";
 DESIGNER_NAMES[41880] = "Overclock";
 DESIGNER_NAMES[34066] = "Dreadfield";
-
-ABILITY_ALIAS[38620] = "Rocketeer's Wings";
-ABILITY_ALIAS[15206] = "Adrenaline Rush";
-ABILITY_ALIAS[39405] = "Cryo Shot";
-
-ABILITY_ALIAS["[ON_ABILITY_STATE]"]        = {};
-ABILITY_ALIAS["[ON_ABILITY_STATE]"][12305] = "ort Beacon"; -- Teleport Beacon -- TODO: check this
-ABILITY_ALIAS["[ON_ABILITY_STATE]"][35909] = "Teleport Beacon"; -- ort Beacon -- TODO: check this
-
-ABILITY_ALIAS["[ON_ABILITY_USED]"] = {};
-
-ABILITY_ALIAS["[PLAYER_STATS]"]        = {};
-ABILITY_ALIAS["[PLAYER_STATS]"][35567] = "Accord Artillery Strike";
-ABILITY_ALIAS["[PLAYER_STATS]"][39405] = "Cryo Bomb Snare"; -- Cryo Shot
-ABILITY_ALIAS["[PLAYER_STATS]"][35458] = "Fuel Air Bomb Fire Patch"; -- Thermal Wave
-ABILITY_ALIAS["[PLAYER_STATS]"][41682] = "Missile Barrage"; -- Hellfire
+DESIGNER_NAMES[15206] = "Adrenaline";
+DESIGNER_NAMES[35567] = "Accord Artillery Strike";
+DESIGNER_NAMES[39405] = "Cryo Bomb Snare"; -- Cryo Shot
+DESIGNER_NAMES[35458] = "Fuel Air Bomb Fire Patch"; -- Thermal Wave
+DESIGNER_NAMES[41682] = "Missile Barrage"; -- Hellfire
+DESIGNER_NAMES[38620] = "Activate: Rocket Wings";
 
 ABILITY_DURATIONS[38620] = 16; -- Activate: Rocket Wings
 
@@ -566,9 +554,7 @@ function RUMPEL.GetAbilityDuration(ability_id)
     local PLAYER_ALL_STATS = Player.GetAllStats();
     local ability_name     = nil;
 
-    if nil ~= ABILITY_ALIAS["[PLAYER_STATS]"][ability_id] then
-        ability_name = string.lower(ABILITY_ALIAS["[PLAYER_STATS]"][ability_id]);
-    elseif nil ~= DESIGNER_NAMES[ability_id] then
+    if nil ~= DESIGNER_NAMES[ability_id] then
         ability_name = string.lower(DESIGNER_NAMES[ability_id]);
     end
 
