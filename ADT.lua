@@ -487,11 +487,11 @@ end
 local original_type = type;
 
 type = function (obj)
-    local otype = original_type(obj)
+    local otype = original_type(obj);
 
     if otype == "table" and getmetatable(obj) == AbilityDurationTimer then
-        return "AbilityDurationTimer"
+        return "AbilityDurationTimer";
     end
 
-    return otype
+    return otype;
 end
