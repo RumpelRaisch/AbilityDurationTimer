@@ -204,6 +204,7 @@ function BuildOptions()
         InterfaceOptions.AddCheckBox({id="ABSORPTION_BOMB_ENABLED", label="Absorption Bomb enabled", default=(Component.GetSetting("ABSORPTION_BOMB_ENABLED") or SETTINGS.TIMERS[41881])});
         InterfaceOptions.AddCheckBox({id="DREADFIELD_ENABLED", label="Dreadfield enabled", default=(Component.GetSetting("DREADFIELD_ENABLED") or SETTINGS.TIMERS[34066])});
         InterfaceOptions.AddCheckBox({id="HEAVY_ARMOR_ENABLED", label="Heavy Armor enabled", default=(Component.GetSetting("HEAVY_ARMOR_ENABLED") or SETTINGS.TIMERS[3782])});
+        InterfaceOptions.AddCheckBox({id="PENETRATING_ROUNDS_ENABLED", label="Penetrating Rounds enabled", default=(Component.GetSetting("PENETRATING_ROUNDS_ENABLED") or SETTINGS.TIMERS[41875])});
         InterfaceOptions.AddCheckBox({id="THUNDERDOME_ENABLED", label="Thunderdome enabled", default=(Component.GetSetting("THUNDERDOME_ENABLED") or SETTINGS.TIMERS[1726])});
     InterfaceOptions.StopGroup();
 
@@ -211,6 +212,7 @@ function BuildOptions()
     InterfaceOptions.StartGroup({label="Biotech"});
         InterfaceOptions.AddCheckBox({id="ADRENALINE_RUSH_ENABLED", label="Adrenaline Rush enabled", default=(Component.GetSetting("ADRENALINE_RUSH_ENABLED") or SETTINGS.TIMERS[15206])});
         InterfaceOptions.AddCheckBox({id="CREEPING_DEATH_ENABLED", label="Creeping Death enabled", default=(Component.GetSetting("CREEPING_DEATH_ENABLED") or SETTINGS.TIMERS[34734])});
+        InterfaceOptions.AddCheckBox({id="HEALING_DOME_ENABLED", label="Healing Dome enabled", default=(Component.GetSetting("HEALING_DOME_ENABLED") or SETTINGS.TIMERS[34928])});
         InterfaceOptions.AddCheckBox({id="NECROSIS_ENABLED", label="Necrosis enabled", default=(Component.GetSetting("NECROSIS_ENABLED") or SETTINGS.TIMERS[41867])});
         InterfaceOptions.AddCheckBox({id="HEROISM_ENABLED", label="Heroism enabled", default=(Component.GetSetting("HEROISM_ENABLED") or SETTINGS.TIMERS[35620])});
         InterfaceOptions.AddCheckBox({id="POISON_BALL_ENABLED", label="Poison Ball enabled", default=(Component.GetSetting("POISON_BALL_ENABLED") or SETTINGS.TIMERS[41865])});
@@ -223,6 +225,7 @@ function BuildOptions()
         InterfaceOptions.AddCheckBox({id="CRYO_BOLT_ENABLED", label="Cryo Shot enabled", default=(Component.GetSetting("CRYO_BOLT_ENABLED") or SETTINGS.TIMERS[39405])});
         InterfaceOptions.AddCheckBox({id="DECOY_ENABLED", label="Decoy enabled", default=(Component.GetSetting("DECOY_ENABLED") or SETTINGS.TIMERS[34957])});
         InterfaceOptions.AddCheckBox({id="SIN_BEACON_ENABLED", label="SIN Beacon enabled", default=(Component.GetSetting("SIN_BEACON_ENABLED") or SETTINGS.TIMERS[34526])});
+        InterfaceOptions.AddCheckBox({id="SMOKE_SCREEN_ENABLED", label="Smoke Screen enabled", default=(Component.GetSetting("SMOKE_SCREEN_ENABLED") or SETTINGS.TIMERS[35345])});
         InterfaceOptions.AddCheckBox({id="TELEPORT_BEACON_ENABLED", label="Teleport Beacon enabled", default=(Component.GetSetting("TELEPORT_BEACON_ENABLED") or SETTINGS.TIMERS[12305])});
     InterfaceOptions.StopGroup();
 
@@ -400,6 +403,15 @@ function OnOptionChanged(id, value)
     elseif "SIN_BEACON_ENABLED" == id then
         SETTINGS.TIMERS[34526] = value;
         Component.SaveSetting("SIN_BEACON_ENABLED", value);
+    elseif "PENETRATING_ROUNDS_ENABLED" == id then
+        SETTINGS.TIMERS[41875] = value;
+        Component.SaveSetting("PENETRATING_ROUNDS_ENABLED", value);
+    elseif "HEALING_DOME_ENABLED" == id then
+        SETTINGS.TIMERS[34928] = value;
+        Component.SaveSetting("HEALING_DOME_ENABLED", value);
+    elseif "SMOKE_SCREEN_ENABLED" == id then
+        SETTINGS.TIMERS[35345] = value;
+        Component.SaveSetting("SMOKE_SCREEN_ENABLED", value);
     end
 
     RUMPEL.Log("OnOptionChanged("..tostring(id)..", "..tostring(value)..")");
