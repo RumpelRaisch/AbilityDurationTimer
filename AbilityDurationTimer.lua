@@ -477,6 +477,10 @@ function OnAbilityUsed(ARGS)
             ADT:SetDuration(ability_duration);
             ADT:StartTimer(RUMPEL.Callback);
 
+            if 38620 == ability_id then
+                Callback2.FireAndForget(RUMPEL.CheckGlidingStart, {ADT = ADT, is_gliding = Player.GetPermissions().glider, count = 1}, 1);
+            end
+
             if nil ~= rm_on_reuse and true == RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT then
                 RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT = ADT;
 
@@ -551,6 +555,10 @@ function OnAbilityState(ARGS)
             ADT:SetDuration(ARGS.state_dur_total);
             ADT:StartTimer(RUMPEL.Callback);
 
+            if 38620 == ability_id then
+                Callback2.FireAndForget(RUMPEL.CheckGlidingStart, {ADT = ADT, is_gliding = Player.GetPermissions().glider, count = 1}, 1);
+            end
+
             if nil ~= rm_on_reuse and true == RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT then
                 RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT = ADT;
 
@@ -586,6 +594,37 @@ function RUMPEL.Callback(ADT)
             end
         end
     end
+end
+
+function RUMPEL.CheckGlidingStart(ARGS)
+    -- RUMPEL.SystemMsg("RUMPEL.CheckGlidingStart()");
+
+    if 50 < ARGS.count then
+        return;
+    elseif false == ARGS.is_gliding then
+        ARGS.count      = ARGS.count + 1;
+        ARGS.is_gliding = Player.GetPermissions().glider;
+
+        Callback2.FireAndForget(RUMPEL.CheckGlidingStart, ARGS, 0.1);
+
+        return;
+    end
+
+    Callback2.FireAndForget(RUMPEL.CheckGliding, ARGS, 0.1);
+end
+
+function RUMPEL.CheckGliding(ARGS)
+    -- RUMPEL.SystemMsg("RUMPEL.CheckGliding()");
+
+    if true == ARGS.is_gliding then
+        ARGS.is_gliding = Player.GetPermissions().glider;
+
+        Callback2.FireAndForget(RUMPEL.CheckGliding, ARGS, 0.1);
+
+        return;
+    end
+
+    ARGS.ADT:Reschedule(0);
 end
 
 function RUMPEL.GetAbilityDuration(ability_id)
@@ -741,5 +780,6 @@ function RUMPEL.TestTimers()
 end
 
 function RUMPEL.Test()
-    RUMPEL.SystemMsg(System.GetLocale());
+    RUMPEL.SystemMsg(Player.GetPermissions().glider)
+    RUMPEL.SystemMsg(Player.GetGliderStatus().glider_state);
 end

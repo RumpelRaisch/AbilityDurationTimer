@@ -168,7 +168,7 @@ function AbilityDurationTimer.New(FRAME)
     function ADT:Release()
         -- PRIVATE.SystemMsg("ADT:Release()");
         -- UPDATE_TIMER:Release();
-        UPDATE_TIMER:Reschedule(0);
+        self:Reschedule(0);
 
         return self;
     end
@@ -282,6 +282,12 @@ function AbilityDurationTimer.New(FRAME)
 
     function ADT:UpdateTimerBind(callback)
         -- PRIVATE.SystemMsg("ADT:UpdateTimerBind()");
+
+        if nil == PRIVATE.ADTS[self:GetID()] then
+            -- PRIVATE.SystemMsg("Timer already gone.");
+
+            return;
+        end
 
         Component.RemoveWidget(BP);
 
