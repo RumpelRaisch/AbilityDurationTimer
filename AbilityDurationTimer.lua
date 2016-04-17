@@ -41,8 +41,14 @@ local ABILITY_INFOS     = {};
 local ABILITY_ALIAS     = {};
 local ABILITY_DURATIONS = {};
 local ON_ABILITY_STATE  = {};
-local DESIGNER_NAMES    = {};
+local NAMES    = {};
+local PERKS             = {};
+local SLOTTED_PERKS     = {};
 local slash_list        = "adt";
+
+-- global for sure shot
+local burst_time     = 0;
+local last_shot_time = 0;
 
 UI.ALIGNMENT = {};
 UI.FRAME     = Component.GetFrame("adt_frame");
@@ -60,12 +66,16 @@ RUMPEL.ABILITIES_RM_ON_REUSE[35909] = {ADT = true, alias = 12305}; -- Teleport B
 RUMPEL.ABILITIES_RM_ON_REUSE[12305] = {ADT = true, alias = 35909}; -- ort Beacon
 RUMPEL.ABILITIES_RM_ON_REUSE[38620] = {ADT = true, alias = false}; -- Rocketeers
 
+-- Perks
+RUMPEL.ABILITIES_RM_ON_REUSE["P[86118]"] = {ADT = true, alias = false}; -- Sure Shot
+
 SETTINGS = {
     debug               = false,
     system_message      = false,
     system_message_text = "Starting duration timer for '${name}' (${duration}s).",
     max_timers          = 12,
     timers_alignment    = "ltr",
+    track_perks         = true,
     -- objects
     TIMERS = {},
     FONT   = {
@@ -91,39 +101,45 @@ SETTINGS = {
 -- ABILITY_INFOS[35455] = {icon_id = 222475}; -- Bulwark
 -- ABILITY_INFOS[41886] = {icon_id = 222491}; -- Fortify
 
-DESIGNER_NAMES[41881] = "Absorption Bomb";
-DESIGNER_NAMES[34066] = "Dreadfield";
-DESIGNER_NAMES[3782]  = "Heavy Armor";
-DESIGNER_NAMES[1726]  = "Thunderdome";
-DESIGNER_NAMES[34066] = "Dreadfield";
-DESIGNER_NAMES[34734] = "Creeping Death";
-DESIGNER_NAMES[34066] = "Dreadfield";
-DESIGNER_NAMES[41867] = "Heroism";
-DESIGNER_NAMES[35620] = "Necrosis";
-DESIGNER_NAMES[34066] = "Dreadfield";
-DESIGNER_NAMES[40592] = "Poison Trail";
-DESIGNER_NAMES[34066] = "Dreadfield";
-DESIGNER_NAMES[34066] = "Dreadfield";
-DESIGNER_NAMES[34526] = "SIN Beacon";
-DESIGNER_NAMES[34066] = "Dreadfield";
-DESIGNER_NAMES[3639]  = "Overcharge";
-DESIGNER_NAMES[34066] = "Dreadfield";
-DESIGNER_NAMES[35455] = "Bulwark";
-DESIGNER_NAMES[34066] = "Dreadfield";
-DESIGNER_NAMES[41880] = "Overclock";
-DESIGNER_NAMES[34066] = "Dreadfield";
-DESIGNER_NAMES[15206] = "Adrenaline";
-DESIGNER_NAMES[35567] = "Accord Artillery Strike";
-DESIGNER_NAMES[39405] = "Cryo Bomb Snare"; -- Cryo Shot
-DESIGNER_NAMES[35458] = "Fuel Air Bomb Fire Patch"; -- Thermal Wave
-DESIGNER_NAMES[41682] = "Missile Barrage"; -- Hellfire
-DESIGNER_NAMES[38620] = "Activate: Rocket Wings";
-DESIGNER_NAMES[34928] = "Healing Dome";
-DESIGNER_NAMES[41875] = "Penetrating Rounds";
-DESIGNER_NAMES[35345] = "Smoke Screen";
--- DESIGNER_NAMES[] = ""; -- NEW
+NAMES[41881] = "Absorption Bomb";
+NAMES[34066] = "Dreadfield";
+NAMES[3782]  = "Heavy Armor";
+NAMES[1726]  = "Thunderdome";
+NAMES[34066] = "Dreadfield";
+NAMES[34734] = "Creeping Death";
+NAMES[34066] = "Dreadfield";
+NAMES[41867] = "Heroism";
+NAMES[35620] = "Necrosis";
+NAMES[34066] = "Dreadfield";
+NAMES[40592] = "Poison Trail";
+NAMES[34066] = "Dreadfield";
+NAMES[34066] = "Dreadfield";
+NAMES[34526] = "SIN Beacon";
+NAMES[34066] = "Dreadfield";
+NAMES[3639]  = "Overcharge";
+NAMES[34066] = "Dreadfield";
+NAMES[35455] = "Bulwark";
+NAMES[34066] = "Dreadfield";
+NAMES[41880] = "Overclock";
+NAMES[34066] = "Dreadfield";
+NAMES[15206] = "Adrenaline";
+NAMES[35567] = "Accord Artillery Strike";
+NAMES[39405] = "Cryo Bomb Snare"; -- Cryo Shot
+NAMES[35458] = "Fuel Air Bomb Fire Patch"; -- Thermal Wave
+NAMES[41682] = "Missile Barrage"; -- Hellfire
+NAMES[38620] = "Activate: Rocket Wings";
+NAMES[34928] = "Healing Dome";
+NAMES[41875] = "Penetrating Rounds";
+NAMES[35345] = "Smoke Screen";
+-- NAMES[] = ""; -- NEW
+
+-- Perks
+NAMES["P[86118]"] = "Sure Shot";
 
 ABILITY_DURATIONS[38620] = 16; -- Activate: Rocket Wings
+
+-- Perks
+ABILITY_DURATIONS["P[86118]"] = 3; -- Sure Shot
 
 ON_ABILITY_STATE[15206] = true; -- Adrenaline
 ON_ABILITY_STATE[3782]  = true; -- Heavy Armor
@@ -133,6 +149,7 @@ ON_ABILITY_STATE[1726]  = true; -- Thunderdome
 ON_ABILITY_STATE[15229] = false; -- Overclock [ON_ABILITY_STATE] (named Overcharge ...)
 ON_ABILITY_STATE[2843]  = false; -- Decoy [ON_ABILITY_STATE] (named Heavy Armor ...)
 ON_ABILITY_STATE[15231] = false; -- Absorption Bomb
+ON_ABILITY_STATE[35455] = false; -- Bulwark
 
 -- Dreadnaught
 SETTINGS.TIMERS[41881] = true; -- Absorption Bomb
@@ -171,6 +188,9 @@ SETTINGS.TIMERS[41880] = true; -- Overclock
 -- Miscellaneous
 SETTINGS.TIMERS[38620] = true; -- Activate: Rocket Wings
 
+-- Perks
+-- SETTINGS.TIMERS["P[86118]"] = true; -- Sure Shot
+
 -- =============================================================================
 --  Options
 -- =============================================================================
@@ -197,6 +217,7 @@ function BuildOptions()
         InterfaceOptions.AddSlider({id="FONT_SIZE", label="Font size", min=1, max=20, inc=1, suffix="", default=(Component.GetSetting("FONT_SIZE") or SETTINGS.FONT.size)});
         InterfaceOptions.AddColorPicker({id="TIMER_COLOR", label="Ability duration color", default={tint=(Component.GetSetting("TIMER_COLOR") or SETTINGS.FONT.COLOR.text_timer)}});
         InterfaceOptions.AddColorPicker({id="TIMER_COLOR_OUTLINE", label="Ability duration outline color", default={tint=(Component.GetSetting("TIMER_COLOR_OUTLINE") or SETTINGS.FONT.COLOR.text_timer_outline)}});
+        InterfaceOptions.AddCheckBox({id="PERKS_ENABLED", label="Perks enabled (experimental)", default=(Component.GetSetting("PERKS_ENABLED") or SETTINGS.track_perks)});
     InterfaceOptions.StopGroup();
 
     -- Dreadnaught
@@ -269,6 +290,9 @@ end
 
 function OnPlayerReady()
     ADTStatic.Init();
+
+    RUMPEL.GetPerks();
+    RUMPEL.GetLoadoutPerks();
 end
 
 function OnComponentUnload()
@@ -282,6 +306,42 @@ function OnSlash(ARGS)
         RUMPEL.TestTimers();
     elseif "rm" == ARGS[1] then
         ADTStatic.KillAll();
+    elseif "bw" == ARGS[1] then
+        local rm_on_reuse       = nil;
+        local rm_on_reuse_alias = nil;
+
+        if "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[35455]) then
+            rm_on_reuse = 35455;
+
+            if false ~= RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].alias then
+                rm_on_reuse_alias = RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].alias;
+            end
+
+            if "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT) then
+                RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT:Reschedule(0);
+                RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT = true;
+
+                if nil ~= rm_on_reuse_alias then
+                    RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT = true;
+                end
+            end
+        end
+
+        local ADT = AbilityDurationTimer.New(UI.FRAME)
+
+        ADT:SetAbilityID(35455);
+        ADT:SetAbilityName("Bulwark");
+        ADT:SetIconID(222475);
+        ADT:SetDuration(45);
+        ADT:StartTimer(RUMPEL.Callback);
+
+        if nil ~= rm_on_reuse and true == RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT then
+            RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT = ADT;
+
+            if nil ~= rm_on_reuse_alias and true == RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT then
+                RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT = ADT;
+            end
+        end
     elseif "pstats" == ARGS[1] then
         log(tostring(Player.GetAllStats()));
     elseif "timers" == ARGS[1] then
@@ -299,6 +359,8 @@ end
 
 function OnBattleframeChanged()
     ADTStatic.KillAll();
+
+    RUMPEL.GetLoadoutPerks();
 end
 
 function OnDeath()
@@ -416,12 +478,21 @@ function OnOptionChanged(id, value)
     elseif "SMOKE_SCREEN_ENABLED" == id then
         SETTINGS.TIMERS[35345] = value;
         Component.SaveSetting("SMOKE_SCREEN_ENABLED", value);
+    elseif "PERKS_ENABLED" == id then
+        SETTINGS.track_perks = value;
+        Component.SaveSetting("PERKS_ENABLED", value);
     end
 
     RUMPEL.Log("OnOptionChanged("..tostring(id)..", "..tostring(value)..")");
 end
 
+function OnEffectsChanged(ARGS)
+    -- RUMPEL.SystemMsg(ARGS);
+end
+
 function OnAbilityUsed(ARGS)
+    -- RUMPEL.SystemMsg(ARGS);
+
     if -1 ~= ARGS.index then
         local ABILITY_INFO      = Player.GetAbilityInfo(ARGS.id);
         local ability_id        = tonumber(ARGS.id);
@@ -482,7 +553,15 @@ function OnAbilityUsed(ARGS)
             ADT:StartTimer(RUMPEL.Callback);
 
             if 38620 == ability_id then
-                Callback2.FireAndForget(RUMPEL.CheckGlidingStart, {ADT = ADT, is_gliding = Player.GetPermissions().glider, count = 1}, 1);
+                Callback2.FireAndForget(
+                    RUMPEL.CheckGlidingStart,
+                    {
+                        ADT        = ADT,
+                        is_gliding = Player.GetPermissions().glider,
+                        count      = 1
+                    },
+                    1
+                );
             end
 
             if nil ~= rm_on_reuse and true == RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT then
@@ -497,6 +576,8 @@ function OnAbilityUsed(ARGS)
 end
 
 function OnAbilityState(ARGS)
+    -- RUMPEL.SystemMsg(ARGS);
+
     if -1 ~= ARGS.index then
         local ability_name      = tostring(ARGS.state);
         local ability_id        = tonumber(ARGS.id);
@@ -560,7 +641,15 @@ function OnAbilityState(ARGS)
             ADT:StartTimer(RUMPEL.Callback);
 
             if 38620 == ability_id then
-                Callback2.FireAndForget(RUMPEL.CheckGlidingStart, {ADT = ADT, is_gliding = Player.GetPermissions().glider, count = 1}, 1);
+                Callback2.FireAndForget(
+                    RUMPEL.CheckGlidingStart,
+                    {
+                        ADT        = ADT,
+                        is_gliding = Player.GetPermissions().glider,
+                        count      = 1
+                    },
+                    1
+                );
             end
 
             if nil ~= rm_on_reuse and true == RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT then
@@ -571,6 +660,27 @@ function OnAbilityState(ARGS)
                 end
             end
         end
+    end
+end
+
+function OnWeaponBurst()
+    -- experimental
+    if true == SETTINGS.track_perks and true == RUMPEL.CheckPerkEquipped("P[86118]") then
+        local client_time    = tonumber(System.GetClientTime());
+        local new_burst_time = client_time - last_shot_time;
+
+        if new_burst_time > burst_time / 3.5 and new_burst_time < burst_time / 1.8 then
+            local ADT = AbilityDurationTimer(UI.FRAME);
+
+            ADT:SetAbilityID("P[86118]");
+            ADT:SetAbilityName(SLOTTED_PERKS["P[86118]"].name);
+            ADT:SetIconID(SLOTTED_PERKS["P[86118]"].web_icon_id);
+            ADT:SetDuration(3);
+            ADT:StartTimer(RUMPEL.Callback);
+        end
+
+        burst_time     = new_burst_time;
+        last_shot_time = client_time;
     end
 end
 
@@ -635,8 +745,8 @@ function RUMPEL.GetAbilityDuration(ability_id)
     local PLAYER_ALL_STATS = Player.GetAllStats();
     local ability_name     = nil;
 
-    if nil ~= DESIGNER_NAMES[ability_id] then
-        ability_name = string.lower(DESIGNER_NAMES[ability_id]);
+    if nil ~= NAMES[ability_id] then
+        ability_name = string.lower(NAMES[ability_id]);
     end
 
     if nil == ability_name then
@@ -760,17 +870,17 @@ function RUMPEL.TestTimers()
     ADTS["1"]:SetAbilityID(3782);
     ADTS["2"]:SetAbilityID(1726);
     ADTS["3"]:SetAbilityID(15206);
-    ADTS["4"]:SetAbilityID(12305);
+    ADTS["4"]:SetAbilityID(34928);
 
     ADTS["1"]:SetAbilityName("Heavy Armor");
     ADTS["2"]:SetAbilityName("Thunderdome");
     ADTS["3"]:SetAbilityName("Adrenaline Rush");
-    ADTS["4"]:SetAbilityName("Teleport Beacon");
+    ADTS["4"]:SetAbilityName("Healing Dome");
 
     ADTS["1"]:SetIconID(202130);
     ADTS["2"]:SetIconID(222527);
     ADTS["3"]:SetIconID(492574);
-    ADTS["4"]:SetIconID(202115);
+    ADTS["4"]:SetIconID(222495);
 
     ADTS["1"]:SetDuration(25);
     ADTS["2"]:SetDuration(15);
@@ -784,6 +894,41 @@ function RUMPEL.TestTimers()
 end
 
 function RUMPEL.Test()
-    RUMPEL.SystemMsg(Player.GetPermissions().glider)
-    RUMPEL.SystemMsg(Player.GetGliderStatus().glider_state);
+    RUMPEL.Log(Game.GetPerkModuleInfo());
+    RUMPEL.Log(Player.GetCurrentLoadout());
+end
+
+function RUMPEL.GetPerks()
+    local PERK_INFO = Game.GetPerkModuleInfo();
+
+    for _,PERK in pairs(PERK_INFO) do
+        PERKS["P["..tostring(PERK.id).."]"] = PERK;
+    end
+end
+
+function RUMPEL.GetLoadoutPerks()
+    local LOADOUT = Player.GetCurrentLoadout();
+
+    SLOTTED_PERKS = {};
+
+    if LOADOUT then
+        for _,MODULE in ipairs(LOADOUT.modules.chassis) do
+            local id   = "P["..tostring(MODULE.item_sdb_id).."]";
+            local PERK = PERKS[id];
+
+            if PERK then
+                SLOTTED_PERKS[id] = PERK;
+            end
+        end
+    end
+
+    RUMPEL.Log(SLOTTED_PERKS);
+end
+
+function RUMPEL.CheckPerkEquipped(id)
+    if nil ~= SLOTTED_PERKS[id] then
+        return true;
+    end
+
+    return false;
 end

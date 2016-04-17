@@ -166,6 +166,12 @@ function AbilityDurationTimer.New(FRAME)
 
     function ADT:Reschedule(delay)
         -- PRIVATE.SystemMsg("ADT:Reschedule()");
+        TIMER:StartTimer(delay, true);
+        TIMER_OUTLINE_1:StartTimer(delay, true);
+        TIMER_OUTLINE_2:StartTimer(delay, true);
+        TIMER_OUTLINE_3:StartTimer(delay, true);
+        TIMER_OUTLINE_4:StartTimer(delay, true);
+
         UPDATE_TIMER:Reschedule(delay);
 
         return self;
@@ -367,7 +373,8 @@ function AbilityDurationTimer.New(FRAME)
     end
 
     function ADT:SetAbilityID(val)
-        ability_id = tonumber(val);
+        -- ability_id = tonumber(val);
+        ability_id = val;
 
         return self;
     end
