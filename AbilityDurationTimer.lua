@@ -307,41 +307,7 @@ function OnSlash(ARGS)
     elseif "rm" == ARGS[1] then
         ADTStatic.KillAll();
     elseif "bw" == ARGS[1] then
-        local rm_on_reuse       = nil;
-        local rm_on_reuse_alias = nil;
-
-        if "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[35455]) then
-            rm_on_reuse = 35455;
-
-            if false ~= RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].alias then
-                rm_on_reuse_alias = RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].alias;
-            end
-
-            if "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT) then
-                RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT:Reschedule(0);
-                RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT = true;
-
-                if nil ~= rm_on_reuse_alias then
-                    RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT = true;
-                end
-            end
-        end
-
-        local ADT = AbilityDurationTimer.New(UI.FRAME)
-
-        ADT:SetAbilityID(35455);
-        ADT:SetAbilityName("Bulwark");
-        ADT:SetIconID(222475);
-        ADT:SetDuration(45);
-        ADT:StartTimer(RUMPEL.Callback);
-
-        if nil ~= rm_on_reuse and true == RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT then
-            RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT = ADT;
-
-            if nil ~= rm_on_reuse_alias and true == RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT then
-                RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT = ADT;
-            end
-        end
+        RUMPEL.TestBulwark();
     elseif "pstats" == ARGS[1] then
         log(tostring(Player.GetAllStats()));
     elseif "timers" == ARGS[1] then
@@ -541,7 +507,7 @@ function OnAbilityUsed(ARGS)
         end
 
         if nil ~= ability_duration and true ~= ON_ABILITY_STATE[ability_id] and true == SETTINGS.TIMERS[ability_id] then
-            RUMPEL.ConsoleLog("AbilityDurationTimer.New()");
+            RUMPEL.ConsoleLog("AbilityDurationTimer()");
             RUMPEL.DurTimerMsg(ABILITY_INFO.name, ability_duration);
 
             local ADT = AbilityDurationTimer(UI.FRAME);
@@ -629,7 +595,7 @@ function OnAbilityState(ARGS)
         end
 
         if true == SETTINGS.TIMERS[ability_id] and false ~= ON_ABILITY_STATE[ability_id] then
-            RUMPEL.ConsoleLog("AbilityDurationTimer.New()");
+            RUMPEL.ConsoleLog("AbilityDurationTimer()");
             RUMPEL.DurTimerMsg(ability_name, ARGS.state_dur_total);
 
             local ADT = AbilityDurationTimer(UI.FRAME);
@@ -774,6 +740,41 @@ function RUMPEL.GetAbilityDuration(ability_id)
     return nil;
 end
 
+function RUMPEL.GetPerks()
+    local PERK_INFO = Game.GetPerkModuleInfo();
+
+    for _,PERK in pairs(PERK_INFO) do
+        PERKS["P["..tostring(PERK.id).."]"] = PERK;
+    end
+end
+
+function RUMPEL.GetLoadoutPerks()
+    local LOADOUT = Player.GetCurrentLoadout();
+
+    SLOTTED_PERKS = {};
+
+    if LOADOUT then
+        for _,MODULE in ipairs(LOADOUT.modules.chassis) do
+            local id   = "P["..tostring(MODULE.item_sdb_id).."]";
+            local PERK = PERKS[id];
+
+            if PERK then
+                SLOTTED_PERKS[id] = PERK;
+            end
+        end
+    end
+
+    RUMPEL.Log(SLOTTED_PERKS);
+end
+
+function RUMPEL.CheckPerkEquipped(id)
+    if nil ~= SLOTTED_PERKS[id] then
+        return true;
+    end
+
+    return false;
+end
+
 function RUMPEL.GetKnownAbilities()
     HTTP.IssueRequest("http://php.bitshifting.de/api/firefall.adt.json", "GET", nil, RUMPEL.SaveKnownAbilities);
 end
@@ -859,12 +860,17 @@ function RUMPEL.DurTimerMsg(ability_name, duration)
     end
 end
 
+function RUMPEL.Test()
+    RUMPEL.Log(Game.GetPerkModuleInfo());
+    RUMPEL.Log(Player.GetCurrentLoadout());
+end
+
 function RUMPEL.TestTimers()
     local ADTS = {
-        ["1"] = AbilityDurationTimer.New(UI.FRAME),
-        ["2"] = AbilityDurationTimer.New(UI.FRAME),
-        ["3"] = AbilityDurationTimer.New(UI.FRAME),
-        ["4"] = AbilityDurationTimer.New(UI.FRAME)
+        ["1"] = AbilityDurationTimer(UI.FRAME),
+        ["2"] = AbilityDurationTimer(UI.FRAME),
+        ["3"] = AbilityDurationTimer(UI.FRAME),
+        ["4"] = AbilityDurationTimer(UI.FRAME)
     };
 
     ADTS["1"]:SetAbilityID(3782);
@@ -893,42 +899,40 @@ function RUMPEL.TestTimers()
     ADTS["4"]:StartTimer();
 end
 
-function RUMPEL.Test()
-    RUMPEL.Log(Game.GetPerkModuleInfo());
-    RUMPEL.Log(Player.GetCurrentLoadout());
-end
+function RUMPEL.TestBulwark()
+    local rm_on_reuse       = nil;
+    local rm_on_reuse_alias = nil;
 
-function RUMPEL.GetPerks()
-    local PERK_INFO = Game.GetPerkModuleInfo();
+    if "table" == type(RUMPEL.ABILITIES_RM_ON_REUSE[35455]) then
+        rm_on_reuse = 35455;
 
-    for _,PERK in pairs(PERK_INFO) do
-        PERKS["P["..tostring(PERK.id).."]"] = PERK;
-    end
-end
+        if false ~= RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].alias then
+            rm_on_reuse_alias = RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].alias;
+        end
 
-function RUMPEL.GetLoadoutPerks()
-    local LOADOUT = Player.GetCurrentLoadout();
+        if "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT) then
+            RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT:Reschedule(0);
+            RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT = true;
 
-    SLOTTED_PERKS = {};
-
-    if LOADOUT then
-        for _,MODULE in ipairs(LOADOUT.modules.chassis) do
-            local id   = "P["..tostring(MODULE.item_sdb_id).."]";
-            local PERK = PERKS[id];
-
-            if PERK then
-                SLOTTED_PERKS[id] = PERK;
+            if nil ~= rm_on_reuse_alias then
+                RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT = true;
             end
         end
     end
 
-    RUMPEL.Log(SLOTTED_PERKS);
-end
+    local ADT = AbilityDurationTimer(UI.FRAME)
 
-function RUMPEL.CheckPerkEquipped(id)
-    if nil ~= SLOTTED_PERKS[id] then
-        return true;
+    ADT:SetAbilityID(35455);
+    ADT:SetAbilityName("Bulwark");
+    ADT:SetIconID(222475);
+    ADT:SetDuration(45);
+    ADT:StartTimer(RUMPEL.Callback);
+
+    if nil ~= rm_on_reuse and true == RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT then
+        RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse].ADT = ADT;
+
+        if nil ~= rm_on_reuse_alias and true == RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT then
+            RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT = ADT;
+        end
     end
-
-    return false;
 end
