@@ -1,36 +1,46 @@
-V 0.6.2 - fixed bug with timer visibility
-V 0.6.1 - fixed bug with bulwark
-V 0.6.0 - added support for perks
-V 0.5.8 - adjusted ordering
-V 0.5.7 - improved glider timers
-V 0.5.6 - added options for the new abilities ._.
-V 0.5.5 - added abilities
-          + Healing Dome
-          + Penetrating Rounds
-          + Smoke Screen
-V 0.5.4 - added option to change the text output
-V 0.5.3 - added icon ordering by remaining duration
-        - reworked addon to ability ids as identifiers
-        - fixed an issue with other languages than english
-V 0.5.0 - added duration arc around icons
-        - added collecting of (unknown) ability infos
-        - added abilities
-          + Creeping Death
-          + Poison Ball
-          + Poison Trail
-          + Artillery Strike
-          + Cryo Shot (maybe inaccurate because of ability behavior)
-          + Decoy
-          + SIN Beacon
-V 0.4.5 - added: Thermal Wave, Hellfire, Rocketeer's Wings
-V 0.4.3 - added icon sliding
-V 0.4.2 - added rtl => ltr options
-        - fixed options not saving
-        - added some abilities
-V 0.3.7 - added support for multiple timers (up to 4)
-V 0.3.6 - moved timer into the icon and added otlines to the timer
-V 0.3.5 - cleaned up the code
-V 0.3.4 - re enabled options to deactivate abilities
-V 0.3.3 - switched to icons instead of text
-V 0.2.1 - fixed typo
-V 0.2.0 - initial
+V 0.7.0  - added 3 new frames for abilities
+         - added options for abilities in wich frame the timer should be placed
+         - reworked the code
+V 0.6.3  - added abilities
+           + Electrical Storm
+           + Boomerang
+           + Supercharge
+           + Overload
+V 0.6.2  - fixed bug with timer visibility
+V 0.6.1  - fixed bug with bulwark
+V 0.6.0  - added support for perks
+V 0.5.8  - adjusted ordering
+V 0.5.7  - improved glider timers
+V 0.5.6  - added options for the new abilities ._.
+V 0.5.5  - added abilities
+           + Healing Dome
+           + Penetrating Rounds
+           + Smoke Screen
+V 0.5.4  - added option to change the text output
+V 0.5.3  - added icon ordering by remaining duration
+         - reworked addon to ability ids as identifiers
+         - fixed an issue with other languages than english
+V 0.5.0  - added duration arc around icons
+         - added collecting of (unknown) ability infos
+         - added abilities
+           + Creeping Death
+           + Poison Ball
+           + Poison Trail
+           + Artillery Strike
+           + Cryo Shot (maybe inaccurate because of ability behavior)
+           + Decoy
+           + SIN Beacon
+V 0.4.5  - added: Thermal Wave, Hellfire, Rocketeer's Wings
+V 0.4.3  - added icon sliding
+V 0.4.2  - added rtl => ltr options
+         - fixed options not saving
+         - added some abilities
+V 0.3.7  - added support for multiple timers (up to 4)
+V 0.3.6  - moved timer into the icon and added otlines to the timer
+V 0.3.5  - cleaned up the code
+V 0.3.4  - re enabled options to deactivate abilities
+V 0.3.3  - switched to icons instead of text
+V 0.2.1  - fixed typo
+V 0.2.0  - initial
+
+V MAJOR.MINOR.PATCH

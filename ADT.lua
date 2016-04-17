@@ -27,6 +27,7 @@
 --]]
 
 require "lib/lib_Callback2";
+require "lib/lib_ChatLib";
 
 -- local
 local PRIVATE = {};
@@ -37,10 +38,8 @@ PRIVATE.font_name          = "";
 PRIVATE.font_size          = 0;
 PRIVATE.font_color         = "";
 PRIVATE.font_color_outline = "";
-PRIVATE.active             = 0;
 PRIVATE.unique             = 1;
-PRIVATE.is_ordering        = false;
-PRIVATE.ADTS               = {};
+PRIVATE.FRAMES             = {};
 
 function PRIVATE.GetUniqueId()
     -- PRIVATE.SystemMsg("PRIVATE:GetUniqueId()");
@@ -49,64 +48,64 @@ function PRIVATE.GetUniqueId()
     return PRIVATE.unique;
 end
 
-function PRIVATE.GetMaxPos()
+function PRIVATE.GetMaxPos(frame_id)
     -- PRIVATE.SystemMsg("PRIVATE:GetMaxPos()");
 
     local max = 0;
 
-    for i,_ in pairs(PRIVATE.ADTS) do
-        if PRIVATE.ADTS[i]:GetPos() > max then
-            max = PRIVATE.ADTS[i]:GetPos();
+    for i,_ in pairs(PRIVATE.FRAMES[frame_id].ADTS) do
+        if PRIVATE.FRAMES[frame_id].ADTS[i]:GetPos() > max then
+            max = PRIVATE.FRAMES[frame_id].ADTS[i]:GetPos();
         end
     end
 
     return max;
 end
 
-function PRIVATE.OrderTimers()
+function PRIVATE.OrderTimers(frame_id)
     -- PRIVATE.SystemMsg("PRIVATE:OrderTimers()");
 
-    if PRIVATE.is_ordering then
-        Callback2.FireAndForget(PRIVATE.OrderTimers, nil, 0.1);
+    if PRIVATE.FRAMES[frame_id].is_ordering then
+        Callback2.FireAndForget(PRIVATE.OrderTimers, frame_id, 0.1);
 
         return;
     end
 
-    PRIVATE.is_ordering = true;
+    PRIVATE.FRAMES[frame_id].is_ordering = true;
 
-    for i,_ in pairs(PRIVATE.ADTS) do
-        for ii,__ in pairs(PRIVATE.ADTS) do
-            local check_id        = PRIVATE.ADTS[i]:GetID() ~= PRIVATE.ADTS[ii]:GetID();
-            local check_remaining = PRIVATE.ADTS[i]:GetRemainingMs() < PRIVATE.ADTS[ii]:GetRemainingMs();
-            local check_pos       = PRIVATE.ADTS[i]:GetPos() > PRIVATE.ADTS[ii]:GetPos();
+    for i,_ in pairs(PRIVATE.FRAMES[frame_id].ADTS) do
+        for ii,__ in pairs(PRIVATE.FRAMES[frame_id].ADTS) do
+            local check_id        = PRIVATE.FRAMES[frame_id].ADTS[i]:GetID() ~= PRIVATE.FRAMES[frame_id].ADTS[ii]:GetID();
+            local check_remaining = PRIVATE.FRAMES[frame_id].ADTS[i]:GetRemainingMs() < PRIVATE.FRAMES[frame_id].ADTS[ii]:GetRemainingMs();
+            local check_pos       = PRIVATE.FRAMES[frame_id].ADTS[i]:GetPos() > PRIVATE.FRAMES[frame_id].ADTS[ii]:GetPos();
 
             if check_id and check_remaining and check_pos then
-                local pos_one = PRIVATE.ADTS[i]:GetPos();
-                local pos_two = PRIVATE.ADTS[ii]:GetPos();
+                local pos_one = PRIVATE.FRAMES[frame_id].ADTS[i]:GetPos();
+                local pos_two = PRIVATE.FRAMES[frame_id].ADTS[ii]:GetPos();
 
-                PRIVATE.ADTS[i]:SetPos(pos_two);
-                PRIVATE.ADTS[ii]:SetPos(pos_one);
+                PRIVATE.FRAMES[frame_id].ADTS[i]:SetPos(pos_two);
+                PRIVATE.FRAMES[frame_id].ADTS[ii]:SetPos(pos_one);
             end
         end
     end
 
-    for i,_ in pairs(PRIVATE.ADTS) do
-        PRIVATE.ADTS[i]:Relocate(0.1);
+    for i,_ in pairs(PRIVATE.FRAMES[frame_id].ADTS) do
+        PRIVATE.FRAMES[frame_id].ADTS[i]:Relocate(0.1);
     end
 
-    PRIVATE.is_ordering = false;
+    PRIVATE.FRAMES[frame_id].is_ordering = false;
 
     return PRIVATE;
 end
 
-function PRIVATE.OrderTimersLoop()
-    PRIVATE.OrderTimers();
+function PRIVATE.OrderTimersLoop(frame_id)
+    PRIVATE.OrderTimers(frame_id);
 
-    Callback2.FireAndForget(PRIVATE.OrderTimersLoop, {}, 1);
+    Callback2.FireAndForget(PRIVATE.OrderTimersLoop, frame_id, 1);
 end
 
 function PRIVATE.SystemMsg(message)
-    Component.GenerateEvent("MY_SYSTEM_MESSAGE", {text = "[ADT] "..tostring(message)});
+    ChatLib.SystemMessage({text = "[ADT] "..tostring(message)});
 end
 
 -- global
@@ -115,14 +114,18 @@ AbilityDurationTimer.__index = AbilityDurationTimer
 
 setmetatable(AbilityDurationTimer, {__call = function(CLS, ...) return CLS.New(...) end});
 
-function AbilityDurationTimer.New(FRAME)
+function AbilityDurationTimer.New(frame_id)
+    if nil == PRIVATE.FRAMES[frame_id] then
+        return;
+    end
+
     -- =========================================================================
     -- = private properties
     -- =========================================================================
 
     local ADT          = setmetatable({}, AbilityDurationTimer); -- instance
     local id           = PRIVATE.GetUniqueId();
-    local pos          = PRIVATE.GetMaxPos() + 1;
+    local pos          = PRIVATE.GetMaxPos(frame_id) + 1;
     local start_time   = tonumber(System.GetClientTime());
     local ability_id   = 0;
     local ability_name = "";
@@ -131,8 +134,9 @@ function AbilityDurationTimer.New(FRAME)
     local duration     = 0;
     local duration_ms  = 0;
     local remaining_ms = 0;
+    local frame_id     = frame_id;
 
-    local BP  = Component.CreateWidget("BP_IconTimer", FRAME); -- from blueprint in xml
+    local BP  = Component.CreateWidget("BP_IconTimer", PRIVATE.FRAMES[frame_id].OBJ); -- from blueprint in xml
     local GRP = BP:GetChild("timer_grp");
 
     local ICON            = GRP:GetChild("icon");
@@ -248,7 +252,7 @@ function AbilityDurationTimer.New(FRAME)
 
         local font = PRIVATE.font_name.."_"..tostring(PRIVATE.font_size);
 
-        if PRIVATE.max_visible >= PRIVATE.active then
+        if PRIVATE.max_visible >= PRIVATE.FRAMES[frame_id].active then
             self:VisibilityTo(1, 0);
         end
 
@@ -291,13 +295,13 @@ function AbilityDurationTimer.New(FRAME)
         );
         UPDATE_TIMER:Schedule(duration);
 
-        PRIVATE.OrderTimers();
+        PRIVATE.OrderTimers(self:GetFrameID());
     end
 
     function ADT:UpdateTimerBind(callback)
         -- PRIVATE.SystemMsg("ADT:UpdateTimerBind()");
 
-        if nil == PRIVATE.ADTS[self:GetID()] then
+        if nil == PRIVATE.FRAMES[frame_id].ADTS[self:GetID()] then
             -- PRIVATE.SystemMsg("Timer already gone.");
 
             return;
@@ -309,23 +313,24 @@ function AbilityDurationTimer.New(FRAME)
             callback(self);
         end
 
-        local _id  = id;
-        local _pos = pos;
+        local _id       = id;
+        local _pos      = pos;
+        local _frame_id = frame_id;
 
-        for i,_ in pairs(PRIVATE.ADTS) do
-            if PRIVATE.ADTS[i]:GetID() == _id then
-                PRIVATE.ADTS[i] = nil;
-                PRIVATE.active  = PRIVATE.active - 1;
-            elseif PRIVATE.ADTS[i]:GetPos() > _pos then
-                PRIVATE.ADTS[i]:SetPos(PRIVATE.ADTS[i]:GetPos() - 1):Relocate(0.1);
+        for i,_ in pairs(PRIVATE.FRAMES[_frame_id].ADTS) do
+            if PRIVATE.FRAMES[_frame_id].ADTS[i]:GetID() == _id then
+                PRIVATE.FRAMES[_frame_id].ADTS[i] = nil;
+                PRIVATE.FRAMES[_frame_id].active  = PRIVATE.FRAMES[_frame_id].active - 1;
+            elseif PRIVATE.FRAMES[_frame_id].ADTS[i]:GetPos() > _pos then
+                PRIVATE.FRAMES[_frame_id].ADTS[i]:SetPos(PRIVATE.FRAMES[_frame_id].ADTS[i]:GetPos() - 1):Relocate(0.1);
             end
         end
 
-        if 0 > PRIVATE.active then
-            PRIVATE.active = 0;
+        if 0 > PRIVATE.FRAMES[_frame_id].active then
+            PRIVATE.FRAMES[_frame_id].active = 0;
         end
 
-        PRIVATE.OrderTimers();
+        PRIVATE.OrderTimers(_frame_id);
 
         return self;
     end
@@ -427,13 +432,16 @@ function AbilityDurationTimer.New(FRAME)
         return remaining_ms;
     end
 
+    function ADT:GetFrameID()
+        return frame_id;
+    end
     -- =========================================================================
     -- = finish creation
     -- =========================================================================
 
-    PRIVATE.ADTS[id] = ADT;
+    PRIVATE.FRAMES[frame_id].ADTS[id] = ADT;
 
-    PRIVATE.active = PRIVATE.active + 1;
+    PRIVATE.FRAMES[frame_id].active = PRIVATE.FRAMES[frame_id].active + 1;
 
     return ADT;
 end
@@ -441,8 +449,23 @@ end
 -- global
 ADTStatic = {};
 
-function ADTStatic.Init()
-    Callback2.FireAndForget(PRIVATE.OrderTimersLoop, {}, 1);
+function ADTStatic.Init(FRAME_IDS)
+    for i,_ in pairs(FRAME_IDS) do
+        Callback2.FireAndForget(PRIVATE.OrderTimersLoop, FRAME_IDS[i], 1);
+    end
+
+    return ADTStatic;
+end
+
+function ADTStatic.RegisterFrame(FRAME)
+    PRIVATE.FRAMES[FRAME.id] = {
+        active      = 0,
+        is_ordering = false,
+        OBJ         = FRAME.OBJ,
+        ADTS        = {}
+    };
+
+    return ADTStatic;
 end
 
 function ADTStatic.SetMaxVisible(val)
@@ -450,7 +473,7 @@ function ADTStatic.SetMaxVisible(val)
 
     log("PRIVATE.max_visible: "..tostring(PRIVATE.max_visible));
 
-    return AbilityDurationTimer;
+    return ADTStatic;
 end
 
 function ADTStatic.SetAlignment(val)
@@ -458,7 +481,7 @@ function ADTStatic.SetAlignment(val)
 
     log("PRIVATE.alignment: "..tostring(PRIVATE.alignment));
 
-    return AbilityDurationTimer;
+    return ADTStatic;
 end
 
 function ADTStatic.SetFontName(val)
@@ -466,7 +489,7 @@ function ADTStatic.SetFontName(val)
 
     log("PRIVATE.font_name: "..PRIVATE.font_name);
 
-    return AbilityDurationTimer;
+    return ADTStatic;
 end
 
 function ADTStatic.SetFontSize(val)
@@ -474,7 +497,7 @@ function ADTStatic.SetFontSize(val)
 
     log("PRIVATE.font_size: "..tostring(PRIVATE.font_size));
 
-    return AbilityDurationTimer;
+    return ADTStatic;
 end
 
 function ADTStatic.SetFontColor(val)
@@ -482,27 +505,41 @@ function ADTStatic.SetFontColor(val)
 
     log("PRIVATE.font_color: "..PRIVATE.font_color);
 
-    return AbilityDurationTimer;
+    return ADTStatic;
 end
 
 function ADTStatic.SetFontColorOutline(val)
     PRIVATE.font_color_outline = tostring(val);
 
-    log("PRIVATE.: "..PRIVATE.font_color_outline);
+    log("PRIVATE.font_color_outline: "..PRIVATE.font_color_outline);
 
-    return AbilityDurationTimer;
+    return ADTStatic;
 end
 
-function ADTStatic.GetActive()
-    return PRIVATE.active;
+function ADTStatic.GetActive(frame_id)
+    if nil == frame_id then
+        local active = 0;
+
+        for i,_ in pairs(PRIVATE.FRAMES) do
+            active = active + PRIVATE.FRAMES[i].active;
+        end
+
+        return active;
+    end
+
+    return PRIVATE.FRAMES[frame_id].active;
 end
 
 function ADTStatic.KillAll()
-    for i,_ in pairs(PRIVATE.ADTS) do
-        PRIVATE.ADTS[i]:Release();
+    for i,_ in pairs(PRIVATE.FRAMES) do
+        for ii,__ in pairs(PRIVATE.FRAMES[i].ADTS) do
+            PRIVATE.FRAMES[i].ADTS[ii]:Release();
 
-        PRIVATE.ADTS[i] = nil;
+            PRIVATE.FRAMES[i].ADTS[ii] = nil;
+        end
     end
+
+    return ADTStatic;
 end
 
 -- =============================================================================

@@ -26,6 +26,7 @@
 require "math";
 require "string";
 require "lib/lib_Callback2";
+require "lib/lib_ChatLib";
 require "lib/lib_InterfaceOptions";
 require "lib/lib_Slash";
 require "./ADT";
@@ -40,19 +41,26 @@ local SETTINGS          = {};
 local ABILITY_INFOS     = {};
 local ABILITY_ALIAS     = {};
 local ABILITY_DURATIONS = {};
+local ABILITY_OPTIONS   = {};
 local ON_ABILITY_STATE  = {};
 local NAMES             = {};
 local PERKS             = {};
 local SLOTTED_PERKS     = {};
 local slash_list        = "adt";
+local output_prefix     = "[ADT] ";
+local debug_prefix      = "[DEBUG] ";
 
 -- global for sure shot
 local burst_time     = 0;
 local last_shot_time = 0;
 
-UI.ALIGNMENT = {};
-UI.FRAME     = Component.GetFrame("adt_frame");
+UI.FRAMES     = {};
+UI.FRAMES[1]  = {id = 1, OBJ = Component.GetFrame("adt_frame_1")};
+UI.FRAMES[2]  = {id = 2, OBJ = Component.GetFrame("adt_frame_2")};
+UI.FRAMES[3]  = {id = 3, OBJ = Component.GetFrame("adt_frame_3")};
+UI.FRAMES[4]  = {id = 4, OBJ = Component.GetFrame("adt_frame_4")};
 
+UI.ALIGNMENT        = {};
 UI.ALIGNMENT["ltr"] = 68;
 UI.ALIGNMENT["rtl"] = -68;
 
@@ -75,10 +83,10 @@ SETTINGS = {
     system_message_text = "Starting duration timer for '${name}' (${duration}s).",
     max_timers          = 12,
     timers_alignment    = "ltr",
-    track_perks         = true,
     -- objects
-    TIMERS = {},
-    FONT   = {
+    TRACK_PERKS = {show = false, frame = 1},
+    TIMERS      = {},
+    FONT        = {
         name = "Demi",
         size = 16,
         -- objects
@@ -131,6 +139,10 @@ NAMES[38620] = "Activate: Rocket Wings";
 NAMES[34928] = "Healing Dome";
 NAMES[41875] = "Penetrating Rounds";
 NAMES[35345] = "Smoke Screen";
+NAMES[35583] = "Electrical Storm";
+NAMES[34770] = "Boomerang";
+NAMES[35637] = "Supercharge";
+NAMES[35618] = "Overload";
 -- NAMES[] = ""; -- NEW
 
 -- Perks
@@ -151,122 +163,136 @@ ON_ABILITY_STATE[2843]  = false; -- Decoy [ON_ABILITY_STATE] (named Heavy Armor 
 ON_ABILITY_STATE[15231] = false; -- Absorption Bomb
 ON_ABILITY_STATE[35455] = false; -- Bulwark
 
--- Dreadnaught
-SETTINGS.TIMERS[41881] = true; -- Absorption Bomb
-SETTINGS.TIMERS[34066] = true; -- Dreadfield
-SETTINGS.TIMERS[3782]  = true; -- Heavy Armor
-SETTINGS.TIMERS[41875] = true; -- Penetrating Rounds
-SETTINGS.TIMERS[1726]  = true; -- Thunderdome
+-- Assault
+SETTINGS.TIMERS[41682] = {show = true, frame = 1}; -- Hellfire
+SETTINGS.TIMERS[3639]  = {show = true, frame = 1}; -- Overcharge
+SETTINGS.TIMERS[35637] = {show = true, frame = 1}; -- Supercharge
+SETTINGS.TIMERS[35458] = {show = true, frame = 1}; -- Thermal Wave
 
 -- Biotech
-SETTINGS.TIMERS[15206] = true; -- Adrenaline
-SETTINGS.TIMERS[34734] = true; -- Creeping Death
-SETTINGS.TIMERS[34928] = true; -- Healing Dome
-SETTINGS.TIMERS[41867] = true; -- Heroism
-SETTINGS.TIMERS[35620] = true; -- Necrosis
-SETTINGS.TIMERS[41865] = true; -- Poison Ball
-SETTINGS.TIMERS[40592] = true; -- Poison Trail
+SETTINGS.TIMERS[15206] = {show = true, frame = 1}; -- Adrenaline
+SETTINGS.TIMERS[34734] = {show = true, frame = 1}; -- Creeping Death
+SETTINGS.TIMERS[34928] = {show = true, frame = 1}; -- Healing Dome
+SETTINGS.TIMERS[41867] = {show = true, frame = 1}; -- Heroism
+SETTINGS.TIMERS[35620] = {show = true, frame = 1}; -- Necrosis
+SETTINGS.TIMERS[41865] = {show = true, frame = 1}; -- Poison Ball
+SETTINGS.TIMERS[40592] = {show = true, frame = 1}; -- Poison Trail
 
--- Recon
-SETTINGS.TIMERS[35567] = true; -- Artillery Strike
-SETTINGS.TIMERS[39405] = true; -- Cryo Bolt -- Cryo Shot
-SETTINGS.TIMERS[34957] = true; -- Decoy
-SETTINGS.TIMERS[34526] = true; -- SIN Beacon
-SETTINGS.TIMERS[35345] = true; -- Smoke Screen
-SETTINGS.TIMERS[12305] = true; -- Teleport Beacon
-
--- Assault
-SETTINGS.TIMERS[41682] = true; -- Hellfire
-SETTINGS.TIMERS[3639]  = true; -- Overcharge
-SETTINGS.TIMERS[35458] = true; -- Thermal Wave
+-- Dreadnaught
+SETTINGS.TIMERS[41881] = {show = true, frame = 1}; -- Absorption Bomb
+SETTINGS.TIMERS[34066] = {show = true, frame = 1}; -- Dreadfield
+SETTINGS.TIMERS[3782]  = {show = true, frame = 1}; -- Heavy Armor
+SETTINGS.TIMERS[41875] = {show = true, frame = 1}; -- Penetrating Rounds
+SETTINGS.TIMERS[1726]  = {show = true, frame = 1}; -- Thunderdome
 
 -- Engineer
-SETTINGS.TIMERS[35455] = true; -- Bulwark
-SETTINGS.TIMERS[41886] = true; -- Fortify
-SETTINGS.TIMERS[41880] = true; -- Overclock
+SETTINGS.TIMERS[34770] = {show = true, frame = 1}; -- Boomerang Shot
+SETTINGS.TIMERS[35455] = {show = true, frame = 1}; -- Bulwark
+SETTINGS.TIMERS[35583] = {show = true, frame = 1}; -- Electrical Storm
+SETTINGS.TIMERS[41886] = {show = true, frame = 1}; -- Fortify
+SETTINGS.TIMERS[41880] = {show = true, frame = 1}; -- Overclock
+
+-- Recon
+SETTINGS.TIMERS[35567] = {show = true, frame = 1}; -- Artillery Strike
+SETTINGS.TIMERS[39405] = {show = true, frame = 1}; -- Cryo Bolt -- Cryo Shot
+SETTINGS.TIMERS[34957] = {show = true, frame = 1}; -- Decoy
+SETTINGS.TIMERS[35618] = {show = true, frame = 1}; -- Overload
+SETTINGS.TIMERS[34526] = {show = true, frame = 1}; -- SIN Beacon
+SETTINGS.TIMERS[35345] = {show = true, frame = 1}; -- Smoke Screen
+SETTINGS.TIMERS[12305] = {show = true, frame = 1}; -- Teleport Beacon
 
 -- Miscellaneous
-SETTINGS.TIMERS[38620] = true; -- Activate: Rocket Wings
+SETTINGS.TIMERS[38620] = {show = true, frame = 1}; -- Activate: Rocket Wings
 
 -- Perks
--- SETTINGS.TIMERS["P[86118]"] = true; -- Sure Shot
+-- SETTINGS.TIMERS["P[86118]"] = {show = true, frame = 1}; -- Sure Shot
 
 -- =============================================================================
 --  Options
 -- =============================================================================
 
 function BuildOptions()
-    InterfaceOptions.AddMovableFrame({frame=UI.FRAME, label="Ability Duration Timer", scalable=true});
+    InterfaceOptions.AddMovableFrame({frame=UI.FRAMES[1].OBJ, label="Ability Duration Timer (Frame 1)", scalable=true});
+    InterfaceOptions.AddMovableFrame({frame=UI.FRAMES[2].OBJ, label="Ability Duration Timer (Frame 2)", scalable=true});
+    InterfaceOptions.AddMovableFrame({frame=UI.FRAMES[3].OBJ, label="Ability Duration Timer (Frame 3)", scalable=true});
+    InterfaceOptions.AddMovableFrame({frame=UI.FRAMES[4].OBJ, label="Ability Duration Timer (Frame 4)", scalable=true});
 
-    InterfaceOptions.StartGroup({label="Ability Duration Timer: Main Settings"});
-        InterfaceOptions.AddCheckBox({id="DEBUG_ENABLED", label="Debug enabled", default=(Component.GetSetting("DEBUG_ENABLED") or SETTINGS.debug)});
-        InterfaceOptions.AddCheckBox({id="SYSMSG_ENABLED", label="Chat output (Starting duration timer ...) enabled", default=(Component.GetSetting("SYSMSG_ENABLED") or SETTINGS.system_message)});
-        InterfaceOptions.AddTextInput({id="SYSMSG_TEXT", label="Chat output message", default=SETTINGS.system_message_text, tooltip="Message to show when the timer starts.\nAvailable parameter: ${name} and ${duration}"});
-        InterfaceOptions.AddSlider({id="MAX_TIMERS", label="max timers", min=1, max=50, inc=1, suffix="", default=(Component.GetSetting("MAX_TIMERS") or SETTINGS.max_timers)});
-        InterfaceOptions.AddChoiceMenu({id="TIMERS_ALIGNMENT", label="Timer alignment", default=(Component.GetSetting("TIMERS_ALIGNMENT") or SETTINGS.timers_alignment)});
-            InterfaceOptions.AddChoiceEntry({menuId="TIMERS_ALIGNMENT", val="ltr", label="left to right"});
-            InterfaceOptions.AddChoiceEntry({menuId="TIMERS_ALIGNMENT", val="rtl", label="right to left"});
-        InterfaceOptions.AddChoiceMenu({id="FONT", label="Font", default=(Component.GetSetting("FONT") or SETTINGS.FONT.name)});
-            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Demi", label="Eurostile Medium"});
-            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Narrow", label="Eurostile Narrow"});
-            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Wide", label="Eurostile Wide"});
-            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Bold", label="Eurostile Bold"});
-            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuRegular", label="Ubuntu Regular"});
-            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuMedium", label="Ubuntu Medium"});
-            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuBold", label="Ubuntu Bold"});
-        InterfaceOptions.AddSlider({id="FONT_SIZE", label="Font size", min=1, max=20, inc=1, suffix="", default=(Component.GetSetting("FONT_SIZE") or SETTINGS.FONT.size)});
-        InterfaceOptions.AddColorPicker({id="TIMER_COLOR", label="Ability duration color", default={tint=(Component.GetSetting("TIMER_COLOR") or SETTINGS.FONT.COLOR.text_timer)}});
-        InterfaceOptions.AddColorPicker({id="TIMER_COLOR_OUTLINE", label="Ability duration outline color", default={tint=(Component.GetSetting("TIMER_COLOR_OUTLINE") or SETTINGS.FONT.COLOR.text_timer_outline)}});
-        InterfaceOptions.AddCheckBox({id="PERKS_ENABLED", label="Perks enabled (experimental)", default=(Component.GetSetting("PERKS_ENABLED") or SETTINGS.track_perks)});
-    InterfaceOptions.StopGroup();
+    InterfaceOptions.AddCheckBox({id="DEBUG_ENABLED", label="Debug", default=(Component.GetSetting("DEBUG_ENABLED") or SETTINGS.debug)});
+    InterfaceOptions.AddCheckBox({id="SYSMSG_ENABLED", label="Chat output (Starting duration timer ...)", default=(Component.GetSetting("SYSMSG_ENABLED") or SETTINGS.system_message)});
+    InterfaceOptions.AddTextInput({id="SYSMSG_TEXT", label="Chat output message", default=SETTINGS.system_message_text, tooltip="Message to show when the timer starts.\nAvailable parameter: ${name} and ${duration}"});
+    InterfaceOptions.AddSlider({id="MAX_TIMERS", label="max timers", min=1, max=50, inc=1, suffix="", default=(Component.GetSetting("MAX_TIMERS") or SETTINGS.max_timers)});
+    InterfaceOptions.AddChoiceMenu({id="TIMERS_ALIGNMENT", label="Timer alignment", default=(Component.GetSetting("TIMERS_ALIGNMENT") or SETTINGS.timers_alignment)});
+        InterfaceOptions.AddChoiceEntry({menuId="TIMERS_ALIGNMENT", val="ltr", label="left to right"});
+        InterfaceOptions.AddChoiceEntry({menuId="TIMERS_ALIGNMENT", val="rtl", label="right to left"});
+    InterfaceOptions.AddChoiceMenu({id="FONT", label="Font", default=(Component.GetSetting("FONT") or SETTINGS.FONT.name)});
+        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Demi", label="Eurostile Medium"});
+        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Narrow", label="Eurostile Narrow"});
+        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Wide", label="Eurostile Wide"});
+        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Bold", label="Eurostile Bold"});
+        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuRegular", label="Ubuntu Regular"});
+        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuMedium", label="Ubuntu Medium"});
+        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuBold", label="Ubuntu Bold"});
+    InterfaceOptions.AddSlider({id="FONT_SIZE", label="Font size", min=1, max=20, inc=1, suffix="", default=(Component.GetSetting("FONT_SIZE") or SETTINGS.FONT.size)});
+    InterfaceOptions.AddColorPicker({id="TIMER_COLOR", label="Ability duration color", default={tint=(Component.GetSetting("TIMER_COLOR") or SETTINGS.FONT.COLOR.text_timer)}});
+    InterfaceOptions.AddColorPicker({id="TIMER_COLOR_OUTLINE", label="Ability duration outline color", default={tint=(Component.GetSetting("TIMER_COLOR_OUTLINE") or SETTINGS.FONT.COLOR.text_timer_outline)}});
+    InterfaceOptions.AddCheckBox({id="PERKS_ENABLED", label="Perks (experimental)", default=(Component.GetSetting("PERKS_ENABLED") or SETTINGS.TRACK_PERKS.show)});
+    InterfaceOptions.AddChoiceMenu({id="PERKS_FRAME", label="Perks frame", default=(Component.GetSetting("PERKS_FRAME") or SETTINGS.TRACK_PERKS.frame)});
+        InterfaceOptions.AddChoiceEntry({menuId="PERKS_FRAME", val="1", label="1"});
+        InterfaceOptions.AddChoiceEntry({menuId="PERKS_FRAME", val="2", label="2"});
+        InterfaceOptions.AddChoiceEntry({menuId="PERKS_FRAME", val="3", label="3"});
+        InterfaceOptions.AddChoiceEntry({menuId="PERKS_FRAME", val="4", label="4"});
 
-    -- Dreadnaught
-    InterfaceOptions.StartGroup({label="Dreadnaught"});
-        InterfaceOptions.AddCheckBox({id="ABSORPTION_BOMB_ENABLED", label="Absorption Bomb enabled", default=(Component.GetSetting("ABSORPTION_BOMB_ENABLED") or SETTINGS.TIMERS[41881])});
-        InterfaceOptions.AddCheckBox({id="DREADFIELD_ENABLED", label="Dreadfield enabled", default=(Component.GetSetting("DREADFIELD_ENABLED") or SETTINGS.TIMERS[34066])});
-        InterfaceOptions.AddCheckBox({id="HEAVY_ARMOR_ENABLED", label="Heavy Armor enabled", default=(Component.GetSetting("HEAVY_ARMOR_ENABLED") or SETTINGS.TIMERS[3782])});
-        InterfaceOptions.AddCheckBox({id="PENETRATING_ROUNDS_ENABLED", label="Penetrating Rounds enabled", default=(Component.GetSetting("PENETRATING_ROUNDS_ENABLED") or SETTINGS.TIMERS[41875])});
-        InterfaceOptions.AddCheckBox({id="THUNDERDOME_ENABLED", label="Thunderdome enabled", default=(Component.GetSetting("THUNDERDOME_ENABLED") or SETTINGS.TIMERS[1726])});
+    -- Assault
+    InterfaceOptions.StartGroup({label="Assault"});
+        RUMPEL.AddAbilityOptions("Hellfire", 41682);
+        RUMPEL.AddAbilityOptions("Overcharge", 3639);
+        RUMPEL.AddAbilityOptions("Supercharge", 35637);
+        RUMPEL.AddAbilityOptions("Thermal Wave", 35458);
     InterfaceOptions.StopGroup();
 
     -- Biotech
     InterfaceOptions.StartGroup({label="Biotech"});
-        InterfaceOptions.AddCheckBox({id="ADRENALINE_RUSH_ENABLED", label="Adrenaline Rush enabled", default=(Component.GetSetting("ADRENALINE_RUSH_ENABLED") or SETTINGS.TIMERS[15206])});
-        InterfaceOptions.AddCheckBox({id="CREEPING_DEATH_ENABLED", label="Creeping Death enabled", default=(Component.GetSetting("CREEPING_DEATH_ENABLED") or SETTINGS.TIMERS[34734])});
-        InterfaceOptions.AddCheckBox({id="HEALING_DOME_ENABLED", label="Healing Dome enabled", default=(Component.GetSetting("HEALING_DOME_ENABLED") or SETTINGS.TIMERS[34928])});
-        InterfaceOptions.AddCheckBox({id="NECROSIS_ENABLED", label="Necrosis enabled", default=(Component.GetSetting("NECROSIS_ENABLED") or SETTINGS.TIMERS[41867])});
-        InterfaceOptions.AddCheckBox({id="HEROISM_ENABLED", label="Heroism enabled", default=(Component.GetSetting("HEROISM_ENABLED") or SETTINGS.TIMERS[35620])});
-        InterfaceOptions.AddCheckBox({id="POISON_BALL_ENABLED", label="Poison Ball enabled", default=(Component.GetSetting("POISON_BALL_ENABLED") or SETTINGS.TIMERS[41865])});
-        InterfaceOptions.AddCheckBox({id="POISON_TRAIL_ENABLED", label="Poison Trail enabled", default=(Component.GetSetting("POISON_TRAIL_ENABLED") or SETTINGS.TIMERS[40592])});
+        RUMPEL.AddAbilityOptions("Adrenaline Rush", 15206);
+        RUMPEL.AddAbilityOptions("Creeping Death", 34734);
+        RUMPEL.AddAbilityOptions("Healing Dome", 34928);
+        RUMPEL.AddAbilityOptions("Necrosis", 41867);
+        RUMPEL.AddAbilityOptions("Heroism", 35620);
+        RUMPEL.AddAbilityOptions("Poison Ball", 41865);
+        RUMPEL.AddAbilityOptions("Poison Trail", 40592);
     InterfaceOptions.StopGroup();
 
-    -- Recon
-    InterfaceOptions.StartGroup({label="Recon"});
-        InterfaceOptions.AddCheckBox({id="ARTILLERY_STRIKE_ENABLED", label="Artillery Strike enabled", default=(Component.GetSetting("ARTILLERY_STRIKE_ENABLED") or SETTINGS.TIMERS[35567])});
-        InterfaceOptions.AddCheckBox({id="CRYO_BOLT_ENABLED", label="Cryo Shot enabled", default=(Component.GetSetting("CRYO_BOLT_ENABLED") or SETTINGS.TIMERS[39405])});
-        InterfaceOptions.AddCheckBox({id="DECOY_ENABLED", label="Decoy enabled", default=(Component.GetSetting("DECOY_ENABLED") or SETTINGS.TIMERS[34957])});
-        InterfaceOptions.AddCheckBox({id="SIN_BEACON_ENABLED", label="SIN Beacon enabled", default=(Component.GetSetting("SIN_BEACON_ENABLED") or SETTINGS.TIMERS[34526])});
-        InterfaceOptions.AddCheckBox({id="SMOKE_SCREEN_ENABLED", label="Smoke Screen enabled", default=(Component.GetSetting("SMOKE_SCREEN_ENABLED") or SETTINGS.TIMERS[35345])});
-        InterfaceOptions.AddCheckBox({id="TELEPORT_BEACON_ENABLED", label="Teleport Beacon enabled", default=(Component.GetSetting("TELEPORT_BEACON_ENABLED") or SETTINGS.TIMERS[12305])});
-    InterfaceOptions.StopGroup();
-
-    -- Assault
-    InterfaceOptions.StartGroup({label="Assault"});
-        InterfaceOptions.AddCheckBox({id="HELLFIRE_ENABLED", label="Hellfire enabled", default=(Component.GetSetting("HELLFIRE_ENABLED") or SETTINGS.TIMERS[41682])});
-        InterfaceOptions.AddCheckBox({id="OVERCHARGE_ENABLED", label="Overcharge enabled", default=(Component.GetSetting("OVERCHARGE_ENABLED") or SETTINGS.TIMERS[3639])});
-        InterfaceOptions.AddCheckBox({id="THERMAL_WAVE_ENABLED", label="Thermal Wave enabled", default=(Component.GetSetting("THERMAL_WAVE_ENABLED") or SETTINGS.TIMERS[35458])});
+    -- Dreadnaught
+    InterfaceOptions.StartGroup({label="Dreadnaught"});
+        RUMPEL.AddAbilityOptions("Absorption Bomb", 41881);
+        RUMPEL.AddAbilityOptions("Dreadfield", 34066);
+        RUMPEL.AddAbilityOptions("Heavy Armor", 3782);
+        RUMPEL.AddAbilityOptions("Penetrating Rounds", 41875);
+        RUMPEL.AddAbilityOptions("Thunderdome", 1726);
     InterfaceOptions.StopGroup();
 
     -- Engineer
     InterfaceOptions.StartGroup({label="Engineer"});
-        InterfaceOptions.AddCheckBox({id="FORTIFY_ENABLED", label="Fortify enabled", default=(Component.GetSetting("FORTIFY_ENABLED") or SETTINGS.TIMERS[35455])});
-        InterfaceOptions.AddCheckBox({id="BULWARK_ENABLED", label="Bulwark enabled", default=(Component.GetSetting("BULWARK_ENABLED") or SETTINGS.TIMERS[41886])});
-        InterfaceOptions.AddCheckBox({id="OVERCLOCK_ENABLED", label="Overclock enabled", default=(Component.GetSetting("OVERCLOCK_ENABLED") or SETTINGS.TIMERS[41880])});
+        RUMPEL.AddAbilityOptions("Boomerang Shot", 34770);
+        RUMPEL.AddAbilityOptions("Bulwark", 41886);
+        RUMPEL.AddAbilityOptions("Electrical Storm", 35583);
+        RUMPEL.AddAbilityOptions("Fortify", 35455);
+        RUMPEL.AddAbilityOptions("Overclock", 41880);
+    InterfaceOptions.StopGroup();
+
+    -- Recon
+    InterfaceOptions.StartGroup({label="Recon"});
+        RUMPEL.AddAbilityOptions("Artillery Strike", 35567);
+        RUMPEL.AddAbilityOptions("Cryo Shot", 39405);
+        RUMPEL.AddAbilityOptions("Decoy", 34957);
+        RUMPEL.AddAbilityOptions("Overload", 35618);
+        RUMPEL.AddAbilityOptions("SIN Beacon", 34526);
+        RUMPEL.AddAbilityOptions("Smoke Screen", 35345);
+        RUMPEL.AddAbilityOptions("Teleport Beacon", 12305);
     InterfaceOptions.StopGroup();
 
     -- Miscellaneous
     InterfaceOptions.StartGroup({label="Miscellaneous"});
-        InterfaceOptions.AddCheckBox({id="ROCKETEERS_WINGS_ENABLED", label="Rocketeer's Wings enabled", default=(Component.GetSetting("ROCKETEERS_WINGS_ENABLED") or SETTINGS.TIMERS[38620])});
+        RUMPEL.AddAbilityOptions("Rocketeer's Wings", 38620);
     InterfaceOptions.StopGroup();
 end
 
@@ -289,7 +315,12 @@ function OnComponentLoad()
 end
 
 function OnPlayerReady()
-    ADTStatic.Init();
+    ADTStatic
+        .RegisterFrame(UI.FRAMES[1])
+        .RegisterFrame(UI.FRAMES[2])
+        .RegisterFrame(UI.FRAMES[3])
+        .RegisterFrame(UI.FRAMES[4])
+        .Init({1, 2, 3, 4});
 
     RUMPEL.GetPerks();
     RUMPEL.GetLoadoutPerks();
@@ -302,12 +333,12 @@ end
 function OnSlash(ARGS)
     -- RUMPEL.ConsoleLog("OnSlash with args: "..tostring(ARGS));
 
-    if 42 == tonumber(ARGS[1]) then
-        RUMPEL.TestTimers();
+    if 42 == tonumber(ARGS[1]) and nil ~= ARGS[2] then
+        RUMPEL.TestTimers(tonumber(ARGS[2]));
     elseif "rm" == ARGS[1] then
         ADTStatic.KillAll();
-    elseif "bw" == ARGS[1] then
-        RUMPEL.TestBulwark();
+    elseif "bw" == ARGS[1] and nil ~= ARGS[2] then
+        RUMPEL.TestBulwark(tonumber(ARGS[2]));
     elseif "pstats" == ARGS[1] then
         log(tostring(Player.GetAllStats()));
     elseif "timers" == ARGS[1] then
@@ -315,12 +346,14 @@ function OnSlash(ARGS)
     elseif "test" == ARGS[1] then
         RUMPEL.Test();
     else
-        RUMPEL.SystemMsg("Unknown slash argument!");
+        RUMPEL.SystemMsg("Unknown slash command.");
     end
 end
 
 function OnShow(ARGS)
-    UI.FRAME:Show(ARGS.show);
+    for i,_ in pairs(UI.FRAMES) do
+        UI.FRAMES[i].OBJ:Show(ARGS.show);
+    end
 end
 
 function OnBattleframeChanged()
@@ -369,84 +402,29 @@ function OnOptionChanged(id, value)
         SETTINGS.FONT.COLOR.text_timer_outline = value.tint;
         Component.SaveSetting("TIMER_COLOR_OUTLINE", value.tint);
         ADTStatic.SetFontColorOutline(value.tint);
-    elseif "HEAVY_ARMOR_ENABLED" == id then
-        SETTINGS.TIMERS[3782] = value;
-        Component.SaveSetting("HEAVY_ARMOR_ENABLED", value);
-    elseif "THUNDERDOME_ENABLED" == id then
-        SETTINGS.TIMERS[1726] = value;
-        Component.SaveSetting("THUNDERDOME_ENABLED", value);
-    elseif "DREADFIELD_ENABLED" == id then
-        SETTINGS.TIMERS[34066] = value;
-        Component.SaveSetting("DREADFIELD_ENABLED", value);
-    elseif "ABSORPTION_BOMB_ENABLED" == id then
-        SETTINGS.TIMERS[41881] = value;
-        Component.SaveSetting("ABSORPTION_BOMB_ENABLED", value);
-    elseif "ADRENALINE_RUSH_ENABLED" == id then
-        SETTINGS.TIMERS[15206] = value;
-        Component.SaveSetting("ADRENALINE_RUSH_ENABLED", value);
-    elseif "NECROSIS_ENABLED" == id then
-        SETTINGS.TIMERS[35620] = value;
-        Component.SaveSetting("NECROSIS_ENABLED", value);
-    elseif "HEROISM_ENABLED" == id then
-        SETTINGS.TIMERS[41867] = value;
-        Component.SaveSetting("HEROISM_ENABLED", value);
-    elseif "TELEPORT_BEACON_ENABLED" == id then
-        SETTINGS.TIMERS[12305] = value;
-        Component.SaveSetting("TELEPORT_BEACON_ENABLED", value);
-    elseif "OVERCHARGE_ENABLED" == id then
-        SETTINGS.TIMERS[3639] = value;
-        Component.SaveSetting("OVERCHARGE_ENABLED", value);
-    elseif "THERMAL_WAVE_ENABLED" == id then
-        SETTINGS.TIMERS[35458] = value;
-        Component.SaveSetting("THERMAL_WAVE_ENABLED", value);
-    elseif "HELLFIRE_ENABLED" == id then
-        SETTINGS.TIMERS[41682] = value;
-        Component.SaveSetting("HELLFIRE_ENABLED", value);
-    elseif "BULWARK_ENABLED" == id then
-        SETTINGS.TIMERS[35455] = value;
-        Component.SaveSetting("BULWARK_ENABLED", value);
-    elseif "OVERCLOCK_ENABLED" == id then
-        SETTINGS.TIMERS[41880] = value;
-        Component.SaveSetting("OVERCLOCK_ENABLED", value);
-    elseif "FORTIFY_ENABLED" == id then
-        SETTINGS.TIMERS[41886] = value;
-        Component.SaveSetting("FORTIFY_ENABLED", value);
-    elseif "ROCKETEERS_WINGS_ENABLED" == id then
-        SETTINGS.TIMERS[38620] = value;
-        Component.SaveSetting("ROCKETEERS_WINGS_ENABLED", value);
-    elseif "CREEPING_DEATH_ENABLED" == id then
-        SETTINGS.TIMERS[34734] = value;
-        Component.SaveSetting("CREEPING_DEATH_ENABLED", value);
-    elseif "POISON_BALL_ENABLED" == id then
-        SETTINGS.TIMERS[41865] = value;
-        Component.SaveSetting("POISON_BALL_ENABLED", value);
-    elseif "POISON_TRAIL_ENABLED" == id then
-        SETTINGS.TIMERS[40592] = value;
-        Component.SaveSetting("POISON_TRAIL_ENABLED", value);
-    elseif "ARTILLERY_STRIKE_ENABLED" == id then
-        SETTINGS.TIMERS[35567] = value;
-        Component.SaveSetting("ARTILLERY_STRIKE_ENABLED", value);
-    elseif "CRYO_BOLT_ENABLED" == id then
-        SETTINGS.TIMERS[39405] = value;
-        Component.SaveSetting("CRYO_BOLT_ENABLED", value);
-    elseif "DECOY_ENABLED" == id then
-        SETTINGS.TIMERS[34957] = value;
-        Component.SaveSetting("DECOY_ENABLED", value);
-    elseif "SIN_BEACON_ENABLED" == id then
-        SETTINGS.TIMERS[34526] = value;
-        Component.SaveSetting("SIN_BEACON_ENABLED", value);
-    elseif "PENETRATING_ROUNDS_ENABLED" == id then
-        SETTINGS.TIMERS[41875] = value;
-        Component.SaveSetting("PENETRATING_ROUNDS_ENABLED", value);
-    elseif "HEALING_DOME_ENABLED" == id then
-        SETTINGS.TIMERS[34928] = value;
-        Component.SaveSetting("HEALING_DOME_ENABLED", value);
-    elseif "SMOKE_SCREEN_ENABLED" == id then
-        SETTINGS.TIMERS[35345] = value;
-        Component.SaveSetting("SMOKE_SCREEN_ENABLED", value);
     elseif "PERKS_ENABLED" == id then
-        SETTINGS.track_perks = value;
+        SETTINGS.TRACK_PERKS.show = value;
         Component.SaveSetting("PERKS_ENABLED", value);
+    elseif "PERKS_FRAME" == id then
+        SETTINGS.TRACK_PERKS.frame = tonumber(value);
+        Component.SaveSetting("PERKS_FRAME", value);
+    else
+        for i,opt in pairs(ABILITY_OPTIONS) do
+            local full_opt_enabled = opt.."_ENABLED";
+            local full_opt_frame   = opt.."_FRAME";
+
+            if full_opt_enabled == id then
+                SETTINGS.TIMERS[i].show = value;
+                Component.SaveSetting(full_opt_enabled, value);
+
+                break;
+            elseif full_opt_frame == id then
+                SETTINGS.TIMERS[i].frame = tonumber(value);
+                Component.SaveSetting(full_opt_frame, value);
+
+                break;
+            end
+        end
     end
 
     RUMPEL.Log("OnOptionChanged("..tostring(id)..", "..tostring(value)..")");
@@ -506,11 +484,11 @@ function OnAbilityUsed(ARGS)
             end
         end
 
-        if nil ~= ability_duration and true ~= ON_ABILITY_STATE[ability_id] and true == SETTINGS.TIMERS[ability_id] then
+        if nil ~= ability_duration and true ~= ON_ABILITY_STATE[ability_id] and nil ~= SETTINGS.TIMERS[ability_id] and true == SETTINGS.TIMERS[ability_id].show then
             RUMPEL.ConsoleLog("AbilityDurationTimer()");
             RUMPEL.DurTimerMsg(ABILITY_INFO.name, ability_duration);
 
-            local ADT = AbilityDurationTimer(UI.FRAME);
+            local ADT = AbilityDurationTimer(SETTINGS.TIMERS[ability_id].frame);
 
             ADT:SetAbilityID(ability_id);
             ADT:SetAbilityName(ABILITY_INFO.name);
@@ -594,11 +572,11 @@ function OnAbilityState(ARGS)
             end
         end
 
-        if true == SETTINGS.TIMERS[ability_id] and false ~= ON_ABILITY_STATE[ability_id] then
+        if nil ~= SETTINGS.TIMERS[ability_id] and true == SETTINGS.TIMERS[ability_id].show and false ~= ON_ABILITY_STATE[ability_id] then
             RUMPEL.ConsoleLog("AbilityDurationTimer()");
             RUMPEL.DurTimerMsg(ability_name, ARGS.state_dur_total);
 
-            local ADT = AbilityDurationTimer(UI.FRAME);
+            local ADT = AbilityDurationTimer(SETTINGS.TIMERS[ability_id].frame);
 
             ADT:SetAbilityID(ability_id);
             ADT:SetAbilityName(ability_name);
@@ -631,12 +609,12 @@ end
 
 function OnWeaponBurst()
     -- experimental
-    if true == SETTINGS.track_perks and true == RUMPEL.CheckPerkEquipped("P[86118]") then
+    if true == SETTINGS.TRACK_PERKS.show and true == RUMPEL.CheckPerkEquipped("P[86118]") then
         local client_time    = tonumber(System.GetClientTime());
         local new_burst_time = client_time - last_shot_time;
 
         if new_burst_time > burst_time / 3.5 and new_burst_time < burst_time / 1.8 then
-            local ADT = AbilityDurationTimer(UI.FRAME);
+            local ADT = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
 
             ADT:SetAbilityID("P[86118]");
             ADT:SetAbilityName(SLOTTED_PERKS["P[86118]"].name);
@@ -674,6 +652,19 @@ function RUMPEL.Callback(ADT)
             end
         end
     end
+end
+
+function RUMPEL.AddAbilityOptions(name, id)
+    local name_for_id = string.gsub(string.gsub(string.upper(name), "%s+", "_"), "[^%a]", "_");
+
+    ABILITY_OPTIONS[id] = name_for_id;
+
+    InterfaceOptions.AddCheckBox({id=name_for_id.."_ENABLED", label=name, default=(Component.GetSetting(name_for_id.."_ENABLED") or SETTINGS.TIMERS[id].show)});
+    InterfaceOptions.AddChoiceMenu({id=name_for_id.."_FRAME", label=name.." frame", default=(Component.GetSetting(name_for_id.."_FRAME") or SETTINGS.TIMERS[id].frame)});
+        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="1", label="1"});
+        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="2", label="2"});
+        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="3", label="3"});
+        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="4", label="4"});
 end
 
 function RUMPEL.CheckGlidingStart(ARGS)
@@ -835,7 +826,7 @@ end
 
 function RUMPEL.ConsoleLog(message)
     if true == SETTINGS.debug then
-        message = "[DEBUG] "..tostring(message);
+        message = debug_prefix..tostring(message);
 
         RUMPEL.Log(message);
 
@@ -848,7 +839,7 @@ function RUMPEL.Log(message)
 end
 
 function RUMPEL.SystemMsg(message)
-    Component.GenerateEvent("MY_SYSTEM_MESSAGE", {text = "[ADT] "..tostring(message)});
+    ChatLib.SystemMessage({text = output_prefix..tostring(message)});
 end
 
 function RUMPEL.DurTimerMsg(ability_name, duration)
@@ -861,16 +852,27 @@ function RUMPEL.DurTimerMsg(ability_name, duration)
 end
 
 function RUMPEL.Test()
-    RUMPEL.Log(Game.GetPerkModuleInfo());
-    RUMPEL.Log(Player.GetCurrentLoadout());
+    RUMPEL.SystemMsg(UI.FRAMES[1].OBJ == UI.FRAMES[1].OBJ);
+    RUMPEL.SystemMsg(UI.FRAMES[1].OBJ == UI.FRAMES[2].OBJ);
+    RUMPEL.SystemMsg(UI.FRAMES[1].OBJ == UI.FRAMES[3].OBJ);
+    RUMPEL.SystemMsg(UI.FRAMES[1].OBJ == UI.FRAMES[4].OBJ);
+
+    RUMPEL.SystemMsg(UI.FRAMES[4].OBJ == UI.FRAMES[1].OBJ);
+    RUMPEL.SystemMsg(UI.FRAMES[4].OBJ == UI.FRAMES[2].OBJ);
+    RUMPEL.SystemMsg(UI.FRAMES[4].OBJ == UI.FRAMES[3].OBJ);
+    RUMPEL.SystemMsg(UI.FRAMES[4].OBJ == UI.FRAMES[4].OBJ);
 end
 
-function RUMPEL.TestTimers()
+function RUMPEL.TestTimers(frame_id)
+    if nil == frame_id then
+        frame_id = 1;
+    end
+
     local ADTS = {
-        ["1"] = AbilityDurationTimer(UI.FRAME),
-        ["2"] = AbilityDurationTimer(UI.FRAME),
-        ["3"] = AbilityDurationTimer(UI.FRAME),
-        ["4"] = AbilityDurationTimer(UI.FRAME)
+        ["1"] = AbilityDurationTimer(frame_id),
+        ["2"] = AbilityDurationTimer(frame_id),
+        ["3"] = AbilityDurationTimer(frame_id),
+        ["4"] = AbilityDurationTimer(frame_id)
     };
 
     ADTS["1"]:SetAbilityID(3782);
@@ -899,7 +901,11 @@ function RUMPEL.TestTimers()
     ADTS["4"]:StartTimer();
 end
 
-function RUMPEL.TestBulwark()
+function RUMPEL.TestBulwark(frame_id)
+    if nil == frame_id then
+        frame_id = 1;
+    end
+
     local rm_on_reuse       = nil;
     local rm_on_reuse_alias = nil;
 
@@ -920,7 +926,7 @@ function RUMPEL.TestBulwark()
         end
     end
 
-    local ADT = AbilityDurationTimer(UI.FRAME)
+    local ADT = AbilityDurationTimer(frame_id);
 
     ADT:SetAbilityID(35455);
     ADT:SetAbilityName("Bulwark");
