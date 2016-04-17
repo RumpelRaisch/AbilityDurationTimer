@@ -231,11 +231,13 @@ function AbilityDurationTimer.New(FRAME)
         end
 
         -- move to pos related dimensions
-        self:MoveTo((0 + PRIVATE.alignment * (pos - 1)), delay);
+        self:MoveTo((0 + PRIVATE.alignment * (self:GetPos() - 1)), delay);
 
         -- hide
         if self:GetPos() > PRIVATE.max_visible then
             self:VisibilityTo(0, 0.1);
+        else
+            self:VisibilityTo(1, 0.1);
         end
 
         return self;
