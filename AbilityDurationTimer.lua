@@ -655,7 +655,7 @@ function RUMPEL.Callback(ADT)
 end
 
 function RUMPEL.AddAbilityOptions(name, id)
-    local name_for_id = string.gsub(string.gsub(string.upper(name), "%s+", "_"), "[^%a]", "_");
+    local name_for_id = string.gsub(string.gsub(string.upper(name), "%s+", "_"), "[^%a]", "");
 
     ABILITY_OPTIONS[id] = name_for_id;
 
