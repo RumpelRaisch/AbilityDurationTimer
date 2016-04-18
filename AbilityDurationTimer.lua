@@ -54,15 +54,15 @@ local debug_prefix      = "[DEBUG] ";
 local burst_time     = 0;
 local last_shot_time = 0;
 
-UI.FRAMES     = {};
-UI.FRAMES[1]  = {id = 1, OBJ = Component.GetFrame("adt_frame_1")};
-UI.FRAMES[2]  = {id = 2, OBJ = Component.GetFrame("adt_frame_2")};
-UI.FRAMES[3]  = {id = 3, OBJ = Component.GetFrame("adt_frame_3")};
-UI.FRAMES[4]  = {id = 4, OBJ = Component.GetFrame("adt_frame_4")};
-
 UI.ALIGNMENT        = {};
 UI.ALIGNMENT["ltr"] = 68;
 UI.ALIGNMENT["rtl"] = -68;
+
+UI.FRAMES    = {};
+UI.FRAMES[1] = {id = 1, alignment = UI.ALIGNMENT["ltr"], OBJ = Component.GetFrame("adt_frame_1")};
+UI.FRAMES[2] = {id = 2, alignment = UI.ALIGNMENT["ltr"], OBJ = Component.GetFrame("adt_frame_2")};
+UI.FRAMES[3] = {id = 3, alignment = UI.ALIGNMENT["ltr"], OBJ = Component.GetFrame("adt_frame_3")};
+UI.FRAMES[4] = {id = 4, alignment = UI.ALIGNMENT["ltr"], OBJ = Component.GetFrame("adt_frame_4")};
 
 RUMPEL.KNOWN_ABILITIES                     = {};
 RUMPEL.KNOWN_ABILITIES["ON_ABILITY_USED"]  = {};
@@ -82,10 +82,9 @@ SETTINGS = {
     system_message      = false,
     system_message_text = "Starting duration timer for '${name}' (${duration}s).",
     max_timers          = 12,
-    timers_alignment    = "ltr",
     -- objects
-    TRACK_PERKS = {show = false, frame = 1},
     TIMERS      = {},
+    TRACK_PERKS = {show = false, frame = 1},
     FONT        = {
         name = "Demi",
         size = 16,
@@ -93,6 +92,14 @@ SETTINGS = {
         COLOR = {
             text_timer         = "FF8800",
             text_timer_outline = "000000"
+        }
+    },
+    ARC = {
+        show    = true,
+        warning = 5,
+        COLOR   = {
+            normal  = "FF8800",
+            warning = "FF0000"
         }
     }
 };
@@ -220,38 +227,60 @@ function BuildOptions()
     InterfaceOptions.AddCheckBox({id="DEBUG_ENABLED", label="Debug", default=(Component.GetSetting("DEBUG_ENABLED") or SETTINGS.debug)});
     InterfaceOptions.AddCheckBox({id="SYSMSG_ENABLED", label="Chat output (Starting duration timer ...)", default=(Component.GetSetting("SYSMSG_ENABLED") or SETTINGS.system_message)});
     InterfaceOptions.AddTextInput({id="SYSMSG_TEXT", label="Chat output message", default=SETTINGS.system_message_text, tooltip="Message to show when the timer starts.\nAvailable parameter: ${name} and ${duration}"});
-    InterfaceOptions.AddSlider({id="MAX_TIMERS", label="max timers", min=1, max=50, inc=1, suffix="", default=(Component.GetSetting("MAX_TIMERS") or SETTINGS.max_timers)});
-    InterfaceOptions.AddChoiceMenu({id="TIMERS_ALIGNMENT", label="Timer alignment", default=(Component.GetSetting("TIMERS_ALIGNMENT") or SETTINGS.timers_alignment)});
-        InterfaceOptions.AddChoiceEntry({menuId="TIMERS_ALIGNMENT", val="ltr", label="left to right"});
-        InterfaceOptions.AddChoiceEntry({menuId="TIMERS_ALIGNMENT", val="rtl", label="right to left"});
-    InterfaceOptions.AddChoiceMenu({id="FONT", label="Font", default=(Component.GetSetting("FONT") or SETTINGS.FONT.name)});
-        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Demi", label="Eurostile Medium"});
-        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Narrow", label="Eurostile Narrow"});
-        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Wide", label="Eurostile Wide"});
-        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Bold", label="Eurostile Bold"});
-        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuRegular", label="Ubuntu Regular"});
-        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuMedium", label="Ubuntu Medium"});
-        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuBold", label="Ubuntu Bold"});
-    InterfaceOptions.AddSlider({id="FONT_SIZE", label="Font size", min=1, max=20, inc=1, suffix="", default=(Component.GetSetting("FONT_SIZE") or SETTINGS.FONT.size)});
-    InterfaceOptions.AddColorPicker({id="TIMER_COLOR", label="Ability duration color", default={tint=(Component.GetSetting("TIMER_COLOR") or SETTINGS.FONT.COLOR.text_timer)}});
-    InterfaceOptions.AddColorPicker({id="TIMER_COLOR_OUTLINE", label="Ability duration outline color", default={tint=(Component.GetSetting("TIMER_COLOR_OUTLINE") or SETTINGS.FONT.COLOR.text_timer_outline)}});
-    InterfaceOptions.AddCheckBox({id="PERKS_ENABLED", label="Perks (experimental)", default=(Component.GetSetting("PERKS_ENABLED") or SETTINGS.TRACK_PERKS.show)});
-    InterfaceOptions.AddChoiceMenu({id="PERKS_FRAME", label="Perks frame", default=(Component.GetSetting("PERKS_FRAME") or SETTINGS.TRACK_PERKS.frame)});
-        InterfaceOptions.AddChoiceEntry({menuId="PERKS_FRAME", val="1", label="1"});
-        InterfaceOptions.AddChoiceEntry({menuId="PERKS_FRAME", val="2", label="2"});
-        InterfaceOptions.AddChoiceEntry({menuId="PERKS_FRAME", val="3", label="3"});
-        InterfaceOptions.AddChoiceEntry({menuId="PERKS_FRAME", val="4", label="4"});
+    InterfaceOptions.AddSlider({id="MAX_TIMERS", label="Max timers", min=1, max=50, inc=1, suffix="", default=(Component.GetSetting("MAX_TIMERS") or SETTINGS.max_timers)});
+    InterfaceOptions.AddChoiceMenu({id="FRAME_1_ALIGNMENT", label="Frame 1 alignment", default=(Component.GetSetting("FRAME_1_ALIGNMENT") or UI.FRAMES[1].alignment)});
+        InterfaceOptions.AddChoiceEntry({menuId="FRAME_1_ALIGNMENT", val="ltr", label="left to right"});
+        InterfaceOptions.AddChoiceEntry({menuId="FRAME_1_ALIGNMENT", val="rtl", label="right to left"});
+    InterfaceOptions.AddChoiceMenu({id="FRAME_2_ALIGNMENT", label="Frame 2 alignment", default=(Component.GetSetting("FRAME_2_ALIGNMENT") or UI.FRAMES[2].alignment)});
+        InterfaceOptions.AddChoiceEntry({menuId="FRAME_2_ALIGNMENT", val="ltr", label="left to right"});
+        InterfaceOptions.AddChoiceEntry({menuId="FRAME_2_ALIGNMENT", val="rtl", label="right to left"});
+    InterfaceOptions.AddChoiceMenu({id="FRAME_3_ALIGNMENT", label="Frame 3 alignment", default=(Component.GetSetting("FRAME_3_ALIGNMENT") or UI.FRAMES[3].alignment)});
+        InterfaceOptions.AddChoiceEntry({menuId="FRAME_3_ALIGNMENT", val="ltr", label="left to right"});
+        InterfaceOptions.AddChoiceEntry({menuId="FRAME_3_ALIGNMENT", val="rtl", label="right to left"});
+    InterfaceOptions.AddChoiceMenu({id="FRAME_4_ALIGNMENT", label="Frame 4 alignment", default=(Component.GetSetting("FRAME_4_ALIGNMENT") or UI.FRAMES[4].alignment)});
+        InterfaceOptions.AddChoiceEntry({menuId="FRAME_4_ALIGNMENT", val="ltr", label="left to right"});
+        InterfaceOptions.AddChoiceEntry({menuId="FRAME_4_ALIGNMENT", val="rtl", label="right to left"});
+
+    InterfaceOptions.StartGroup({label="Font", subtab={"Font"}});
+        InterfaceOptions.AddChoiceMenu({id="FONT", label="Type", default=(Component.GetSetting("FONT") or SETTINGS.FONT.name), subtab={"Font"}});
+            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Demi", label="Eurostile Medium", subtab={"Font"}});
+            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Narrow", label="Eurostile Narrow", subtab={"Font"}});
+            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Wide", label="Eurostile Wide", subtab={"Font"}});
+            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Bold", label="Eurostile Bold", subtab={"Font"}});
+            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuRegular", label="Ubuntu Regular", subtab={"Font"}});
+            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuMedium", label="Ubuntu Medium", subtab={"Font"}});
+            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuBold", label="Ubuntu Bold", subtab={"Font"}});
+        InterfaceOptions.AddSlider({id="FONT_SIZE", label="Size", min=1, max=20, inc=1, suffix="", default=(Component.GetSetting("FONT_SIZE") or SETTINGS.FONT.size), subtab={"Font"}});
+        InterfaceOptions.AddColorPicker({id="TIMER_COLOR", label="Duration color", default={tint=(Component.GetSetting("TIMER_COLOR") or SETTINGS.FONT.COLOR.text_timer)}, subtab={"Font"}});
+        InterfaceOptions.AddColorPicker({id="TIMER_COLOR_OUTLINE", label="Duration outline color", default={tint=(Component.GetSetting("TIMER_COLOR_OUTLINE") or SETTINGS.FONT.COLOR.text_timer_outline)}, subtab={"Font"}});
+    InterfaceOptions.StopGroup({subtab={"Font"}});
+
+    InterfaceOptions.StartGroup({label="Arc", subtab={"Arc"}});
+        InterfaceOptions.AddCheckBox({id="ARC_ENABLED", label="Enabled", default=(Component.GetSetting("ARC_ENABLED") or SETTINGS.ARC.show), subtab={"Arc"}});
+        InterfaceOptions.AddColorPicker({id="ARC_COLOR", label="Color", default={tint=(Component.GetSetting("ARC_COLOR") or SETTINGS.ARC.COLOR.normal)}, subtab={"Arc"}});
+        InterfaceOptions.AddColorPicker({id="ARC_WARNING_COLOR", label="Warning color", default={tint=(Component.GetSetting("ARC_WARNING_COLOR") or SETTINGS.ARC.COLOR.warning)}, subtab={"Arc"}});
+        InterfaceOptions.AddSlider({id="ARC_WARNING_SECONDS", label="Warning start at X seconds remain", min=1, max=20, inc=1, suffix="", default=(Component.GetSetting("ARC_WARNING_SECONDS") or SETTINGS.ARC.warning), subtab={"Arc"}});
+    InterfaceOptions.StopGroup({subtab={"Arc"}});
+
+    InterfaceOptions.StartGroup({label="Perks (experimental)", subtab={"Abilities"}});
+        InterfaceOptions.AddCheckBox({id="PERKS_ENABLED", label="Enabled", default=(Component.GetSetting("PERKS_ENABLED") or SETTINGS.TRACK_PERKS.show), subtab={"Abilities"}});
+        InterfaceOptions.AddChoiceMenu({id="PERKS_FRAME", label="Frame", default=(Component.GetSetting("PERKS_FRAME") or SETTINGS.TRACK_PERKS.frame), subtab={"Abilities"}});
+            InterfaceOptions.AddChoiceEntry({menuId="PERKS_FRAME", val="1", label="1", subtab={"Abilities"}});
+            InterfaceOptions.AddChoiceEntry({menuId="PERKS_FRAME", val="2", label="2", subtab={"Abilities"}});
+            InterfaceOptions.AddChoiceEntry({menuId="PERKS_FRAME", val="3", label="3", subtab={"Abilities"}});
+            InterfaceOptions.AddChoiceEntry({menuId="PERKS_FRAME", val="4", label="4", subtab={"Abilities"}});
+    InterfaceOptions.StopGroup({subtab={"Abilities"}});
 
     -- Assault
-    InterfaceOptions.StartGroup({label="Assault"});
+    InterfaceOptions.StartGroup({label="Assault", subtab={"Abilities"}});
         RUMPEL.AddAbilityOptions("Hellfire", 41682);
         RUMPEL.AddAbilityOptions("Overcharge", 3639);
         RUMPEL.AddAbilityOptions("Supercharge", 35637);
         RUMPEL.AddAbilityOptions("Thermal Wave", 35458);
-    InterfaceOptions.StopGroup();
+    InterfaceOptions.StopGroup({subtab={"Abilities"}});
 
     -- Biotech
-    InterfaceOptions.StartGroup({label="Biotech"});
+    InterfaceOptions.StartGroup({label="Biotech", subtab={"Abilities"}});
         RUMPEL.AddAbilityOptions("Adrenaline Rush", 15206);
         RUMPEL.AddAbilityOptions("Creeping Death", 34734);
         RUMPEL.AddAbilityOptions("Healing Dome", 34928);
@@ -259,28 +288,28 @@ function BuildOptions()
         RUMPEL.AddAbilityOptions("Heroism", 35620);
         RUMPEL.AddAbilityOptions("Poison Ball", 41865);
         RUMPEL.AddAbilityOptions("Poison Trail", 40592);
-    InterfaceOptions.StopGroup();
+    InterfaceOptions.StopGroup({subtab={"Abilities"}});
 
     -- Dreadnaught
-    InterfaceOptions.StartGroup({label="Dreadnaught"});
+    InterfaceOptions.StartGroup({label="Dreadnaught", subtab={"Abilities"}});
         RUMPEL.AddAbilityOptions("Absorption Bomb", 41881);
         RUMPEL.AddAbilityOptions("Dreadfield", 34066);
         RUMPEL.AddAbilityOptions("Heavy Armor", 3782);
         RUMPEL.AddAbilityOptions("Penetrating Rounds", 41875);
         RUMPEL.AddAbilityOptions("Thunderdome", 1726);
-    InterfaceOptions.StopGroup();
+    InterfaceOptions.StopGroup({subtab={"Abilities"}});
 
     -- Engineer
-    InterfaceOptions.StartGroup({label="Engineer"});
+    InterfaceOptions.StartGroup({label="Engineer", subtab={"Abilities"}});
         RUMPEL.AddAbilityOptions("Boomerang Shot", 34770);
         RUMPEL.AddAbilityOptions("Bulwark", 41886);
         RUMPEL.AddAbilityOptions("Electrical Storm", 35583);
         RUMPEL.AddAbilityOptions("Fortify", 35455);
         RUMPEL.AddAbilityOptions("Overclock", 41880);
-    InterfaceOptions.StopGroup();
+    InterfaceOptions.StopGroup({subtab={"Abilities"}});
 
     -- Recon
-    InterfaceOptions.StartGroup({label="Recon"});
+    InterfaceOptions.StartGroup({label="Recon", subtab={"Abilities"}});
         RUMPEL.AddAbilityOptions("Artillery Strike", 35567);
         RUMPEL.AddAbilityOptions("Cryo Shot", 39405);
         RUMPEL.AddAbilityOptions("Decoy", 34957);
@@ -288,12 +317,12 @@ function BuildOptions()
         RUMPEL.AddAbilityOptions("SIN Beacon", 34526);
         RUMPEL.AddAbilityOptions("Smoke Screen", 35345);
         RUMPEL.AddAbilityOptions("Teleport Beacon", 12305);
-    InterfaceOptions.StopGroup();
+    InterfaceOptions.StopGroup({subtab={"Abilities"}});
 
     -- Miscellaneous
-    InterfaceOptions.StartGroup({label="Miscellaneous"});
+    InterfaceOptions.StartGroup({label="Miscellaneous", subtab={"Abilities"}});
         RUMPEL.AddAbilityOptions("Rocketeer's Wings", 38620);
-    InterfaceOptions.StopGroup();
+    InterfaceOptions.StopGroup({subtab={"Abilities"}});
 end
 
 -- =============================================================================
@@ -382,10 +411,22 @@ function OnOptionChanged(id, value)
         SETTINGS.max_timers = value;
         Component.SaveSetting("MAX_TIMERS", value);
         ADTStatic.SetMaxVisible(value);
-    elseif "TIMERS_ALIGNMENT" == id then
-        SETTINGS.timers_alignment = value;
-        Component.SaveSetting("TIMERS_ALIGNMENT", value);
-        ADTStatic.SetAlignment(UI.ALIGNMENT[value]);
+    elseif "FRAME_1_ALIGNMENT" == id then
+        UI.FRAMES[1].alignment = UI.ALIGNMENT[value];
+        Component.SaveSetting("FRAME_1_ALIGNMENT", value);
+        ADTStatic.UpdateFrame(UI.FRAMES[1]);
+    elseif "FRAME_2_ALIGNMENT" == id then
+        UI.FRAMES[2].alignment = UI.ALIGNMENT[value];
+        Component.SaveSetting("FRAME_2_ALIGNMENT", value);
+        ADTStatic.UpdateFrame(UI.FRAMES[2]);
+    elseif "FRAME_3_ALIGNMENT" == id then
+        UI.FRAMES[3].alignment = UI.ALIGNMENT[value];
+        Component.SaveSetting("FRAME_3_ALIGNMENT", value);
+        ADTStatic.UpdateFrame(UI.FRAMES[3]);
+    elseif "FRAME_4_ALIGNMENT" == id then
+        UI.FRAMES[4].alignment = UI.ALIGNMENT[value];
+        Component.SaveSetting("FRAME_4_ALIGNMENT", value);
+        ADTStatic.UpdateFrame(UI.FRAMES[4]);
     elseif "FONT" == id then
         SETTINGS.FONT.name = value;
         Component.SaveSetting("FONT", value);
@@ -402,6 +443,22 @@ function OnOptionChanged(id, value)
         SETTINGS.FONT.COLOR.text_timer_outline = value.tint;
         Component.SaveSetting("TIMER_COLOR_OUTLINE", value.tint);
         ADTStatic.SetFontColorOutline(value.tint);
+    elseif "ARC_ENABLED" == id then
+        SETTINGS.ARC.show = value;
+        Component.SaveSetting("ARC_ENABLED", value);
+        ADTStatic.SetArcShow(value);
+    elseif "ARC_COLOR" == id then
+        SETTINGS.ARC.COLOR.normal = value.tint;
+        Component.SaveSetting("ARC_COLOR", value.tint);
+        ADTStatic.SetArcColor(value.tint);
+    elseif "ARC_WARNING_COLOR" == id then
+        SETTINGS.ARC.COLOR.warning = value.tint;
+        Component.SaveSetting("ARC_WARNING_COLOR", value.tint);
+        ADTStatic.SetArcColorWarning(value.tint);
+    elseif "ARC_WARNING_SECONDS" == id then
+        SETTINGS.ARC.warning = value;
+        Component.SaveSetting("ARC_WARNING_SECONDS", value);
+        ADTStatic.SetWarningSeconds(value);
     elseif "PERKS_ENABLED" == id then
         SETTINGS.TRACK_PERKS.show = value;
         Component.SaveSetting("PERKS_ENABLED", value);
@@ -659,12 +716,12 @@ function RUMPEL.AddAbilityOptions(name, id)
 
     ABILITY_OPTIONS[id] = name_for_id;
 
-    InterfaceOptions.AddCheckBox({id=name_for_id.."_ENABLED", label=name, default=(Component.GetSetting(name_for_id.."_ENABLED") or SETTINGS.TIMERS[id].show)});
-    InterfaceOptions.AddChoiceMenu({id=name_for_id.."_FRAME", label=name.." frame", default=(Component.GetSetting(name_for_id.."_FRAME") or SETTINGS.TIMERS[id].frame)});
-        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="1", label="1"});
-        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="2", label="2"});
-        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="3", label="3"});
-        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="4", label="4"});
+    InterfaceOptions.AddCheckBox({id=name_for_id.."_ENABLED", label=name, default=(Component.GetSetting(name_for_id.."_ENABLED") or SETTINGS.TIMERS[id].show), subtab={"Abilities"}});
+    InterfaceOptions.AddChoiceMenu({id=name_for_id.."_FRAME", label=name.." frame", default=(Component.GetSetting(name_for_id.."_FRAME") or SETTINGS.TIMERS[id].frame), subtab={"Abilities"}});
+        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="1", label="1", subtab={"Abilities"}});
+        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="2", label="2", subtab={"Abilities"}});
+        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="3", label="3", subtab={"Abilities"}});
+        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="4", label="4", subtab={"Abilities"}});
 end
 
 function RUMPEL.CheckGlidingStart(ARGS)

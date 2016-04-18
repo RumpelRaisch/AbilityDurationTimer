@@ -33,13 +33,20 @@ require "lib/lib_ChatLib";
 local PRIVATE = {};
 
 PRIVATE.max_visible        = 0;
-PRIVATE.alignment          = 0;
 PRIVATE.font_name          = "";
 PRIVATE.font_size          = 0;
 PRIVATE.font_color         = "";
 PRIVATE.font_color_outline = "";
 PRIVATE.unique             = 1;
 PRIVATE.FRAMES             = {};
+PRIVATE.ARC                = {
+    show    = nil,
+    warning = 0,
+    COLOR   = {
+        normal  = "",
+        warning = ""
+    }
+};
 
 function PRIVATE.GetUniqueId()
     -- PRIVATE.SystemMsg("PRIVATE:GetUniqueId()");
@@ -155,6 +162,16 @@ function AbilityDurationTimer.New(frame_id)
 
     GRP:ParamTo("alpha", 0, 0);
 
+    if true == PRIVATE.ARC.show then
+        ARC:ParamTo("alpha", 1, 0);
+
+        if "" ~= PRIVATE.ARC.COLOR.normal then
+            ARC:SetParam("tint", "#"..PRIVATE.ARC.COLOR.normal, 0.1);
+        end
+    else
+        ARC:ParamTo("alpha", 0, 0);
+    end
+
     -- PRIVATE.SystemMsg(type(ADT));
 
     -- =========================================================================
@@ -235,7 +252,7 @@ function AbilityDurationTimer.New(frame_id)
         end
 
         -- move to pos related dimensions
-        self:MoveTo((0 + PRIVATE.alignment * (self:GetPos() - 1)), delay);
+        self:MoveTo((0 + PRIVATE.FRAMES[frame_id].alignment * (self:GetPos() - 1)), delay);
 
         -- hide
         if self:GetPos() > PRIVATE.max_visible then
@@ -256,8 +273,8 @@ function AbilityDurationTimer.New(frame_id)
             self:VisibilityTo(1, 0);
         end
 
-        self:MoveTo((0 + PRIVATE.alignment * (pos - 1) + PRIVATE.alignment), 0); -- start opposite to slide in
-        self:MoveTo((0 + PRIVATE.alignment * (pos - 1)), 0.1); -- slide in
+        self:MoveTo((0 + PRIVATE.FRAMES[frame_id].alignment * (pos - 1) + PRIVATE.FRAMES[frame_id].alignment), 0); -- start opposite to slide in
+        self:MoveTo((0 + PRIVATE.FRAMES[frame_id].alignment * (pos - 1)), 0.1); -- slide in
 
         -- Font
         TIMER:SetFont(font);
@@ -286,7 +303,9 @@ function AbilityDurationTimer.New(frame_id)
         TIMER_OUTLINE_3:StartTimer(duration, true);
         TIMER_OUTLINE_4:StartTimer(duration, true);
 
-        self:UpdateDuration();
+        if true == PRIVATE.ARC.show then
+            self:UpdateDuration();
+        end
 
         UPDATE_TIMER:Bind(
             function()
@@ -348,8 +367,8 @@ function AbilityDurationTimer.New(frame_id)
 
         remaining_ms = remaining;
 
-        if 5000 >= remaining then
-            ARC:SetParam("tint", "#FF0000", 0.1);
+        if PRIVATE.ARC.warning >= remaining then
+            ARC:SetParam("tint", "#"..PRIVATE.ARC.COLOR.warning, 0.1);
         end
 
         if 180 <= angle then
@@ -461,9 +480,16 @@ function ADTStatic.RegisterFrame(FRAME)
     PRIVATE.FRAMES[FRAME.id] = {
         active      = 0,
         is_ordering = false,
+        alignment   = FRAME.alignment,
         OBJ         = FRAME.OBJ,
         ADTS        = {}
     };
+
+    return ADTStatic;
+end
+
+function ADTStatic.UpdateFrame(FRAME)
+    PRIVATE.FRAMES[FRAME.id].alignment = FRAME.alignment;
 
     return ADTStatic;
 end
@@ -472,14 +498,6 @@ function ADTStatic.SetMaxVisible(val)
     PRIVATE.max_visible = tonumber(val);
 
     log("PRIVATE.max_visible: "..tostring(PRIVATE.max_visible));
-
-    return ADTStatic;
-end
-
-function ADTStatic.SetAlignment(val)
-    PRIVATE.alignment = tonumber(val);
-
-    log("PRIVATE.alignment: "..tostring(PRIVATE.alignment));
 
     return ADTStatic;
 end
@@ -516,6 +534,38 @@ function ADTStatic.SetFontColorOutline(val)
     return ADTStatic;
 end
 
+function ADTStatic.SetArcShow(val)
+    PRIVATE.ARC.show = val;
+
+    log("PRIVATE.ARC.show: "..tostring(PRIVATE.ARC.show));
+
+    return ADTStatic;
+end
+
+function ADTStatic.SetArcColor(val)
+    PRIVATE.ARC.COLOR.normal = tostring(val);
+
+    log("PRIVATE.ARC.COLOR.normal: "..PRIVATE.ARC.COLOR.normal);
+
+    return ADTStatic;
+end
+
+function ADTStatic.SetArcColorWarning(val)
+    PRIVATE.ARC.COLOR.warning = tostring(val);
+
+    log("PRIVATE.ARC.COLOR.warning: "..PRIVATE.ARC.COLOR.warning);
+
+    return ADTStatic;
+end
+
+function ADTStatic.SetWarningSeconds(val)
+    PRIVATE.ARC.warning = tonumber(val) * 1000;
+
+    log("PRIVATE.ARC.warning: "..tostring(PRIVATE.ARC.warning));
+
+    return ADTStatic;
+end
+
 function ADTStatic.GetActive(frame_id)
     if nil == frame_id then
         local active = 0;
@@ -537,6 +587,8 @@ function ADTStatic.KillAll()
 
             PRIVATE.FRAMES[i].ADTS[ii] = nil;
         end
+
+        PRIVATE.FRAMES[i].active = 0;
     end
 
     return ADTStatic;

@@ -1,3 +1,7 @@
+V 0.7.1  - added ltr/rtl options for every single frame
+         - added options for arc colors (normal/warning)
+         - added option for arc warning color starting at X seconds
+         - reworked options
 V 0.7.0  - added 3 new frames for abilities
          - added options for abilities in wich frame the timer should be placed
          - reworked the code
