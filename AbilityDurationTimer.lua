@@ -330,20 +330,6 @@ end
 -- =============================================================================
 
 function OnComponentLoad()
-    BuildOptions();
-
-    InterfaceOptions.SetCallbackFunc(OnOptionChanged, "Ability Duration Timer");
-
-    LIB_SLASH.BindCallback({slash_list=slash_list, func=OnSlash});
-
-    getmetatable("").__mod = function (s, tab)
-        return (s:gsub('($%b{})', function(w) return tab[w:sub(3, -2)] or w end))
-    end
-
-    RUMPEL.GetKnownAbilities();
-end
-
-function OnPlayerReady()
     ADTStatic
         .SetAlignment(UI.ALIGNMENT)
         .SetArcShow(SETTINGS.ARC.show)
@@ -361,6 +347,20 @@ function OnPlayerReady()
         .RegisterFrame(UI.FRAMES[4])
         .Init({1, 2, 3, 4});
 
+    BuildOptions();
+
+    InterfaceOptions.SetCallbackFunc(OnOptionChanged, "Ability Duration Timer");
+
+    LIB_SLASH.BindCallback({slash_list=slash_list, func=OnSlash});
+
+    getmetatable("").__mod = function (s, tab)
+        return (s:gsub('($%b{})', function(w) return tab[w:sub(3, -2)] or w end))
+    end
+
+    RUMPEL.GetKnownAbilities();
+end
+
+function OnPlayerReady()
     RUMPEL.GetPerks();
     RUMPEL.GetLoadoutPerks();
 end
