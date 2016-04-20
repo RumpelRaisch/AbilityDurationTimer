@@ -1,3 +1,4 @@
+V 0.7.3  - fixed bug with colors
 V 0.7.2  - fixed bug
 V 0.7.1  - added ltr/rtl options for every single frame
          - added options for arc colors (normal/warning)
