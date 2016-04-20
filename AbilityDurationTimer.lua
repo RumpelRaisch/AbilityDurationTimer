@@ -345,6 +345,7 @@ end
 
 function OnPlayerReady()
     ADTStatic
+        .SetAlignment(UI.ALIGNMENT)
         .RegisterFrame(UI.FRAMES[1])
         .RegisterFrame(UI.FRAMES[2])
         .RegisterFrame(UI.FRAMES[3])
@@ -412,19 +413,19 @@ function OnOptionChanged(id, value)
         Component.SaveSetting("MAX_TIMERS", value);
         ADTStatic.SetMaxVisible(value);
     elseif "FRAME_1_ALIGNMENT" == id then
-        UI.FRAMES[1].alignment = UI.ALIGNMENT[value];
+        UI.FRAMES[1].alignment = value;
         Component.SaveSetting("FRAME_1_ALIGNMENT", value);
         ADTStatic.UpdateFrame(UI.FRAMES[1]);
     elseif "FRAME_2_ALIGNMENT" == id then
-        UI.FRAMES[2].alignment = UI.ALIGNMENT[value];
+        UI.FRAMES[2].alignment = value;
         Component.SaveSetting("FRAME_2_ALIGNMENT", value);
         ADTStatic.UpdateFrame(UI.FRAMES[2]);
     elseif "FRAME_3_ALIGNMENT" == id then
-        UI.FRAMES[3].alignment = UI.ALIGNMENT[value];
+        UI.FRAMES[3].alignment = value;
         Component.SaveSetting("FRAME_3_ALIGNMENT", value);
         ADTStatic.UpdateFrame(UI.FRAMES[3]);
     elseif "FRAME_4_ALIGNMENT" == id then
-        UI.FRAMES[4].alignment = UI.ALIGNMENT[value];
+        UI.FRAMES[4].alignment = value;
         Component.SaveSetting("FRAME_4_ALIGNMENT", value);
         ADTStatic.UpdateFrame(UI.FRAMES[4]);
     elseif "FONT" == id then

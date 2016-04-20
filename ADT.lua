@@ -38,6 +38,7 @@ PRIVATE.font_size          = 0;
 PRIVATE.font_color         = "";
 PRIVATE.font_color_outline = "";
 PRIVATE.unique             = 1;
+PRIVATE.ALIGNMENT          = {};
 PRIVATE.FRAMES             = {};
 PRIVATE.ARC                = {
     show    = nil,
@@ -252,7 +253,7 @@ function AbilityDurationTimer.New(frame_id)
         end
 
         -- move to pos related dimensions
-        self:MoveTo((0 + PRIVATE.FRAMES[frame_id].alignment * (self:GetPos() - 1)), delay);
+        self:MoveTo((0 + PRIVATE.ALIGNMENT[PRIVATE.FRAMES[frame_id].alignment] * (self:GetPos() - 1)), delay);
 
         -- hide
         if self:GetPos() > PRIVATE.max_visible then
@@ -273,8 +274,8 @@ function AbilityDurationTimer.New(frame_id)
             self:VisibilityTo(1, 0);
         end
 
-        self:MoveTo((0 + PRIVATE.FRAMES[frame_id].alignment * (pos - 1) + PRIVATE.FRAMES[frame_id].alignment), 0); -- start opposite to slide in
-        self:MoveTo((0 + PRIVATE.FRAMES[frame_id].alignment * (pos - 1)), 0.1); -- slide in
+        self:MoveTo((0 + PRIVATE.ALIGNMENT[PRIVATE.FRAMES[frame_id].alignment] * (pos - 1) + PRIVATE.ALIGNMENT[PRIVATE.FRAMES[frame_id].alignment]), 0); -- start opposite to slide in
+        self:MoveTo((0 + PRIVATE.ALIGNMENT[PRIVATE.FRAMES[frame_id].alignment] * (pos - 1)), 0.1); -- slide in
 
         -- Font
         TIMER:SetFont(font);
@@ -562,6 +563,14 @@ function ADTStatic.SetWarningSeconds(val)
     PRIVATE.ARC.warning = tonumber(val) * 1000;
 
     log("PRIVATE.ARC.warning: "..tostring(PRIVATE.ARC.warning));
+
+    return ADTStatic;
+end
+
+function ADTStatic.SetAlignment(OBJ)
+    PRIVATE.ALIGNMENT = OBJ;
+
+    log("PRIVATE.ALIGNMENT: "..tostring(PRIVATE.ALIGNMENT));
 
     return ADTStatic;
 end
