@@ -1,3 +1,5 @@
+V 0.7.4  - fixed bug with inital alignment values wich causing the whole addon
+           to stop working
 V 0.7.3  - fixed bug with colors
 V 0.7.2  - fixed bug
 V 0.7.1  - added ltr/rtl options for every single frame

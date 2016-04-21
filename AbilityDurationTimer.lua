@@ -59,10 +59,10 @@ UI.ALIGNMENT["ltr"] = 68;
 UI.ALIGNMENT["rtl"] = -68;
 
 UI.FRAMES    = {};
-UI.FRAMES[1] = {id = 1, alignment = UI.ALIGNMENT["ltr"], OBJ = Component.GetFrame("adt_frame_1")};
-UI.FRAMES[2] = {id = 2, alignment = UI.ALIGNMENT["ltr"], OBJ = Component.GetFrame("adt_frame_2")};
-UI.FRAMES[3] = {id = 3, alignment = UI.ALIGNMENT["ltr"], OBJ = Component.GetFrame("adt_frame_3")};
-UI.FRAMES[4] = {id = 4, alignment = UI.ALIGNMENT["ltr"], OBJ = Component.GetFrame("adt_frame_4")};
+UI.FRAMES[1] = {id = 1, alignment = "ltr", OBJ = Component.GetFrame("adt_frame_1")};
+UI.FRAMES[2] = {id = 2, alignment = "ltr", OBJ = Component.GetFrame("adt_frame_2")};
+UI.FRAMES[3] = {id = 3, alignment = "ltr", OBJ = Component.GetFrame("adt_frame_3")};
+UI.FRAMES[4] = {id = 4, alignment = "ltr", OBJ = Component.GetFrame("adt_frame_4")};
 
 RUMPEL.KNOWN_ABILITIES                     = {};
 RUMPEL.KNOWN_ABILITIES["ON_ABILITY_USED"]  = {};
