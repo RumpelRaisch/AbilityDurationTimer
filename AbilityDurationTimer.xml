@@ -36,6 +36,7 @@
         <Event name="ON_DEATH"               bind="OnDeath"              />
         <Event name="ON_EFFECTS_CHANGED"     bind="OnEffectsChanged"     />
         <Event name="ON_PLAYER_READY"        bind="OnPlayerReady"        />
+        <Event name="ON_TOOK_HIT"            bind="OnTookHit"            />
         <Event name="ON_WEAPON_BURST"        bind="OnWeaponBurst"        />
 
         <Event name="MY_HUD_SHOW"            bind="OnShow"               />

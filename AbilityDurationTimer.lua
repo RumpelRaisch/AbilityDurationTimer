@@ -154,11 +154,15 @@ NAMES[35618] = "Overload";
 
 -- Perks
 NAMES["P[86118]"] = "Sure Shot";
+NAMES["P[85995]"] = "Hero";
+NAMES["P[85888]"] = "Hyper Kinesis Surge";
 
 ABILITY_DURATIONS[38620] = 16; -- Activate: Rocket Wings
 
 -- Perks
 ABILITY_DURATIONS["P[86118]"] = 3; -- Sure Shot
+ABILITY_DURATIONS["P[85995]"] = 5; -- Hero
+ABILITY_DURATIONS["P[85888]"] = 12; -- Hyper Kinesis Surge
 
 ON_ABILITY_STATE[15206] = true; -- Adrenaline
 ON_ABILITY_STATE[3782]  = true; -- Heavy Armor
@@ -382,6 +386,11 @@ function OnSlash(ARGS)
         log(tostring(Player.GetAllStats()));
     elseif "timers" == ARGS[1] then
         RUMPEL.SystemMsg("Active Timers: "..tostring(ADTStatic.GetActive()));
+    elseif "life" == ARGS[1] then
+        RUMPEL.SystemMsg(Player.GetLifeInfo());
+        RUMPEL.SystemMsg(RUMPEL.CurrentHealth());
+    elseif "perks" == ARGS[1] then
+        RUMPEL.GetLoadoutPerks();
     elseif "test" == ARGS[1] then
         RUMPEL.Test();
     else
@@ -509,6 +518,18 @@ function OnAbilityUsed(ARGS)
         local ability_id        = tonumber(ARGS.id);
         local rm_on_reuse       = nil;
         local rm_on_reuse_alias = nil;
+
+        if 4 == ARGS.index and true == SETTINGS.TRACK_PERKS.show then
+            if true == RUMPEL.CheckPerkEquipped("P[85888]") then
+                local ADT = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
+
+                ADT:SetAbilityID("P[85888]");
+                ADT:SetAbilityName(SLOTTED_PERKS["P[85888]"].name);
+                ADT:SetIconID(SLOTTED_PERKS["P[85888]"].web_icon_id);
+                ADT:SetDuration(ABILITY_DURATIONS["P[85888]"]);
+                ADT:StartTimer(RUMPEL.Callback);
+            end
+        end
 
         RUMPEL.ConsoleLog("Ability '"..ABILITY_INFO.name.."' fired Event 'ON_ABILITY_USED'!");
         RUMPEL.ConsoleLog("ID: "..tostring(ability_id));
@@ -676,22 +697,42 @@ end
 
 function OnWeaponBurst()
     -- experimental
-    if true == SETTINGS.TRACK_PERKS.show and true == RUMPEL.CheckPerkEquipped("P[86118]") then
-        local client_time    = tonumber(System.GetClientTime());
-        local new_burst_time = client_time - last_shot_time;
+    if true == SETTINGS.TRACK_PERKS.show then
+        if true == RUMPEL.CheckPerkEquipped("P[86118]") then
+            local client_time    = tonumber(System.GetClientTime());
+            local new_burst_time = client_time - last_shot_time;
 
-        if new_burst_time > burst_time / 3.5 and new_burst_time < burst_time / 1.8 then
-            local ADT = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
+            if new_burst_time > burst_time / 3.5 and new_burst_time < burst_time / 1.8 then
+                local ADT = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
 
-            ADT:SetAbilityID("P[86118]");
-            ADT:SetAbilityName(SLOTTED_PERKS["P[86118]"].name);
-            ADT:SetIconID(SLOTTED_PERKS["P[86118]"].web_icon_id);
-            ADT:SetDuration(3);
-            ADT:StartTimer(RUMPEL.Callback);
+                ADT:SetAbilityID("P[86118]");
+                ADT:SetAbilityName(SLOTTED_PERKS["P[86118]"].name);
+                ADT:SetIconID(SLOTTED_PERKS["P[86118]"].web_icon_id);
+                ADT:SetDuration(ABILITY_DURATIONS["P[86118]"]);
+                ADT:StartTimer(RUMPEL.Callback);
+            end
+
+            burst_time     = new_burst_time;
+            last_shot_time = client_time;
         end
+    end
+end
 
-        burst_time     = new_burst_time;
-        last_shot_time = client_time;
+function OnTookHit()
+    if true == SETTINGS.TRACK_PERKS.show then
+        if true == RUMPEL.CheckPerkEquipped("P[85995]") then
+            local LIFE_INFO = Player.GetLifeInfo();
+
+            if 0 == LIFE_INFO["Health"] then
+                local ADT = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
+
+                ADT:SetAbilityID("P[85995]");
+                ADT:SetAbilityName(SLOTTED_PERKS["P[85995]"].name);
+                ADT:SetIconID(SLOTTED_PERKS["P[85995]"].web_icon_id);
+                ADT:SetDuration(ABILITY_DURATIONS["P[85995]"]);
+                ADT:StartTimer(RUMPEL.Callback);
+            end
+        end
     end
 end
 
