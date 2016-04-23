@@ -49,6 +49,7 @@ local SLOTTED_PERKS     = {};
 local slash_list        = "adt";
 local output_prefix     = "[ADT] ";
 local debug_prefix      = "[DEBUG] ";
+local hero_proc_time    = 0;
 
 -- global for sure shot
 local burst_time     = 0;
@@ -76,6 +77,9 @@ RUMPEL.ABILITIES_RM_ON_REUSE[38620] = {ADT = true, alias = false}; -- Rocketeers
 
 -- Perks
 RUMPEL.ABILITIES_RM_ON_REUSE["P[86118]"] = {ADT = true, alias = false}; -- Sure Shot
+RUMPEL.ABILITIES_RM_ON_REUSE["P[85888]"] = {ADT = true, alias = false}; -- Hyper Kinesis Surge
+RUMPEL.ABILITIES_RM_ON_REUSE["P[85818]"] = {ADT = true, alias = false}; -- Health Surge
+RUMPEL.ABILITIES_RM_ON_REUSE["P[95078]"] = {ADT = true, alias = false}; -- Invigorate
 
 SETTINGS = {
     debug               = false,
@@ -140,7 +144,7 @@ NAMES[34066] = "Dreadfield";
 NAMES[15206] = "Adrenaline";
 NAMES[35567] = "Accord Artillery Strike";
 NAMES[39405] = "Cryo Bomb Snare"; -- Cryo Shot
-NAMES[35458] = "Fuel Air Bomb Fire Patch"; -- Thermal Wave
+NAMES[35458] = "Thermal Wave";
 NAMES[41682] = "Missile Barrage"; -- Hellfire
 NAMES[38620] = "Activate: Rocket Wings";
 NAMES[34928] = "Healing Dome";
@@ -156,6 +160,9 @@ NAMES[35618] = "Overload";
 NAMES["P[86118]"] = "Sure Shot";
 NAMES["P[85995]"] = "Hero";
 NAMES["P[85888]"] = "Hyper Kinesis Surge";
+NAMES["P[85818]"] = "Health Surge";
+NAMES["P[95078]"] = "Invigorate";
+-- NAMES["P[]"] = ""; -- NEW
 
 ABILITY_DURATIONS[38620] = 16; -- Activate: Rocket Wings
 
@@ -163,6 +170,11 @@ ABILITY_DURATIONS[38620] = 16; -- Activate: Rocket Wings
 ABILITY_DURATIONS["P[86118]"] = 3; -- Sure Shot
 ABILITY_DURATIONS["P[85995]"] = 5; -- Hero
 ABILITY_DURATIONS["P[85888]"] = 12; -- Hyper Kinesis Surge
+ABILITY_DURATIONS["P[85818]"] = 10; -- Health Surge
+ABILITY_DURATIONS["P[95078]"] = 6; -- Invigorate
+-- ABILITY_DURATIONS["P[]"] = ; --
+
+ABILITY_DURATIONS["P[85995][CD]"] = 900; -- Hero cooldown
 
 ON_ABILITY_STATE[15206] = true; -- Adrenaline
 ON_ABILITY_STATE[3782]  = true; -- Heavy Armor
@@ -411,7 +423,7 @@ function OnBattleframeChanged()
 end
 
 function OnDeath()
-    ADTStatic.KillAll();
+    -- ADTStatic.KillAll();
 end
 
 function OnOptionChanged(id, value)
@@ -519,16 +531,8 @@ function OnAbilityUsed(ARGS)
         local rm_on_reuse       = nil;
         local rm_on_reuse_alias = nil;
 
-        if 4 == ARGS.index and true == SETTINGS.TRACK_PERKS.show then
-            if true == RUMPEL.CheckPerkEquipped("P[85888]") then
-                local ADT = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
-
-                ADT:SetAbilityID("P[85888]");
-                ADT:SetAbilityName(SLOTTED_PERKS["P[85888]"].name);
-                ADT:SetIconID(SLOTTED_PERKS["P[85888]"].web_icon_id);
-                ADT:SetDuration(ABILITY_DURATIONS["P[85888]"]);
-                ADT:StartTimer(RUMPEL.Callback);
-            end
+        if 4 >= ARGS.index and true == SETTINGS.TRACK_PERKS.show then
+            RUMPEL.CheckOnAbilityPerks(ARGS);
         end
 
         RUMPEL.ConsoleLog("Ability '"..ABILITY_INFO.name.."' fired Event 'ON_ABILITY_USED'!");
@@ -617,6 +621,10 @@ function OnAbilityState(ARGS)
         local rm_on_reuse_alias = nil;
         local icon_id           = 0;
 
+        if 4 >= ARGS.index and true == SETTINGS.TRACK_PERKS.show then
+            RUMPEL.CheckOnAbilityPerks(ARGS);
+        end
+
         if nil ~= ABILITY_INFOS[ability_id] then
             icon_id = ABILITY_INFOS[ability_id].icon_id;
         end
@@ -703,13 +711,19 @@ function OnWeaponBurst()
             local new_burst_time = client_time - last_shot_time;
 
             if new_burst_time > burst_time / 3.5 and new_burst_time < burst_time / 1.8 then
-                local ADT = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
+                if "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE["P[86118]"].ADT) then
+                    RUMPEL.ABILITIES_RM_ON_REUSE["P[86118]"].ADT:Reschedule(ABILITY_DURATIONS["P[86118]"]);
+                else
+                    local ADT = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
 
-                ADT:SetAbilityID("P[86118]");
-                ADT:SetAbilityName(SLOTTED_PERKS["P[86118]"].name);
-                ADT:SetIconID(SLOTTED_PERKS["P[86118]"].web_icon_id);
-                ADT:SetDuration(ABILITY_DURATIONS["P[86118]"]);
-                ADT:StartTimer(RUMPEL.Callback);
+                    ADT:SetAbilityID("P[86118]");
+                    ADT:SetAbilityName(SLOTTED_PERKS["P[86118]"].name);
+                    ADT:SetIconID(SLOTTED_PERKS["P[86118]"].web_icon_id);
+                    ADT:SetDuration(ABILITY_DURATIONS["P[86118]"]);
+                    ADT:StartTimer(RUMPEL.Callback);
+
+                    RUMPEL.ABILITIES_RM_ON_REUSE["P[86118]"].ADT = ADT;
+                end
             end
 
             burst_time     = new_burst_time;
@@ -718,19 +732,34 @@ function OnWeaponBurst()
     end
 end
 
-function OnTookHit()
+function OnTookHit(ARGS)
     if true == SETTINGS.TRACK_PERKS.show then
-        if true == RUMPEL.CheckPerkEquipped("P[85995]") then
+        if true == RUMPEL.CheckPerkEquipped("P[85995]") and "Healing" ~= ARGS.damageType then
             local LIFE_INFO = Player.GetLifeInfo();
+            local health    = LIFE_INFO["Health"] - ARGS.damage;
 
-            if 0 == LIFE_INFO["Health"] then
-                local ADT = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
+            -- RUMPEL.SystemMsg(LIFE_INFO);
+            -- RUMPEL.SystemMsg(hero_proc_time);
+            -- RUMPEL.SystemMsg(ARGS);
+
+            if 0 >= health and 0 == hero_proc_time then
+                local ADT    = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
+                local ADT_CD = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
+
+                hero_proc_time = tonumber(System.GetClientTime());
 
                 ADT:SetAbilityID("P[85995]");
+                ADT_CD:SetAbilityID("P[85995]");
                 ADT:SetAbilityName(SLOTTED_PERKS["P[85995]"].name);
+                ADT_CD:SetAbilityName(SLOTTED_PERKS["P[85995]"].name);
                 ADT:SetIconID(SLOTTED_PERKS["P[85995]"].web_icon_id);
+                ADT_CD:SetIconID(SLOTTED_PERKS["P[85995]"].web_icon_id);
                 ADT:SetDuration(ABILITY_DURATIONS["P[85995]"]);
+                ADT_CD:SetDuration(ABILITY_DURATIONS["P[85995][CD]"]);
                 ADT:StartTimer(RUMPEL.Callback);
+                ADT_CD:StartTimer(RUMPEL.Callback);
+
+                Callback2.FireAndForget(RUMPEL.ResetHeroProcTime, {}, 0.1);
             end
         end
     end
@@ -759,6 +788,21 @@ function RUMPEL.Callback(ADT)
                 RUMPEL.ABILITIES_RM_ON_REUSE[rm_on_reuse_alias].ADT = true;
             end
         end
+    end
+end
+
+function RUMPEL.ResetHeroProcTime()
+    local time       = tonumber(System.GetClientTime());
+    local reset_time = hero_proc_time + ABILITY_DURATIONS["P[85995]"] * 1000 + 1000;
+
+    -- RUMPEL.SystemMsg(hero_proc_time);
+    -- RUMPEL.SystemMsg(time);
+    -- RUMPEL.SystemMsg(reset_time);
+
+    if time > reset_time then
+        hero_proc_time = 0;
+    else
+        Callback2.FireAndForget(RUMPEL.ResetHeroProcTime, {}, 0.1);
     end
 end
 
@@ -804,6 +848,56 @@ function RUMPEL.CheckGliding(ARGS)
     end
 
     ARGS.ADT:Reschedule(0);
+end
+
+function RUMPEL.CheckOnAbilityPerks(ARGS)
+    if 4 == ARGS.index and true == RUMPEL.CheckPerkEquipped("P[85888]") then
+        if "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE["P[85888]"].ADT) then
+            RUMPEL.ABILITIES_RM_ON_REUSE["P[85888]"].ADT:Reschedule(ABILITY_DURATIONS["P[85888]"]);
+        else
+            local ADT = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
+
+            ADT:SetAbilityID("P[85888]");
+            ADT:SetAbilityName(SLOTTED_PERKS["P[85888]"].name);
+            ADT:SetIconID(SLOTTED_PERKS["P[85888]"].web_icon_id);
+            ADT:SetDuration(ABILITY_DURATIONS["P[85888]"]);
+            ADT:StartTimer(RUMPEL.Callback);
+
+            RUMPEL.ABILITIES_RM_ON_REUSE["P[85888]"].ADT = ADT;
+        end
+    end
+
+    if true == RUMPEL.CheckPerkEquipped("P[85818]") then
+        if "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE["P[85818]"].ADT) then
+            RUMPEL.ABILITIES_RM_ON_REUSE["P[85818]"].ADT:Reschedule(ABILITY_DURATIONS["P[85818]"]);
+        else
+            local ADT = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
+
+            ADT:SetAbilityID("P[85818]");
+            ADT:SetAbilityName(SLOTTED_PERKS["P[85818]"].name);
+            ADT:SetIconID(SLOTTED_PERKS["P[85818]"].web_icon_id);
+            ADT:SetDuration(ABILITY_DURATIONS["P[85818]"]);
+            ADT:StartTimer(RUMPEL.Callback);
+
+            RUMPEL.ABILITIES_RM_ON_REUSE["P[85818]"].ADT = ADT;
+        end
+    end
+
+    if true == RUMPEL.CheckPerkEquipped("P[95078]") then
+        if "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE["P[95078]"].ADT) then
+            RUMPEL.ABILITIES_RM_ON_REUSE["P[95078]"].ADT:Reschedule(ABILITY_DURATIONS["P[95078]"]);
+        else
+            local ADT = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
+
+            ADT:SetAbilityID("P[95078]");
+            ADT:SetAbilityName(SLOTTED_PERKS["P[95078]"].name);
+            ADT:SetIconID(SLOTTED_PERKS["P[95078]"].web_icon_id);
+            ADT:SetDuration(ABILITY_DURATIONS["P[95078]"]);
+            ADT:StartTimer(RUMPEL.Callback);
+
+            RUMPEL.ABILITIES_RM_ON_REUSE["P[95078]"].ADT = ADT;
+        end
+    end
 end
 
 function RUMPEL.GetAbilityDuration(ability_id)

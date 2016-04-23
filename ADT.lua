@@ -143,6 +143,7 @@ function AbilityDurationTimer.New(frame_id)
     local duration_ms  = 0;
     local remaining_ms = 0;
     local frame_id     = frame_id;
+    local is_finished  = false;
 
     local BP  = Component.CreateWidget("BP_IconTimer", PRIVATE.FRAMES[frame_id].OBJ); -- from blueprint in xml
     local GRP = BP:GetChild("timer_grp");
@@ -186,15 +187,23 @@ function AbilityDurationTimer.New(frame_id)
     -- = public methods
     -- =========================================================================
 
-    function ADT:Reschedule(delay)
+    function ADT:Reschedule(duration)
         -- PRIVATE.SystemMsg("ADT:Reschedule()");
-        TIMER:StartTimer(delay, true);
-        TIMER_OUTLINE_1:StartTimer(delay, true);
-        TIMER_OUTLINE_2:StartTimer(delay, true);
-        TIMER_OUTLINE_3:StartTimer(delay, true);
-        TIMER_OUTLINE_4:StartTimer(delay, true);
+        TIMER:StartTimer(duration, true);
+        TIMER_OUTLINE_1:StartTimer(duration, true);
+        TIMER_OUTLINE_2:StartTimer(duration, true);
+        TIMER_OUTLINE_3:StartTimer(duration, true);
+        TIMER_OUTLINE_4:StartTimer(duration, true);
 
-        UPDATE_TIMER:Reschedule(delay);
+        start_time = tonumber(System.GetClientTime());
+
+        self:SetDuration(duration);
+
+        ARC:SetParam("tint", "#"..PRIVATE.ARC.COLOR.normal, 0.1);
+
+        UPDATE_TIMER:Reschedule(duration);
+
+        PRIVATE.OrderTimers(self:GetFrameID());
 
         return self;
     end
@@ -321,7 +330,7 @@ function AbilityDurationTimer.New(frame_id)
     function ADT:UpdateTimerBind(callback)
         -- PRIVATE.SystemMsg("ADT:UpdateTimerBind()");
 
-        if nil == PRIVATE.FRAMES[frame_id].ADTS[self:GetID()] then
+        if nil == PRIVATE.FRAMES[frame_id].ADTS[self:GetID()] or true == is_finished then
             -- PRIVATE.SystemMsg("Timer already gone.");
 
             return;
@@ -339,6 +348,7 @@ function AbilityDurationTimer.New(frame_id)
 
         for i,_ in pairs(PRIVATE.FRAMES[_frame_id].ADTS) do
             if PRIVATE.FRAMES[_frame_id].ADTS[i]:GetID() == _id then
+                is_finished                       = true;
                 PRIVATE.FRAMES[_frame_id].ADTS[i] = nil;
                 PRIVATE.FRAMES[_frame_id].active  = PRIVATE.FRAMES[_frame_id].active - 1;
             elseif PRIVATE.FRAMES[_frame_id].ADTS[i]:GetPos() > _pos then

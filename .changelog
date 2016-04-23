@@ -1,3 +1,9 @@
+V 0.7.6  - fixed bug with thermal wave
+         - fixed issue with hero perk
+         - added cooldown for hero perk
+         - added perks
+           + Health Surge
+           + Invigorate
 V 0.7.5  - added perks
            + Hero
            + Hyper Kinesis Surge
