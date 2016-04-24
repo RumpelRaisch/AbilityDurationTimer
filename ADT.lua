@@ -131,7 +131,6 @@ function AbilityDurationTimer.New(frame_id)
     -- = private properties
     -- =========================================================================
 
-    local ADT          = setmetatable({}, AbilityDurationTimer); -- instance
     local id           = PRIVATE.GetUniqueId();
     local pos          = PRIVATE.GetMaxPos(frame_id) + 1;
     local start_time   = tonumber(System.GetClientTime());
@@ -145,34 +144,21 @@ function AbilityDurationTimer.New(frame_id)
     local frame_id     = frame_id;
     local is_finished  = false;
 
-    local BP  = Component.CreateWidget("BP_IconTimer", PRIVATE.FRAMES[frame_id].OBJ); -- from blueprint in xml
-    local GRP = BP:GetChild("timer_grp");
-
-    local ICON            = GRP:GetChild("icon");
-    local ARC             = GRP:GetChild("arc");
-    local TIMER_OUTLINE_1 = GRP:GetChild("text_timer_outline_1");
-    local TIMER_OUTLINE_2 = GRP:GetChild("text_timer_outline_2");
-    local TIMER_OUTLINE_3 = GRP:GetChild("text_timer_outline_3");
-    local TIMER_OUTLINE_4 = GRP:GetChild("text_timer_outline_4");
-    local TIMER           = GRP:GetChild("text_timer");
-
-    local UPDATE_TIMER = Callback2.Create();
+    local ADT             = setmetatable({}, AbilityDurationTimer); -- instance
+    local BP              = nil;
+    local GRP             = nil;
+    local ICON            = nil;
+    local ARC             = nil;
+    local TIMER_OUTLINE_1 = nil;
+    local TIMER_OUTLINE_2 = nil;
+    local TIMER_OUTLINE_3 = nil;
+    local TIMER_OUTLINE_4 = nil;
+    local TIMER           = nil;
+    local UPDATE_TIMER    = Callback2.Create();
 
     -- =========================================================================
     -- = init stuff
     -- =========================================================================
-
-    GRP:ParamTo("alpha", 0, 0);
-
-    if true == PRIVATE.ARC.show then
-        ARC:ParamTo("alpha", 1, 0);
-
-        if "" ~= PRIVATE.ARC.COLOR.normal then
-            ARC:SetParam("tint", "#"..PRIVATE.ARC.COLOR.normal, 0.1);
-        end
-    else
-        ARC:ParamTo("alpha", 0, 0);
-    end
 
     -- PRIVATE.SystemMsg(type(ADT));
 
@@ -278,6 +264,33 @@ function AbilityDurationTimer.New(frame_id)
         -- PRIVATE.SystemMsg("ADT:StartTimer()");
 
         local font = PRIVATE.font_name.."_"..tostring(PRIVATE.font_size);
+
+        if 100 <= duration then
+            BP = Component.CreateWidget("BP_IconTimer_Minutes", PRIVATE.FRAMES[frame_id].OBJ); -- from blueprint in xml
+        else
+            BP = Component.CreateWidget("BP_IconTimer", PRIVATE.FRAMES[frame_id].OBJ); -- from blueprint in xml
+        end
+
+        GRP             = BP:GetChild("timer_grp");
+        ICON            = GRP:GetChild("icon");
+        ARC             = GRP:GetChild("arc");
+        TIMER_OUTLINE_1 = GRP:GetChild("text_timer_outline_1");
+        TIMER_OUTLINE_2 = GRP:GetChild("text_timer_outline_2");
+        TIMER_OUTLINE_3 = GRP:GetChild("text_timer_outline_3");
+        TIMER_OUTLINE_4 = GRP:GetChild("text_timer_outline_4");
+        TIMER           = GRP:GetChild("text_timer");
+
+        GRP:ParamTo("alpha", 0, 0);
+
+        if true == PRIVATE.ARC.show then
+            ARC:ParamTo("alpha", 1, 0);
+
+            if "" ~= PRIVATE.ARC.COLOR.normal then
+                ARC:SetParam("tint", "#"..PRIVATE.ARC.COLOR.normal, 0.1);
+            end
+        else
+            ARC:ParamTo("alpha", 0, 0);
+        end
 
         if PRIVATE.max_visible >= PRIVATE.FRAMES[frame_id].active then
             self:VisibilityTo(1, 0);

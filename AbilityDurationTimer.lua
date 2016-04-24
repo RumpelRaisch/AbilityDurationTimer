@@ -25,6 +25,7 @@
 
 require "math";
 require "string";
+require "unicode";
 require "lib/lib_Callback2";
 require "lib/lib_ChatLib";
 require "lib/lib_InterfaceOptions";
@@ -309,8 +310,8 @@ function BuildOptions()
 
     InterfaceOptions.StartGroup({label="Ultimate/HKM", subtab=SUBTAB});
         RUMPEL.AddAbilityOptions("Healing Dome", 34928, SUBTAB);
-        RUMPEL.AddAbilityOptions("Necrosis", 41867, SUBTAB);
-        RUMPEL.AddAbilityOptions("Heroism", 35620, SUBTAB);
+        RUMPEL.AddAbilityOptions("Heroism", 41867, SUBTAB);
+        RUMPEL.AddAbilityOptions("Necrosis", 35620, SUBTAB);
     InterfaceOptions.StopGroup({subtab=SUBTAB});
 
     -- Dreadnaught
@@ -422,9 +423,11 @@ function OnSlash(ARGS)
     elseif "weapon" == ARGS[1] then
         RUMPEL.SystemMsg("Player.GetWeaponInfo():\n"..tostring(Player.GetWeaponInfo()));
         RUMPEL.SystemMsg("Player.GetWeaponState():\n"..tostring(Player.GetWeaponState()));
-        RUMPEL.SystemMsg("Player.GetWeaponMode():\n"..tostring(Player.GetWeaponMode()));
-        RUMPEL.SystemMsg("Player.GetWeaponIndex():\n"..tostring(Player.GetWeaponIndex()));
-        RUMPEL.SystemMsg("Player.GetWeaponCharge():\n"..tostring(Player.GetWeaponCharge()));
+        -- RUMPEL.SystemMsg("Player.GetWeaponMode():\n"..tostring(Player.GetWeaponMode()));
+        -- RUMPEL.SystemMsg("Player.GetWeaponIndex():\n"..tostring(Player.GetWeaponIndex()));
+        -- RUMPEL.SystemMsg("Player.GetWeaponCharge():\n"..tostring(Player.GetWeaponCharge()));
+    elseif "loadout" == ARGS[1] then
+        RUMPEL.Log("Player.GetCurrentLoadout():\n"..tostring(Player.GetCurrentLoadout()));
     elseif "test" == ARGS[1] then
         RUMPEL.Test();
     else
