@@ -88,7 +88,6 @@ SETTINGS = {
     max_timers          = 12,
     -- objects
     TIMERS      = {},
-    TRACK_PERKS = {show = false, frame = 1},
     FONT        = {
         name = "Demi",
         size = 16,
@@ -228,13 +227,20 @@ SETTINGS.TIMERS[12305] = {show = true, frame = 1}; -- Teleport Beacon
 SETTINGS.TIMERS[38620] = {show = true, frame = 1}; -- Activate: Rocket Wings
 
 -- Perks
--- SETTINGS.TIMERS["P[86118]"] = {show = true, frame = 1}; -- Sure Shot
+SETTINGS.TIMERS["P[86118]"] = {show = true, frame = 1}; -- Sure Shot
+SETTINGS.TIMERS["P[85995]"] = {show = true, frame = 1}; -- Hero
+SETTINGS.TIMERS["P[85888]"] = {show = true, frame = 1}; -- Hyper Kinesis Surge
+SETTINGS.TIMERS["P[85818]"] = {show = true, frame = 1}; -- Health Surge
+SETTINGS.TIMERS["P[95078]"] = {show = true, frame = 1}; -- Invigorate
+-- SETTINGS.TIMERS["P[]"] = {show = true, frame = 1}; --
 
 -- =============================================================================
 --  Options
 -- =============================================================================
 
 function BuildOptions()
+    local SUBTAB = {};
+
     InterfaceOptions.AddMovableFrame({frame=UI.FRAMES[1].OBJ, label="Ability Duration Timer (Frame 1)", scalable=true});
     InterfaceOptions.AddMovableFrame({frame=UI.FRAMES[2].OBJ, label="Ability Duration Timer (Frame 2)", scalable=true});
     InterfaceOptions.AddMovableFrame({frame=UI.FRAMES[3].OBJ, label="Ability Duration Timer (Frame 3)", scalable=true});
@@ -257,88 +263,102 @@ function BuildOptions()
         InterfaceOptions.AddChoiceEntry({menuId="FRAME_4_ALIGNMENT", val="ltr", label="left to right"});
         InterfaceOptions.AddChoiceEntry({menuId="FRAME_4_ALIGNMENT", val="rtl", label="right to left"});
 
-    InterfaceOptions.StartGroup({label="Font", subtab={"Font"}});
-        InterfaceOptions.AddChoiceMenu({id="FONT", label="Type", default=(Component.GetSetting("FONT") or SETTINGS.FONT.name), subtab={"Font"}});
-            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Demi", label="Eurostile Medium", subtab={"Font"}});
-            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Narrow", label="Eurostile Narrow", subtab={"Font"}});
-            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Wide", label="Eurostile Wide", subtab={"Font"}});
-            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Bold", label="Eurostile Bold", subtab={"Font"}});
-            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuRegular", label="Ubuntu Regular", subtab={"Font"}});
-            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuMedium", label="Ubuntu Medium", subtab={"Font"}});
-            InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuBold", label="Ubuntu Bold", subtab={"Font"}});
-        InterfaceOptions.AddSlider({id="FONT_SIZE", label="Size", min=1, max=20, inc=1, suffix="", default=(Component.GetSetting("FONT_SIZE") or SETTINGS.FONT.size), subtab={"Font"}});
-        InterfaceOptions.AddColorPicker({id="TIMER_COLOR", label="Duration color", default={tint=(Component.GetSetting("TIMER_COLOR") or SETTINGS.FONT.COLOR.text_timer)}, subtab={"Font"}});
-        InterfaceOptions.AddColorPicker({id="TIMER_COLOR_OUTLINE", label="Duration outline color", default={tint=(Component.GetSetting("TIMER_COLOR_OUTLINE") or SETTINGS.FONT.COLOR.text_timer_outline)}, subtab={"Font"}});
-    InterfaceOptions.StopGroup({subtab={"Font"}});
+    SUBTAB = {"Font"};
 
-    InterfaceOptions.StartGroup({label="Arc", subtab={"Arc"}});
-        InterfaceOptions.AddCheckBox({id="ARC_ENABLED", label="Enabled", default=(Component.GetSetting("ARC_ENABLED") or SETTINGS.ARC.show), subtab={"Arc"}});
-        InterfaceOptions.AddColorPicker({id="ARC_COLOR", label="Color", default={tint=(Component.GetSetting("ARC_COLOR") or SETTINGS.ARC.COLOR.normal)}, subtab={"Arc"}});
-        InterfaceOptions.AddColorPicker({id="ARC_WARNING_COLOR", label="Warning color", default={tint=(Component.GetSetting("ARC_WARNING_COLOR") or SETTINGS.ARC.COLOR.warning)}, subtab={"Arc"}});
-        InterfaceOptions.AddSlider({id="ARC_WARNING_SECONDS", label="Warning start at X seconds remain", min=1, max=20, inc=1, suffix="", default=(Component.GetSetting("ARC_WARNING_SECONDS") or SETTINGS.ARC.warning), subtab={"Arc"}});
-    InterfaceOptions.StopGroup({subtab={"Arc"}});
+    InterfaceOptions.AddChoiceMenu({id="FONT", label="Type", default=(Component.GetSetting("FONT") or SETTINGS.FONT.name), subtab=SUBTAB});
+        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Demi", label="Eurostile Medium", subtab=SUBTAB});
+        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Narrow", label="Eurostile Narrow", subtab=SUBTAB});
+        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Wide", label="Eurostile Wide", subtab=SUBTAB});
+        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="Bold", label="Eurostile Bold", subtab=SUBTAB});
+        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuRegular", label="Ubuntu Regular", subtab=SUBTAB});
+        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuMedium", label="Ubuntu Medium", subtab=SUBTAB});
+        InterfaceOptions.AddChoiceEntry({menuId="FONT", val="UbuntuBold", label="Ubuntu Bold", subtab=SUBTAB});
+    InterfaceOptions.AddSlider({id="FONT_SIZE", label="Size", min=1, max=20, inc=1, suffix="", default=(Component.GetSetting("FONT_SIZE") or SETTINGS.FONT.size), subtab=SUBTAB});
+    InterfaceOptions.AddColorPicker({id="TIMER_COLOR", label="Duration color", default={tint=(Component.GetSetting("TIMER_COLOR") or SETTINGS.FONT.COLOR.text_timer)}, subtab=SUBTAB});
+    InterfaceOptions.AddColorPicker({id="TIMER_COLOR_OUTLINE", label="Duration outline color", default={tint=(Component.GetSetting("TIMER_COLOR_OUTLINE") or SETTINGS.FONT.COLOR.text_timer_outline)}, subtab=SUBTAB});
 
-    InterfaceOptions.StartGroup({label="Perks (experimental)", subtab={"Abilities"}});
-        InterfaceOptions.AddCheckBox({id="PERKS_ENABLED", label="Enabled", default=(Component.GetSetting("PERKS_ENABLED") or SETTINGS.TRACK_PERKS.show), subtab={"Abilities"}});
-        InterfaceOptions.AddChoiceMenu({id="PERKS_FRAME", label="Frame", default=(Component.GetSetting("PERKS_FRAME") or SETTINGS.TRACK_PERKS.frame), subtab={"Abilities"}});
-            InterfaceOptions.AddChoiceEntry({menuId="PERKS_FRAME", val="1", label="1", subtab={"Abilities"}});
-            InterfaceOptions.AddChoiceEntry({menuId="PERKS_FRAME", val="2", label="2", subtab={"Abilities"}});
-            InterfaceOptions.AddChoiceEntry({menuId="PERKS_FRAME", val="3", label="3", subtab={"Abilities"}});
-            InterfaceOptions.AddChoiceEntry({menuId="PERKS_FRAME", val="4", label="4", subtab={"Abilities"}});
-    InterfaceOptions.StopGroup({subtab={"Abilities"}});
+    SUBTAB = {"Arc"};
+
+    InterfaceOptions.AddCheckBox({id="ARC_ENABLED", label="Enabled", default=(Component.GetSetting("ARC_ENABLED") or SETTINGS.ARC.show), subtab=SUBTAB});
+    InterfaceOptions.AddColorPicker({id="ARC_COLOR", label="Color", default={tint=(Component.GetSetting("ARC_COLOR") or SETTINGS.ARC.COLOR.normal)}, subtab=SUBTAB});
+    InterfaceOptions.AddColorPicker({id="ARC_WARNING_COLOR", label="Warning color", default={tint=(Component.GetSetting("ARC_WARNING_COLOR") or SETTINGS.ARC.COLOR.warning)}, subtab=SUBTAB});
+    InterfaceOptions.AddSlider({id="ARC_WARNING_SECONDS", label="Warning start at X seconds remain", min=1, max=20, inc=1, suffix="", default=(Component.GetSetting("ARC_WARNING_SECONDS") or SETTINGS.ARC.warning), subtab=SUBTAB});
+
+    SUBTAB = {"Perks"};
+
+    RUMPEL.AddAbilityOptions("Sure Shot", "P[86118]", SUBTAB);
+    RUMPEL.AddAbilityOptions("Hero", "P[85995]", SUBTAB);
+    RUMPEL.AddAbilityOptions("Hyper Kinesis Surge", "P[85888]", SUBTAB);
+    RUMPEL.AddAbilityOptions("Health Surge", "P[85818]", SUBTAB);
+    RUMPEL.AddAbilityOptions("Invigorate", "P[95078]", SUBTAB);
 
     -- Assault
-    InterfaceOptions.StartGroup({label="Assault", subtab={"Abilities"}});
-        RUMPEL.AddAbilityOptions("Hellfire", 41682);
-        RUMPEL.AddAbilityOptions("Overcharge", 3639);
-        RUMPEL.AddAbilityOptions("Supercharge", 35637);
-        RUMPEL.AddAbilityOptions("Thermal Wave", 35458);
-    InterfaceOptions.StopGroup({subtab={"Abilities"}});
+    SUBTAB = {"Abilities", "Assault"};
+
+    RUMPEL.AddAbilityOptions("Hellfire", 41682, SUBTAB);
+    RUMPEL.AddAbilityOptions("Overcharge", 3639, SUBTAB);
+    RUMPEL.AddAbilityOptions("Thermal Wave", 35458, SUBTAB);
+
+    InterfaceOptions.StartGroup({label="Ultimate/HKM", subtab=SUBTAB});
+        RUMPEL.AddAbilityOptions("Supercharge", 35637, SUBTAB);
+    InterfaceOptions.StopGroup({subtab=SUBTAB});
 
     -- Biotech
-    InterfaceOptions.StartGroup({label="Biotech", subtab={"Abilities"}});
-        RUMPEL.AddAbilityOptions("Adrenaline Rush", 15206);
-        RUMPEL.AddAbilityOptions("Creeping Death", 34734);
-        RUMPEL.AddAbilityOptions("Healing Dome", 34928);
-        RUMPEL.AddAbilityOptions("Necrosis", 41867);
-        RUMPEL.AddAbilityOptions("Heroism", 35620);
-        RUMPEL.AddAbilityOptions("Poison Ball", 41865);
-        RUMPEL.AddAbilityOptions("Poison Trail", 40592);
-    InterfaceOptions.StopGroup({subtab={"Abilities"}});
+    SUBTAB = {"Abilities", "Biotech"};
+
+    RUMPEL.AddAbilityOptions("Adrenaline Rush", 15206, SUBTAB);
+    RUMPEL.AddAbilityOptions("Creeping Death", 34734, SUBTAB);
+    RUMPEL.AddAbilityOptions("Poison Ball", 41865, SUBTAB);
+    RUMPEL.AddAbilityOptions("Poison Trail", 40592, SUBTAB);
+
+    InterfaceOptions.StartGroup({label="Ultimate/HKM", subtab=SUBTAB});
+        RUMPEL.AddAbilityOptions("Healing Dome", 34928, SUBTAB);
+        RUMPEL.AddAbilityOptions("Necrosis", 41867, SUBTAB);
+        RUMPEL.AddAbilityOptions("Heroism", 35620, SUBTAB);
+    InterfaceOptions.StopGroup({subtab=SUBTAB});
 
     -- Dreadnaught
-    InterfaceOptions.StartGroup({label="Dreadnaught", subtab={"Abilities"}});
-        RUMPEL.AddAbilityOptions("Absorption Bomb", 41881);
-        RUMPEL.AddAbilityOptions("Dreadfield", 34066);
-        RUMPEL.AddAbilityOptions("Heavy Armor", 3782);
-        RUMPEL.AddAbilityOptions("Penetrating Rounds", 41875);
-        RUMPEL.AddAbilityOptions("Thunderdome", 1726);
-    InterfaceOptions.StopGroup({subtab={"Abilities"}});
+    SUBTAB = {"Abilities", "Dreadnaught"};
+
+    RUMPEL.AddAbilityOptions("Heavy Armor", 3782, SUBTAB);
+    RUMPEL.AddAbilityOptions("Penetrating Rounds", 41875, SUBTAB);
+    RUMPEL.AddAbilityOptions("Thunderdome", 1726, SUBTAB);
+
+    InterfaceOptions.StartGroup({label="Ultimate/HKM", subtab=SUBTAB});
+        RUMPEL.AddAbilityOptions("Absorption Bomb", 41881, SUBTAB);
+        RUMPEL.AddAbilityOptions("Dreadfield", 34066, SUBTAB);
+    InterfaceOptions.StopGroup({subtab=SUBTAB});
 
     -- Engineer
-    InterfaceOptions.StartGroup({label="Engineer", subtab={"Abilities"}});
-        RUMPEL.AddAbilityOptions("Boomerang Shot", 34770);
-        RUMPEL.AddAbilityOptions("Bulwark", 41886);
-        RUMPEL.AddAbilityOptions("Electrical Storm", 35583);
-        RUMPEL.AddAbilityOptions("Fortify", 35455);
-        RUMPEL.AddAbilityOptions("Overclock", 41880);
-    InterfaceOptions.StopGroup({subtab={"Abilities"}});
+    SUBTAB = {"Abilities", "Engineer"};
+
+    RUMPEL.AddAbilityOptions("Boomerang Shot", 34770, SUBTAB);
+    RUMPEL.AddAbilityOptions("Bulwark", 41886, SUBTAB);
+    RUMPEL.AddAbilityOptions("Overclock", 41880, SUBTAB);
+
+    InterfaceOptions.StartGroup({label="Ultimate/HKM", subtab=SUBTAB});
+        RUMPEL.AddAbilityOptions("Electrical Storm", 35583, SUBTAB);
+        RUMPEL.AddAbilityOptions("Fortify", 35455, SUBTAB);
+    InterfaceOptions.StopGroup({subtab=SUBTAB});
 
     -- Recon
-    InterfaceOptions.StartGroup({label="Recon", subtab={"Abilities"}});
-        RUMPEL.AddAbilityOptions("Artillery Strike", 35567);
-        RUMPEL.AddAbilityOptions("Cryo Shot", 39405);
-        RUMPEL.AddAbilityOptions("Decoy", 34957);
-        RUMPEL.AddAbilityOptions("Overload", 35618);
-        RUMPEL.AddAbilityOptions("SIN Beacon", 34526);
-        RUMPEL.AddAbilityOptions("Smoke Screen", 35345);
-        RUMPEL.AddAbilityOptions("Teleport Beacon", 12305);
-    InterfaceOptions.StopGroup({subtab={"Abilities"}});
+    SUBTAB = {"Abilities", "Recon"};
+
+    RUMPEL.AddAbilityOptions("Cryo Shot", 39405, SUBTAB);
+    RUMPEL.AddAbilityOptions("Decoy", 34957, SUBTAB);
+    RUMPEL.AddAbilityOptions("SIN Beacon", 34526, SUBTAB);
+    RUMPEL.AddAbilityOptions("Smoke Screen", 35345, SUBTAB);
+    RUMPEL.AddAbilityOptions("Teleport Beacon", 12305, SUBTAB);
+
+    InterfaceOptions.StartGroup({label="Ultimate/HKM", subtab=SUBTAB});
+        RUMPEL.AddAbilityOptions("Artillery Strike", 35567, SUBTAB);
+        RUMPEL.AddAbilityOptions("Overload", 35618, SUBTAB);
+    InterfaceOptions.StopGroup({subtab=SUBTAB});
 
     -- Miscellaneous
-    InterfaceOptions.StartGroup({label="Miscellaneous", subtab={"Abilities"}});
-        RUMPEL.AddAbilityOptions("Rocketeer's Wings", 38620);
-    InterfaceOptions.StopGroup({subtab={"Abilities"}});
+    SUBTAB = {"Abilities", "Miscellaneous"};
+
+    RUMPEL.AddAbilityOptions("Rocketeer's Wings", 38620, SUBTAB);
 end
 
 -- =============================================================================
@@ -531,7 +551,7 @@ function OnAbilityUsed(ARGS)
         local rm_on_reuse       = nil;
         local rm_on_reuse_alias = nil;
 
-        if 4 >= ARGS.index and true == SETTINGS.TRACK_PERKS.show then
+        if 4 >= ARGS.index then
             RUMPEL.CheckOnAbilityPerks(ARGS);
         end
 
@@ -621,7 +641,7 @@ function OnAbilityState(ARGS)
         local rm_on_reuse_alias = nil;
         local icon_id           = 0;
 
-        if 4 >= ARGS.index and true == SETTINGS.TRACK_PERKS.show then
+        if 4 >= ARGS.index then
             RUMPEL.CheckOnAbilityPerks(ARGS);
         end
 
@@ -705,62 +725,58 @@ end
 
 function OnWeaponBurst()
     -- experimental
-    if true == SETTINGS.TRACK_PERKS.show then
-        if true == RUMPEL.CheckPerkEquipped("P[86118]") then
-            local client_time    = tonumber(System.GetClientTime());
-            local new_burst_time = client_time - last_shot_time;
+    if true == RUMPEL.CheckPerkEquipped("P[86118]") and true == SETTINGS.TIMERS["P[86118]"].show then
+        local client_time    = tonumber(System.GetClientTime());
+        local new_burst_time = client_time - last_shot_time;
 
-            if new_burst_time > burst_time / 3.5 and new_burst_time < burst_time / 1.8 then
-                if "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE["P[86118]"].ADT) then
-                    RUMPEL.ABILITIES_RM_ON_REUSE["P[86118]"].ADT:Reschedule(ABILITY_DURATIONS["P[86118]"]);
-                else
-                    local ADT = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
+        if new_burst_time > burst_time / 3.5 and new_burst_time < burst_time / 1.8 then
+            if "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE["P[86118]"].ADT) then
+                RUMPEL.ABILITIES_RM_ON_REUSE["P[86118]"].ADT:Reschedule(ABILITY_DURATIONS["P[86118]"]);
+            else
+                local ADT = AbilityDurationTimer(SETTINGS.TIMERS["P[86118]"].frame);
 
-                    ADT:SetAbilityID("P[86118]");
-                    ADT:SetAbilityName(SLOTTED_PERKS["P[86118]"].name);
-                    ADT:SetIconID(SLOTTED_PERKS["P[86118]"].web_icon_id);
-                    ADT:SetDuration(ABILITY_DURATIONS["P[86118]"]);
-                    ADT:StartTimer(RUMPEL.Callback);
+                ADT:SetAbilityID("P[86118]");
+                ADT:SetAbilityName(SLOTTED_PERKS["P[86118]"].name);
+                ADT:SetIconID(SLOTTED_PERKS["P[86118]"].web_icon_id);
+                ADT:SetDuration(ABILITY_DURATIONS["P[86118]"]);
+                ADT:StartTimer(RUMPEL.Callback);
 
-                    RUMPEL.ABILITIES_RM_ON_REUSE["P[86118]"].ADT = ADT;
-                end
+                RUMPEL.ABILITIES_RM_ON_REUSE["P[86118]"].ADT = ADT;
             end
-
-            burst_time     = new_burst_time;
-            last_shot_time = client_time;
         end
+
+        burst_time     = new_burst_time;
+        last_shot_time = client_time;
     end
 end
 
 function OnTookHit(ARGS)
-    if true == SETTINGS.TRACK_PERKS.show then
-        if true == RUMPEL.CheckPerkEquipped("P[85995]") and "Healing" ~= ARGS.damageType then
-            local LIFE_INFO = Player.GetLifeInfo();
-            local health    = LIFE_INFO["Health"] - ARGS.damage;
+    if true == RUMPEL.CheckPerkEquipped("P[85995]") and true == SETTINGS.TIMERS["P[85995]"].show and "Healing" ~= ARGS.damageType then
+        local LIFE_INFO = Player.GetLifeInfo();
+        local health    = LIFE_INFO["Health"] - ARGS.damage;
 
-            -- RUMPEL.SystemMsg(LIFE_INFO);
-            -- RUMPEL.SystemMsg(hero_proc_time);
-            -- RUMPEL.SystemMsg(ARGS);
+        -- RUMPEL.SystemMsg(LIFE_INFO);
+        -- RUMPEL.SystemMsg(hero_proc_time);
+        -- RUMPEL.SystemMsg(ARGS);
 
-            if 0 >= health and 0 == hero_proc_time then
-                local ADT    = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
-                local ADT_CD = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
+        if 0 >= health and 0 == hero_proc_time then
+            local ADT    = AbilityDurationTimer(SETTINGS.TIMERS["P[85995]"].frame);
+            local ADT_CD = AbilityDurationTimer(SETTINGS.TIMERS["P[85995]"].frame);
 
-                hero_proc_time = tonumber(System.GetClientTime());
+            hero_proc_time = tonumber(System.GetClientTime());
 
-                ADT:SetAbilityID("P[85995]");
-                ADT_CD:SetAbilityID("P[85995]");
-                ADT:SetAbilityName(SLOTTED_PERKS["P[85995]"].name);
-                ADT_CD:SetAbilityName(SLOTTED_PERKS["P[85995]"].name);
-                ADT:SetIconID(SLOTTED_PERKS["P[85995]"].web_icon_id);
-                ADT_CD:SetIconID(SLOTTED_PERKS["P[85995]"].web_icon_id);
-                ADT:SetDuration(ABILITY_DURATIONS["P[85995]"]);
-                ADT_CD:SetDuration(ABILITY_DURATIONS["P[85995][CD]"]);
-                ADT:StartTimer(RUMPEL.Callback);
-                ADT_CD:StartTimer(RUMPEL.Callback);
+            ADT:SetAbilityID("P[85995]");
+            ADT_CD:SetAbilityID("P[85995]");
+            ADT:SetAbilityName(SLOTTED_PERKS["P[85995]"].name);
+            ADT_CD:SetAbilityName(SLOTTED_PERKS["P[85995]"].name);
+            ADT:SetIconID(SLOTTED_PERKS["P[85995]"].web_icon_id);
+            ADT_CD:SetIconID(SLOTTED_PERKS["P[85995]"].web_icon_id);
+            ADT:SetDuration(ABILITY_DURATIONS["P[85995]"]);
+            ADT_CD:SetDuration(ABILITY_DURATIONS["P[85995][CD]"]);
+            ADT:StartTimer(RUMPEL.Callback);
+            ADT_CD:StartTimer(RUMPEL.Callback);
 
-                Callback2.FireAndForget(RUMPEL.ResetHeroProcTime, {}, 0.1);
-            end
+            Callback2.FireAndForget(RUMPEL.ResetHeroProcTime, {}, 0.1);
         end
     end
 end
@@ -806,17 +822,17 @@ function RUMPEL.ResetHeroProcTime()
     end
 end
 
-function RUMPEL.AddAbilityOptions(name, id)
+function RUMPEL.AddAbilityOptions(name, id, SUBTAB)
     local name_for_id = string.gsub(string.gsub(string.upper(name), "%s+", "_"), "[^%a]", "");
 
     ABILITY_OPTIONS[id] = name_for_id;
 
-    InterfaceOptions.AddCheckBox({id=name_for_id.."_ENABLED", label=name, default=(Component.GetSetting(name_for_id.."_ENABLED") or SETTINGS.TIMERS[id].show), subtab={"Abilities"}});
-    InterfaceOptions.AddChoiceMenu({id=name_for_id.."_FRAME", label=name.." frame", default=(Component.GetSetting(name_for_id.."_FRAME") or SETTINGS.TIMERS[id].frame), subtab={"Abilities"}});
-        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="1", label="1", subtab={"Abilities"}});
-        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="2", label="2", subtab={"Abilities"}});
-        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="3", label="3", subtab={"Abilities"}});
-        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="4", label="4", subtab={"Abilities"}});
+    InterfaceOptions.AddCheckBox({id=name_for_id.."_ENABLED", label=name, default=(Component.GetSetting(name_for_id.."_ENABLED") or SETTINGS.TIMERS[id].show), subtab=SUBTAB});
+    InterfaceOptions.AddChoiceMenu({id=name_for_id.."_FRAME", label=name.." frame", default=(Component.GetSetting(name_for_id.."_FRAME") or SETTINGS.TIMERS[id].frame), subtab=SUBTAB});
+        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="1", label="1", subtab=SUBTAB});
+        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="2", label="2", subtab=SUBTAB});
+        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="3", label="3", subtab=SUBTAB});
+        InterfaceOptions.AddChoiceEntry({menuId=name_for_id.."_FRAME", val="4", label="4", subtab=SUBTAB});
 end
 
 function RUMPEL.CheckGlidingStart(ARGS)
@@ -851,11 +867,11 @@ function RUMPEL.CheckGliding(ARGS)
 end
 
 function RUMPEL.CheckOnAbilityPerks(ARGS)
-    if 4 == ARGS.index and true == RUMPEL.CheckPerkEquipped("P[85888]") then
+    if 4 == ARGS.index and true == RUMPEL.CheckPerkEquipped("P[85888]") and true == SETTINGS.TIMERS["P[85888]"].show then
         if "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE["P[85888]"].ADT) then
             RUMPEL.ABILITIES_RM_ON_REUSE["P[85888]"].ADT:Reschedule(ABILITY_DURATIONS["P[85888]"]);
         else
-            local ADT = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
+            local ADT = AbilityDurationTimer(SETTINGS.TIMERS["P[85888]"].frame);
 
             ADT:SetAbilityID("P[85888]");
             ADT:SetAbilityName(SLOTTED_PERKS["P[85888]"].name);
@@ -867,11 +883,11 @@ function RUMPEL.CheckOnAbilityPerks(ARGS)
         end
     end
 
-    if true == RUMPEL.CheckPerkEquipped("P[85818]") then
+    if true == RUMPEL.CheckPerkEquipped("P[85818]") and true == SETTINGS.TIMERS["P[85818]"].show then
         if "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE["P[85818]"].ADT) then
             RUMPEL.ABILITIES_RM_ON_REUSE["P[85818]"].ADT:Reschedule(ABILITY_DURATIONS["P[85818]"]);
         else
-            local ADT = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
+            local ADT = AbilityDurationTimer(SETTINGS.TIMERS["P[85818]"].frame);
 
             ADT:SetAbilityID("P[85818]");
             ADT:SetAbilityName(SLOTTED_PERKS["P[85818]"].name);
@@ -883,11 +899,11 @@ function RUMPEL.CheckOnAbilityPerks(ARGS)
         end
     end
 
-    if true == RUMPEL.CheckPerkEquipped("P[95078]") then
+    if true == RUMPEL.CheckPerkEquipped("P[95078]") and true == SETTINGS.TIMERS["P[95078]"].show then
         if "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE["P[95078]"].ADT) then
             RUMPEL.ABILITIES_RM_ON_REUSE["P[95078]"].ADT:Reschedule(ABILITY_DURATIONS["P[95078]"]);
         else
-            local ADT = AbilityDurationTimer(SETTINGS.TRACK_PERKS.frame);
+            local ADT = AbilityDurationTimer(SETTINGS.TIMERS["P[95078]"].frame);
 
             ADT:SetAbilityID("P[95078]");
             ADT:SetAbilityName(SLOTTED_PERKS["P[95078]"].name);
