@@ -49,11 +49,8 @@ local SLOTTED_PERKS     = {};
 local slash_list        = "adt";
 local output_prefix     = "[ADT] ";
 local debug_prefix      = "[DEBUG] ";
-local hero_proc_time    = 0;
-
--- global for sure shot
-local burst_time     = 0;
-local last_shot_time = 0;
+local hero_proc_time    = 0; -- for Hero perk
+local fire_rate_mod     = 0; -- for Sure Shot perk
 
 UI.ALIGNMENT        = {};
 UI.ALIGNMENT["ltr"] = 68;
@@ -76,7 +73,6 @@ RUMPEL.ABILITIES_RM_ON_REUSE[12305] = {ADT = true, alias = 35909}; -- ort Beacon
 RUMPEL.ABILITIES_RM_ON_REUSE[38620] = {ADT = true, alias = false}; -- Rocketeers
 
 -- Perks
-RUMPEL.ABILITIES_RM_ON_REUSE["P[86118]"] = {ADT = true, alias = false}; -- Sure Shot
 RUMPEL.ABILITIES_RM_ON_REUSE["P[85888]"] = {ADT = true, alias = false}; -- Hyper Kinesis Surge
 RUMPEL.ABILITIES_RM_ON_REUSE["P[85818]"] = {ADT = true, alias = false}; -- Health Surge
 RUMPEL.ABILITIES_RM_ON_REUSE["P[95078]"] = {ADT = true, alias = false}; -- Invigorate
@@ -423,6 +419,12 @@ function OnSlash(ARGS)
         RUMPEL.SystemMsg(RUMPEL.CurrentHealth());
     elseif "perks" == ARGS[1] then
         RUMPEL.GetLoadoutPerks();
+    elseif "weapon" == ARGS[1] then
+        RUMPEL.SystemMsg("Player.GetWeaponInfo():\n"..tostring(Player.GetWeaponInfo()));
+        RUMPEL.SystemMsg("Player.GetWeaponState():\n"..tostring(Player.GetWeaponState()));
+        RUMPEL.SystemMsg("Player.GetWeaponMode():\n"..tostring(Player.GetWeaponMode()));
+        RUMPEL.SystemMsg("Player.GetWeaponIndex():\n"..tostring(Player.GetWeaponIndex()));
+        RUMPEL.SystemMsg("Player.GetWeaponCharge():\n"..tostring(Player.GetWeaponCharge()));
     elseif "test" == ARGS[1] then
         RUMPEL.Test();
     else
@@ -726,27 +728,20 @@ end
 function OnWeaponBurst()
     -- experimental
     if true == RUMPEL.CheckPerkEquipped("P[86118]") and true == SETTINGS.TIMERS["P[86118]"].show then
-        local client_time    = tonumber(System.GetClientTime());
-        local new_burst_time = client_time - last_shot_time;
+        local fire_rate_mod_new   = Player.GetWeaponState().FireRateMod;
+        local fire_rate_mod_check = fire_rate_mod * 0.5;
 
-        if new_burst_time > burst_time / 3.5 and new_burst_time < burst_time / 1.8 then
-            if "AbilityDurationTimer" == type(RUMPEL.ABILITIES_RM_ON_REUSE["P[86118]"].ADT) then
-                RUMPEL.ABILITIES_RM_ON_REUSE["P[86118]"].ADT:Reschedule(ABILITY_DURATIONS["P[86118]"]);
-            else
-                local ADT = AbilityDurationTimer(SETTINGS.TIMERS["P[86118]"].frame);
+        if fire_rate_mod_new == fire_rate_mod_check then
+            local ADT = AbilityDurationTimer(SETTINGS.TIMERS["P[86118]"].frame);
 
-                ADT:SetAbilityID("P[86118]");
-                ADT:SetAbilityName(SLOTTED_PERKS["P[86118]"].name);
-                ADT:SetIconID(SLOTTED_PERKS["P[86118]"].web_icon_id);
-                ADT:SetDuration(ABILITY_DURATIONS["P[86118]"]);
-                ADT:StartTimer(RUMPEL.Callback);
-
-                RUMPEL.ABILITIES_RM_ON_REUSE["P[86118]"].ADT = ADT;
-            end
+            ADT:SetAbilityID("P[86118]");
+            ADT:SetAbilityName(SLOTTED_PERKS["P[86118]"].name);
+            ADT:SetIconID(SLOTTED_PERKS["P[86118]"].web_icon_id);
+            ADT:SetDuration(ABILITY_DURATIONS["P[86118]"]);
+            ADT:StartTimer(RUMPEL.Callback);
         end
 
-        burst_time     = new_burst_time;
-        last_shot_time = client_time;
+        fire_rate_mod = fire_rate_mod_new;
     end
 end
 
