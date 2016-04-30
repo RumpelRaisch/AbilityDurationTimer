@@ -143,6 +143,8 @@ NAMES[34770] = "Boomerang";
 NAMES[35637] = "Supercharge";
 NAMES[35618] = "Overload";
 NAMES[12305] = "Teleport Beacon";
+NAMES[35453] = "Eruption Rounds";
+NAMES[34671] = "Execution";
 -- NAMES[] = ""; -- NEW
 
 -- Perks
@@ -170,6 +172,7 @@ ON_ABILITY_STATE[3782]  = true; -- Heavy Armor
 ON_ABILITY_STATE[3639]  = true; -- Overcharge
 ON_ABILITY_STATE[12305] = true; -- Teleport Beacon
 ON_ABILITY_STATE[1726]  = true; -- Thunderdome
+ON_ABILITY_STATE[35453] = true; -- Eruption Rounds
 ON_ABILITY_STATE[15229] = false; -- Overclock [ON_ABILITY_STATE] (named Overcharge ...)
 ON_ABILITY_STATE[2843]  = false; -- Decoy [ON_ABILITY_STATE] (named Heavy Armor ...)
 ON_ABILITY_STATE[15231] = false; -- Absorption Bomb
@@ -194,6 +197,7 @@ ON_ABILITY_STATE[35583] = false; -- Electrical Storm
 ON_ABILITY_STATE[34770] = false; -- Boomerang
 ON_ABILITY_STATE[35637] = false; -- Supercharge
 ON_ABILITY_STATE[35618] = false; -- Overload
+ON_ABILITY_STATE[34671] = false; -- Execution
 
 -- Assault
 SETTINGS.TIMERS[41682] = {show = true, frame = 1}; -- Hellfire
@@ -228,6 +232,8 @@ SETTINGS.TIMERS[41880] = {show = true, frame = 1}; -- Overclock
 SETTINGS.TIMERS[35567] = {show = true, frame = 1}; -- Artillery Strike
 SETTINGS.TIMERS[39405] = {show = true, frame = 1}; -- Cryo Bolt -- Cryo Shot
 SETTINGS.TIMERS[34957] = {show = true, frame = 1}; -- Decoy
+SETTINGS.TIMERS[35453] = {show = true, frame = 1}; -- Eruption Rounds
+SETTINGS.TIMERS[34671] = {show = true, frame = 1}; -- Execution
 SETTINGS.TIMERS[35618] = {show = true, frame = 1}; -- Overload
 SETTINGS.TIMERS[34526] = {show = true, frame = 1}; -- SIN Beacon
 SETTINGS.TIMERS[35345] = {show = true, frame = 1}; -- Smoke Screen
@@ -356,12 +362,14 @@ function BuildOptions()
 
     RUMPEL.AddAbilityOptions("Cryo Shot", 39405, SUBTAB);
     RUMPEL.AddAbilityOptions("Decoy", 34957, SUBTAB);
+    RUMPEL.AddAbilityOptions("Execution", 34671, SUBTAB);
     RUMPEL.AddAbilityOptions("SIN Beacon", 34526, SUBTAB);
     RUMPEL.AddAbilityOptions("Smoke Screen", 35345, SUBTAB);
     RUMPEL.AddAbilityOptions("Teleport Beacon", 12305, SUBTAB);
 
     InterfaceOptions.StartGroup({label="Ultimate/HKM", subtab=SUBTAB});
         RUMPEL.AddAbilityOptions("Artillery Strike", 35567, SUBTAB);
+        RUMPEL.AddAbilityOptions("Eruption Rounds", 35453, SUBTAB);
         RUMPEL.AddAbilityOptions("Overload", 35618, SUBTAB);
     InterfaceOptions.StopGroup({subtab=SUBTAB});
 
@@ -432,7 +440,7 @@ function OnSlash(ARGS)
         RUMPEL.SystemMsg(Player.GetLifeInfo());
         RUMPEL.SystemMsg(RUMPEL.CurrentHealth());
     elseif "perks" == ARGS[1] then
-        RUMPEL.GetLoadoutPerks();
+        RUMPEL.Log(SLOTTED_PERKS);
     elseif "weapon" == ARGS[1] then
         RUMPEL.SystemMsg("Player.GetWeaponInfo():\n"..tostring(Player.GetWeaponInfo()));
         RUMPEL.SystemMsg("Player.GetWeaponState():\n"..tostring(Player.GetWeaponState()));
@@ -742,7 +750,6 @@ function OnAbilityState(ARGS)
 end
 
 function OnWeaponBurst()
-    -- experimental
     if true == RUMPEL.CheckPerkEquipped("P[86118]") and true == SETTINGS.TIMERS["P[86118]"].show then
         local fire_rate_mod_new   = Player.GetWeaponState().FireRateMod;
         local fire_rate_mod_check = fire_rate_mod * 0.5;
@@ -830,6 +837,27 @@ function RUMPEL.ResetHeroProcTime()
         hero_proc_time = 0;
     else
         Callback2.FireAndForget(RUMPEL.ResetHeroProcTime, {}, 0.1);
+    end
+end
+
+function RUMPEL.CheckSureShot()
+    if true == RUMPEL.CheckPerkEquipped("P[86118]") and true == SETTINGS.TIMERS["P[86118]"].show then
+        local fire_rate_mod_new   = Player.GetWeaponState().FireRateMod;
+        local fire_rate_mod_check = fire_rate_mod * 0.5;
+
+        if fire_rate_mod_new == fire_rate_mod_check then
+            local ADT = AbilityDurationTimer(SETTINGS.TIMERS["P[86118]"].frame);
+
+            ADT:SetAbilityID("P[86118]");
+            ADT:SetAbilityName(SLOTTED_PERKS["P[86118]"].name);
+            ADT:SetIconID(SLOTTED_PERKS["P[86118]"].web_icon_id);
+            ADT:SetDuration(ABILITY_DURATIONS["P[86118]"]);
+            ADT:StartTimer(RUMPEL.Callback);
+        end
+
+        fire_rate_mod = fire_rate_mod_new;
+
+        Callback2.FireAndForget(RUMPEL.CheckSureShot, {}, 0.1);
     end
 end
 
@@ -985,6 +1013,7 @@ function RUMPEL.GetLoadoutPerks()
     end
 
     RUMPEL.Log(SLOTTED_PERKS);
+    RUMPEL.CheckSureShot();
 end
 
 function RUMPEL.CheckPerkEquipped(id)
