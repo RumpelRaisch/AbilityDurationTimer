@@ -749,24 +749,24 @@ function OnAbilityState(ARGS)
     end
 end
 
-function OnWeaponBurst()
-    if true == RUMPEL.CheckPerkEquipped("P[86118]") and true == SETTINGS.TIMERS["P[86118]"].show then
-        local fire_rate_mod_new   = Player.GetWeaponState().FireRateMod;
-        local fire_rate_mod_check = fire_rate_mod * 0.5;
+-- function OnWeaponBurst()
+--     if true == RUMPEL.CheckPerkEquipped("P[86118]") and true == SETTINGS.TIMERS["P[86118]"].show then
+--         local fire_rate_mod_new   = Player.GetWeaponState().FireRateMod;
+--         local fire_rate_mod_check = fire_rate_mod * 0.5;
 
-        if fire_rate_mod_new == fire_rate_mod_check then
-            local ADT = AbilityDurationTimer(SETTINGS.TIMERS["P[86118]"].frame);
+--         if fire_rate_mod_new == fire_rate_mod_check then
+--             local ADT = AbilityDurationTimer(SETTINGS.TIMERS["P[86118]"].frame);
 
-            ADT:SetAbilityID("P[86118]");
-            ADT:SetAbilityName(SLOTTED_PERKS["P[86118]"].name);
-            ADT:SetIconID(SLOTTED_PERKS["P[86118]"].web_icon_id);
-            ADT:SetDuration(ABILITY_DURATIONS["P[86118]"]);
-            ADT:StartTimer(RUMPEL.Callback);
-        end
+--             ADT:SetAbilityID("P[86118]");
+--             ADT:SetAbilityName(SLOTTED_PERKS["P[86118]"].name);
+--             ADT:SetIconID(SLOTTED_PERKS["P[86118]"].web_icon_id);
+--             ADT:SetDuration(ABILITY_DURATIONS["P[86118]"]);
+--             ADT:StartTimer(RUMPEL.Callback);
+--         end
 
-        fire_rate_mod = fire_rate_mod_new;
-    end
-end
+--         fire_rate_mod = fire_rate_mod_new;
+--     end
+-- end
 
 function OnTookHit(ARGS)
     if true == RUMPEL.CheckPerkEquipped("P[85995]") and true == SETTINGS.TIMERS["P[85995]"].show and "Healing" ~= ARGS.damageType then
