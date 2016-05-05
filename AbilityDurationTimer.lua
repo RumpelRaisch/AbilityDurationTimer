@@ -145,6 +145,7 @@ NAMES[35618] = "Overload";
 NAMES[12305] = "Teleport Beacon";
 NAMES[35453] = "Eruption Rounds";
 NAMES[34671] = "Execution";
+NAMES[34957] = "Decoy";
 -- NAMES[] = ""; -- NEW
 
 -- Perks
@@ -198,6 +199,7 @@ ON_ABILITY_STATE[34770] = false; -- Boomerang
 ON_ABILITY_STATE[35637] = false; -- Supercharge
 ON_ABILITY_STATE[35618] = false; -- Overload
 ON_ABILITY_STATE[34671] = false; -- Execution
+ON_ABILITY_STATE[34957] = false; -- Decoy
 
 -- Assault
 SETTINGS.TIMERS[41682] = {show = true, frame = 1}; -- Hellfire
