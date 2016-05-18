@@ -53,6 +53,7 @@ local output_prefix     = "[ADT] ";
 local debug_prefix      = "[DEBUG] ";
 local hero_proc_time    = 0; -- for Hero perk
 local fire_rate_mod     = 0; -- for Sure Shot perk
+local console_log       = false;
 
 UI.ALIGNMENT        = {};
 UI.ALIGNMENT["ltr"] = 68;
@@ -453,6 +454,12 @@ function OnSlash(ARGS)
         RUMPEL.Log("Player.GetCurrentLoadout():\n"..tostring(Player.GetCurrentLoadout()));
     elseif "test" == ARGS[1] then
         RUMPEL.Test();
+    elseif "cl" == ARGS[1] and nil ~= ARGS[2] then
+        if "on" == ARGS[2] then
+            console_log = true;
+        elseif "off" == ARGS[2] then
+            console_log = false;
+        end
     else
         RUMPEL.SystemMsg("Unknown slash command.");
     end
@@ -1095,7 +1102,7 @@ function RUMPEL.ConsoleLog(message)
 end
 
 function RUMPEL.Log(message)
-    if true == SETTINGS.debug then
+    if true == SETTINGS.debug or true == console_log then
         log(tostring(message));
     end
 end
