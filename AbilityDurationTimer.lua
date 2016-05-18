@@ -1095,7 +1095,9 @@ function RUMPEL.ConsoleLog(message)
 end
 
 function RUMPEL.Log(message)
-    log(tostring(message));
+    if true == SETTINGS.debug then
+        log(tostring(message));
+    end
 end
 
 function RUMPEL.SystemMsg(message)
